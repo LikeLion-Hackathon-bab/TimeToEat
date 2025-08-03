@@ -1,4 +1,4 @@
-package com.example.timetoeat.domain.meeting.adapter.out.persistence;
+package com.example.timetoeat.domain.meeting.domain;
 
 public enum AnnouncementStatus {
     OPEN,       // 모집중

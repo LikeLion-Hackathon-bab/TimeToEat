@@ -1,6 +1,7 @@
 package com.example.timetoeat.global.error.exception;
 
 import com.example.timetoeat.global.common.ApiResponse;
+import com.example.timetoeat.global.error.GlobalErrorCode;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;

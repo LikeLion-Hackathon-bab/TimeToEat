@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.meeting.dto.request;
 
-import com.example.timetoeat.domain.meeting.adapter.out.persistence.AnnouncementStatus;
+import com.example.timetoeat.domain.meeting.domain.AnnouncementStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

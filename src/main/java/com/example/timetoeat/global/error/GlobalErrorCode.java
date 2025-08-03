@@ -1,6 +1,5 @@
-package com.example.timetoeat.global.error.exception;
+package com.example.timetoeat.global.error;
 
-import com.example.timetoeat.global.error.BaseError;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
@@ -33,6 +32,8 @@ public enum GlobalErrorCode implements BaseError {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "REQUEST_010", "유효하지 않은 토큰입니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "REQUEST_011", "토큰이 일치하지 않습니다"),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "REQUEST_012", "토큰의 유효기간이 만료되었습니다."),
+    PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "REQUEST_013", "유효하지 않은 PROVIDER"),
+    COOKIE_NOT_FOUND(HttpStatus.NOT_FOUND, "REQUEST_014", "유효하지 않은 COOKIE"),
 
     /**
      * 500 : 응답 실패

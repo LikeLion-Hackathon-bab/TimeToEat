@@ -1,4 +1,4 @@
-package com.example.timetoeat.domain.meeting.adapter.out.persistence;
+package com.example.timetoeat.domain.meeting.domain;
 
 import com.example.timetoeat.domain.user.domain.User;
 import com.example.timetoeat.global.util.BaseTimeEntity;
@@ -19,7 +19,6 @@ import java.time.LocalTime;
 @DynamicUpdate
 @AllArgsConstructor
 @Builder
-@Where(clause = "is_deleted=false")
 public class AnnouncementEntity extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,7 +53,4 @@ public class AnnouncementEntity extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private AnnouncementStatus status;
 
-    // 삭제 여부 (soft delete)
-    @Column(nullable = false)
-    private boolean isDeleted = false;
 }
