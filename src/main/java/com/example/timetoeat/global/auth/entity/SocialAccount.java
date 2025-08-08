@@ -22,7 +22,7 @@ public class SocialAccount {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false, unique = true)
-    private Member member;
+    private MemberEntity memberEntity;
 
     @Column(name = "registration_id", nullable = false, length = 50)
     private String registrationId;  // 예: google, kakao, naver, facebook
@@ -42,15 +42,15 @@ public class SocialAccount {
     @Column(name = "role", nullable = false)
     private Role role;
 
-    public static SocialAccount from(Oauth2Provider oauth2Provider, Member member) {
+    public static SocialAccount from(Oauth2Provider oauth2Provider, MemberEntity memberEntity) {
         return SocialAccount.builder()
                 .email(oauth2Provider.getEmail())
                 .registrationId(oauth2Provider.getRegistrationId())
                 .providerId(oauth2Provider.getProviderId())
                 .profileUrl(oauth2Provider.getProfileUrl())
                 .username(oauth2Provider.getUsername()) // 필요하다면
-                .role(member.getRole())
-                .member(member)
+                .role(memberEntity.getRole())
+                .memberEntity(memberEntity)
                 .build();
     }
 }

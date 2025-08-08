@@ -1,7 +1,7 @@
 package com.example.timetoeat.global.auth.jwt;
 
 import com.example.timetoeat.global.auth.dto.TokenDto;
-import com.example.timetoeat.global.auth.entity.Member;
+import com.example.timetoeat.global.auth.entity.MemberEntity;
 import com.example.timetoeat.global.error.exception.CustomException;
 import com.example.timetoeat.global.error.GlobalErrorCode;
 import io.jsonwebtoken.*;
@@ -42,9 +42,9 @@ public class JwtProvider {
                 .build();
     }
 
-    public TokenDto issueToken(Member member, Date now) {
-        String accessToken = generateAccessToken(member, now);
-        String refreshToken = generateRefreshToken(member, now);
+    public TokenDto issueToken(MemberEntity memberEntity, Date now) {
+        String accessToken = generateAccessToken(memberEntity, now);
+        String refreshToken = generateRefreshToken(memberEntity, now);
 
         return TokenDto.builder()
                 .accessToken(accessToken)
@@ -57,21 +57,21 @@ public class JwtProvider {
         return new Date(now.getTime() + refreshTockenExpiration);
     }
 
-    public String generateAccessToken(Member member, Date now) {
+    public String generateAccessToken(MemberEntity memberEntity, Date now) {
         return Jwts.builder()
-                .subject(String.valueOf(member.getId()))
+                .subject(String.valueOf(memberEntity.getId()))
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTockenExpiration))
-                .claim("username", member.getUsername())
-                .claim("email", member.getEmail())
-                .claim("role", member.getRole())
+                .claim("username", memberEntity.getUsername())
+                .claim("email", memberEntity.getEmail())
+                .claim("role", memberEntity.getRole())
                 .signWith(secretKey)
                 .compact();
     }
 
-    String generateRefreshToken(Member member, Date now) {
+    String generateRefreshToken(MemberEntity memberEntity, Date now) {
         return Jwts.builder()
-                .subject(String.valueOf(member.getId()))
+                .subject(String.valueOf(memberEntity.getId()))
                 .issuedAt(now)
                 .expiration(getRefreshTokenExpiration(now))
                 .claim("typ", "refresh")

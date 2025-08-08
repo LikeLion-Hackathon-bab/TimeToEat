@@ -1,0 +1,8 @@
+package com.example.timetoeat.domain.posting.application.port.in.usecase;
+
+import com.example.timetoeat.global.auth.entity.Member;
+import com.example.timetoeat.domain.posting.domain.vo.PostId;
+
+public interface ParticipationUseCase {
+    boolean apply(Member member, PostId postId);
+}

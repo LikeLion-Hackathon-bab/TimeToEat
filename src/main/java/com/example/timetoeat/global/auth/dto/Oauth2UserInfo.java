@@ -22,7 +22,7 @@ public class Oauth2UserInfo {
                 .username(socialAccount.getUsername())
                 .email(socialAccount.getEmail())
                 .role(socialAccount.getRole())
-                .memberId(socialAccount.getMember().getId())
+                .memberId(socialAccount.getMemberEntity().getId())
                 .build();
     }
 }
