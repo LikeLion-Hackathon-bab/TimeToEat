@@ -2,15 +2,14 @@ package com.example.timetoeat.global.auth.model;
 
 import com.example.timetoeat.global.auth.dto.Oauth2UserInfo;
 import com.example.timetoeat.global.auth.model.provider.Oauth2Provider;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+@Getter
 public class CustomOauth2User implements OAuth2User {
     private final Map<String, Object> attributes;
     private final Oauth2UserInfo oAuth2UserInfo;
@@ -22,6 +21,11 @@ public class CustomOauth2User implements OAuth2User {
 
     public static CustomOauth2User of(Oauth2UserInfo dto, Oauth2Provider oauth2Provider) {
         return new CustomOauth2User(dto, oauth2Provider);
+    }
+
+    public CustomOauth2User(Oauth2UserInfo oAuth2UserInfo) {
+        this.oAuth2UserInfo = oAuth2UserInfo;
+        this.attributes = Collections.emptyMap(); // JWT에는 attributes 정보가 없으므로 비워둠
     }
 
     @Override

@@ -1,17 +1,16 @@
 package com.example.timetoeat.global.auth.jwt;
 
 import com.example.timetoeat.global.auth.dto.TokenDto;
-import com.example.timetoeat.global.auth.entity.Member;
+import com.example.timetoeat.global.auth.entity.MemberEntity;
 import com.example.timetoeat.global.error.exception.CustomException;
 import com.example.timetoeat.global.error.GlobalErrorCode;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -35,16 +34,16 @@ public class JwtProvider {
     private SecretKey secretKey;
     private JwtParser jwtParser;
 
-    public JwtProvider(@Value("${jwt.secret}") String secretKey) {
-        this.secretKey = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
+    public JwtProvider(@Value("${jwt.secret}") String secret) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.jwtParser = Jwts.parser()
                 .verifyWith(this.secretKey)
                 .build();
     }
 
-    public TokenDto issueToken(Member member, Date now) {
-        String accessToken = generateAccessToken(member, now);
-        String refreshToken = generateRefreshToken(member, now);
+    public TokenDto issueToken(MemberEntity memberEntity, Date now) {
+        String accessToken = generateAccessToken(memberEntity, now);
+        String refreshToken = generateRefreshToken(memberEntity, now);
 
         return TokenDto.builder()
                 .accessToken(accessToken)
@@ -57,21 +56,22 @@ public class JwtProvider {
         return new Date(now.getTime() + refreshTockenExpiration);
     }
 
-    public String generateAccessToken(Member member, Date now) {
+    public String generateAccessToken(MemberEntity memberEntity, Date now) {
+        String roleKey = memberEntity.getRole().getKey();
         return Jwts.builder()
-                .subject(String.valueOf(member.getId()))
+                .subject(String.valueOf(memberEntity.getId()))
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTockenExpiration))
-                .claim("username", member.getUsername())
-                .claim("email", member.getEmail())
-                .claim("role", member.getRole())
+                .claim("username", memberEntity.getUsername())
+                .claim("email", memberEntity.getEmail())
+                .claim("role", roleKey)
                 .signWith(secretKey)
                 .compact();
     }
 
-    String generateRefreshToken(Member member, Date now) {
+    String generateRefreshToken(MemberEntity memberEntity, Date now) {
         return Jwts.builder()
-                .subject(String.valueOf(member.getId()))
+                .subject(String.valueOf(memberEntity.getId()))
                 .issuedAt(now)
                 .expiration(getRefreshTokenExpiration(now))
                 .claim("typ", "refresh")
@@ -114,4 +114,5 @@ public class JwtProvider {
     public String getRole(String token) {
         return getPayload(token).get("role", String.class);
     }
+
 }

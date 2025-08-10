@@ -1,7 +1,7 @@
 package com.example.timetoeat.global.auth.jwt;
 
 import com.example.timetoeat.global.auth.dto.TokenDto;
-import com.example.timetoeat.global.auth.entity.Member;
+import com.example.timetoeat.global.auth.entity.MemberEntity;
 import com.example.timetoeat.global.auth.entity.RefreshToken;
 import com.example.timetoeat.global.auth.model.CustomOauth2User;
 import com.example.timetoeat.global.auth.repository.RefreshTokenRepository;
@@ -29,8 +29,8 @@ public class JwtService {
     @Transactional
     public TokenDto doTokenGenerationProcess(CustomOauth2User principal) {
         Long memberId = principal.getMemberId();
-        Member member = memberService.getById(memberId);
-        return jwtProvider.issueToken(member, new Date());
+        MemberEntity memberEntity = memberService.getById(memberId);
+        return jwtProvider.issueToken(memberEntity, new Date());
     }
 
     @Transactional
@@ -40,8 +40,8 @@ public class JwtService {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
         Long memberId = jwtProvider.getId(refreshToken);
-        Member member = memberService.getById(memberId);
-        TokenDto tokenDto = jwtProvider.issueToken(member, new Date());
+        MemberEntity memberEntity = memberService.getById(memberId);
+        TokenDto tokenDto = jwtProvider.issueToken(memberEntity, new Date());
 
         refreshTokenRepository.deleteByMemberId(memberId); //원래 deleteAllByMemberId 였다가 수정
         refreshTokenRepository.save(
