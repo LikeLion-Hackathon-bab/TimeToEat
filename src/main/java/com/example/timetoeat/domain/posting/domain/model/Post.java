@@ -67,8 +67,8 @@ public class Post {
     }
 
     public boolean isOwnedBy(MemberId memberId) {
-        if (this.memberId == null || memberId == null) {
-            return false;
+        if (memberId == null) {
+            throw new IllegalStateException("멤버 id가 비어있습니다");
         }
         return this.memberId.equals(memberId);
     }

@@ -42,9 +42,9 @@ public class PostService implements PostUseCase {
     }
 
     @Override
-    public void close(Member member,PostId postId) {
+    public void close(MemberId memberId,PostId postId) {
         Post post = getPostQuery.findById(postId);
-        if (!post.isOwnedBy(member.getMemberId())) {
+        if (!post.isOwnedBy(memberId)) {
             throw new SecurityException("공고를 마감할 권한이 없습니다.");
         }
         Post closedPost = post.close();

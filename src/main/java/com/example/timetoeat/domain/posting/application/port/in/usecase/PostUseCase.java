@@ -7,6 +7,6 @@ import com.example.timetoeat.domain.posting.domain.vo.PostId;
 
 public interface PostUseCase {
     void create(MemberId memberId, CreatePostCommand command);
-    void close(Member member, PostId postId);
+    void close(MemberId memberId, PostId postId);
     void expire(PostId postId);
 }

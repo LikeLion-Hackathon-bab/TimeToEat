@@ -1,6 +1,7 @@
 package com.example.timetoeat.domain.posting.adapter.out.persistence.post;
 
 import com.example.timetoeat.domain.posting.domain.model.Status;
+import com.example.timetoeat.global.auth.entity.MemberEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -40,6 +41,10 @@ public class PostEntity {
 
     @Column(nullable = false, length = 100)
     private String message;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private MemberEntity member;
 
     public void setStatus(Status status) {
         this.status = status;

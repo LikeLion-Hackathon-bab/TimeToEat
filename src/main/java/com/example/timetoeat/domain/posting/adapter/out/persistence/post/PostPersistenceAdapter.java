@@ -35,6 +35,8 @@ public class PostPersistenceAdapter implements GetPostQuery, SavePostPort {
 
             // Mapper를 사용해 도메인 객체의 변경 내용을 엔티티에 반영합니다.
             postMapper.updateEntityFromDomain(post, postEntity);
+            // [추가] 변경된 엔티티를 저장하라고 명시적으로 호출합니다.
+            //postJpaRepository.save(postEntity);
         }
     }
 }
