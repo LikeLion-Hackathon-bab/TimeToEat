@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class Participation {
 
     @Getter private final PostId postId;

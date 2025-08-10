@@ -5,13 +5,12 @@ import com.example.timetoeat.global.auth.entity.MemberEntity;
 import com.example.timetoeat.global.error.exception.CustomException;
 import com.example.timetoeat.global.error.GlobalErrorCode;
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
@@ -35,8 +34,8 @@ public class JwtProvider {
     private SecretKey secretKey;
     private JwtParser jwtParser;
 
-    public JwtProvider(@Value("${jwt.secret}") String secretKey) {
-        this.secretKey = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
+    public JwtProvider(@Value("${jwt.secret}") String secret) {
+        this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.jwtParser = Jwts.parser()
                 .verifyWith(this.secretKey)
                 .build();
@@ -58,13 +57,14 @@ public class JwtProvider {
     }
 
     public String generateAccessToken(MemberEntity memberEntity, Date now) {
+        String roleKey = memberEntity.getRole().getKey();
         return Jwts.builder()
                 .subject(String.valueOf(memberEntity.getId()))
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTockenExpiration))
                 .claim("username", memberEntity.getUsername())
                 .claim("email", memberEntity.getEmail())
-                .claim("role", memberEntity.getRole())
+                .claim("role", roleKey)
                 .signWith(secretKey)
                 .compact();
     }
@@ -114,4 +114,5 @@ public class JwtProvider {
     public String getRole(String token) {
         return getPayload(token).get("role", String.class);
     }
+
 }

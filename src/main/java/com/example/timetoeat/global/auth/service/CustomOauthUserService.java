@@ -29,7 +29,7 @@ public class CustomOauthUserService implements OAuth2UserService {
         OAuth2User oAuth2User = oAuth2UserService.loadUser(userRequest); // 인가 서버와 통신해서 실제 사용자 정보 조회
         Oauth2Provider oauth2Provider = this.getOauth2ProviderUsers(clientRegistration, oAuth2User);
 
-        SocialAccount socialAccount = memberService.findByRegistrationIdOrRegister(oauth2Provider);
+        SocialAccount socialAccount = memberService.findByProviderId(oauth2Provider);
         log.info("소셜 로그인 - 유저 아이디: {}, 유저명: {}, 이메일: {},", socialAccount.getProviderId(), socialAccount.getUsername(), socialAccount.getEmail());
 
         Oauth2UserInfo dto = Oauth2UserInfo.from(socialAccount);

@@ -17,8 +17,8 @@ public class MemberService {
     private final SocialAccountRepository socialAccountRepository;
 
     @Transactional
-    public SocialAccount findByRegistrationIdOrRegister(Oauth2Provider oauth2Provider) {
-        return socialAccountRepository.findByRegistrationId(oauth2Provider.getRegistrationId())
+    public SocialAccount findByProviderId(Oauth2Provider oauth2Provider) {
+        return socialAccountRepository.findByProviderId(oauth2Provider.getProviderId())
                 .orElseGet(() -> registerByOAuth2(oauth2Provider));
     }
 
@@ -36,7 +36,6 @@ public class MemberService {
     }
 
     public MemberEntity getById(Long memberId) {
-        // 예외 처리 필요시 진행!
         return memberJpaRepository.findById(memberId).orElse(null);
     }
 }

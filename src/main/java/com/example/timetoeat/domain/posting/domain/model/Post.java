@@ -1,15 +1,16 @@
 package com.example.timetoeat.domain.posting.domain.model;
 
+import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class Post {
     @Getter private final PostId postId;
+    @Getter private final MemberId memberId;
     @Getter private final int targetCount;
     @Getter private final Status status;
     @Getter private final LocalDateTime createdAt;
@@ -19,6 +20,7 @@ public class Post {
     @Getter private final String message;
 
     public static Post withoutId(
+            MemberId memberId,
             int targetCount,
             Status status,
             LocalDateTime createdAt,
@@ -29,6 +31,7 @@ public class Post {
     ) {
         return new Post(
                 null,
+                memberId,
                 targetCount,
                 status,
                 createdAt,
@@ -41,6 +44,7 @@ public class Post {
 
     public static Post withId(
             PostId id,
+            MemberId memberId,
             int targetCount,
             Status status,
             LocalDateTime createdAt,
@@ -51,6 +55,7 @@ public class Post {
     ) {
         return new Post(
                 id,
+                memberId,
                 targetCount,
                 status,
                 createdAt,
@@ -59,6 +64,13 @@ public class Post {
                 location,
                 message
         );
+    }
+
+    public boolean isOwnedBy(MemberId memberId) {
+        if (this.memberId == null || memberId == null) {
+            return false;
+        }
+        return this.memberId.equals(memberId);
     }
 
     public boolean canApply(Participation participation) {
@@ -72,6 +84,7 @@ public class Post {
         }
         return Post.withId(
                 this.postId,
+                this.memberId,
                 this.targetCount,
                 Status.CLOSED, // 상태 변경
                 this.createdAt,
@@ -88,6 +101,7 @@ public class Post {
         }
         return Post.withId(
                 this.postId,
+                this.memberId,
                 this.targetCount,
                 Status.CLOSED, // 만료 시에도 상태는 CLOSED로 변경
                 this.createdAt,
