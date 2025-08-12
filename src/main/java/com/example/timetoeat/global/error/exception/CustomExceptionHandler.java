@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -44,6 +45,17 @@ public class CustomExceptionHandler {
         return ResponseEntity
                 .status(GlobalErrorCode.NOT_FOUND.getHttpStatus())
                 .body(ApiResponse.fail(GlobalErrorCode.NOT_FOUND));
+    }
+
+    // --- [추가] JSON 직렬화 에러를 위한 전용 핸들러 ---
+    @ExceptionHandler(HttpMessageNotWritableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleSerializationException(HttpMessageNotWritableException e) {
+        // 이 로그가 찍힌다면, 100% JSON 변환 문제입니다.
+        log.error("JSON 직렬화 에러 발생 (Response Body 생성 실패): {}", e.getMessage(), e);
+
+        return ResponseEntity
+                .status(GlobalErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(ApiResponse.fail(GlobalErrorCode.INTERNAL_SERVER_ERROR, "서버가 응답을 생성하는데 실패했습니다."));
     }
 
     @ExceptionHandler(Exception.class)

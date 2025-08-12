@@ -1,9 +1,8 @@
-package com.example.timetoeat.domain.posting.application.port.service;
+package com.example.timetoeat.domain.posting.application.port.service.participation;
 
 import com.example.timetoeat.domain.posting.application.port.in.usecase.ParticipationUseCase;
-import com.example.timetoeat.domain.posting.application.port.out.PostLock;
+import com.example.timetoeat.domain.posting.application.port.out.lock.PostLock;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
-import com.example.timetoeat.global.auth.entity.Member;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
