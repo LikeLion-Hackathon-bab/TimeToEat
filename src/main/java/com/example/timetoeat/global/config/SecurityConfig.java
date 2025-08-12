@@ -17,12 +17,15 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
 
 @RequiredArgsConstructor
 @EnableWebSecurity
@@ -36,6 +39,7 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtVerificationFilter jwtVerificationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -62,9 +66,12 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
-
         http
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authorization -> authorization
+                                // 세션 대신 쿠키를 사용해서 요청 정보를 저장하도록 설정
+                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
+                        )
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
                                         .userService(customOAuth2UserService)
@@ -82,7 +89,7 @@ public class SecurityConfig {
 
         // 커스텀 필터 등록 (순서 중요!)
         http
-                .addFilterBefore(jwtVerificationFilter, OAuth2AuthorizationRequestRedirectFilter.class)
+                .addFilterBefore(jwtVerificationFilter,  UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtExceptionFilter, JwtVerificationFilter.class);
 
         http
@@ -96,7 +103,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/login/**",
                                 "/oauth2/authorization/**",
-                                "/login/oauth2/code/**"   // 콜백, 인증 시작 엔드포인트(permitAll)
+                                "/login/oauth2/code/**", // 콜백, 인증 시작 엔드포인트(permitAll)
+                                "/api/v1/posts/test",
+                                "/"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );
@@ -109,6 +118,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
+
+        configuration.setAllowedOriginPatterns(List.of("*")); // 모든 Origin 허용
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

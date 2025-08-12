@@ -1,4 +1,4 @@
-package com.example.timetoeat.domain.posting.application.port.service;
+package com.example.timetoeat.domain.posting.application.port.service.post;
 
 import com.example.timetoeat.domain.posting.adapter.out.mapper.PostMapper;
 import com.example.timetoeat.domain.posting.application.port.in.command.CreatePostCommand;
@@ -8,8 +8,6 @@ import com.example.timetoeat.domain.posting.application.port.out.save.SavePostPo
 import com.example.timetoeat.domain.posting.domain.model.*;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
-import com.example.timetoeat.domain.posting.dto.request.PostReq;
-import com.example.timetoeat.global.auth.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

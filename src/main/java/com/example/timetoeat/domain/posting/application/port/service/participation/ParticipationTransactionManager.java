@@ -1,11 +1,10 @@
-package com.example.timetoeat.domain.posting.application.port.service;
+package com.example.timetoeat.domain.posting.application.port.service.participation;
 
 import com.example.timetoeat.domain.posting.application.port.out.Query.GetParticipationQuery;
 import com.example.timetoeat.domain.posting.application.port.out.Query.GetPostQuery;
 import com.example.timetoeat.domain.posting.application.port.out.save.SaveParticipationPort;
 import com.example.timetoeat.domain.posting.application.port.out.save.SavePostPort;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
-import com.example.timetoeat.global.auth.entity.Member;
 import com.example.timetoeat.domain.posting.domain.model.Participation;
 import com.example.timetoeat.domain.posting.domain.model.Post;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
