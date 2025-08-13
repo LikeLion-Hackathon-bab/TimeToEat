@@ -104,7 +104,9 @@ public class SecurityConfig {
                                 "/login/**",
                                 "/oauth2/authorization/**",
                                 "/login/oauth2/code/**", // 콜백, 인증 시작 엔드포인트(permitAll)
-                                "/api/v1/posts/test",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
                                 "/"
                         ).permitAll()
                         .anyRequest().authenticated()
