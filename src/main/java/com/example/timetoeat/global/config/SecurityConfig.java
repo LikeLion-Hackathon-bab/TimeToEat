@@ -39,7 +39,7 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtVerificationFilter jwtVerificationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
-    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+    //private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -68,10 +68,10 @@ public class SecurityConfig {
 
         http
                 .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(authorization -> authorization
+/*                        .authorizationEndpoint(authorization -> authorization
                                 // 세션 대신 쿠키를 사용해서 요청 정보를 저장하도록 설정
                                 .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
-                        )
+                        )*/
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
                                         .userService(customOAuth2UserService)
