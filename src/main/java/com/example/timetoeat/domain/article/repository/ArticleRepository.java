@@ -4,6 +4,8 @@ import com.example.timetoeat.domain.article.entity.Article;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 
@@ -17,4 +19,9 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
 
     // 삭제 권한 확인 (글 작성자인지)
     boolean existsByIdAndAuthor_Id(Long articleId, Long authorId);
+
+    // 글 ID와 작성자 ID가 모두 일치할 때만 삭제 (삭제 성공 시 1, 없으면 0 반환)
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from Article a where a.id = :articleId and a.author.id = :authorId")
+    int deleteByIdAndAuthorId(Long articleId, Long authorId);
 }

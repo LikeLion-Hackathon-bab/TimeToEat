@@ -1,5 +1,3 @@
-# application.yml
-
 server:
   port: 8080
 
@@ -8,9 +6,9 @@ springdoc:
 
 spring:
   config:
-    import: optional:file:.env[.properties]
-  profiles:
-    active: prod
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:.env.${spring.profiles.active:dev}[.properties]
 
   jpa:
     show-sql: true
@@ -30,6 +28,10 @@ spring:
             user-name-attribute: id
 
 jwt:
-  access-token-expiration: 3600000  # 1시간
-  refresh-token-expiration: 604800000 # 7일
+  access-token-expiration: 3600000      # 1시간
+  refresh-token-expiration: 604800000   # 7일
   secret: ${JWT_SECRET}
+
+logging:
+  level:
+    org.hibernate.SQL: debug

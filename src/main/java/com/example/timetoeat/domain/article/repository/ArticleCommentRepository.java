@@ -15,4 +15,7 @@ public interface ArticleCommentRepository extends JpaRepository<ArticleComment, 
 
     // 본인 댓글인지 권한 확인
     boolean existsByIdAndAuthor_Id(Long commentId, Long authorId);
+
+    // 특정 댓글(parentComment)에 달린 대댓글 개수 반환
+    long countByParentComment_Id(Long parentCommentId);
 }

@@ -90,4 +90,8 @@ public class Article extends BaseTimeEntity {
         return getExpiresAt().isBefore(now);
     }
 
+    public void decreaseCommentBy(int n) {
+        if (n <= 0) return;
+        this.commentCount = Math.max(0, this.commentCount - n);
+    }
 }
