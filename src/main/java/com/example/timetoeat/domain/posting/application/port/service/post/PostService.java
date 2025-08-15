@@ -1,6 +1,5 @@
 package com.example.timetoeat.domain.posting.application.port.service.post;
 
-import com.example.timetoeat.domain.posting.adapter.out.mapper.PostMapper;
 import com.example.timetoeat.domain.posting.application.port.in.command.CreatePostCommand;
 import com.example.timetoeat.domain.posting.application.port.in.usecase.PostUseCase;
 import com.example.timetoeat.domain.posting.application.port.out.Query.GetPostQuery;
@@ -21,7 +20,6 @@ public class PostService implements PostUseCase {
 
     private final SavePostPort savePostPort;
     private final GetPostQuery getPostQuery;
-    private final PostMapper postMapper;
 
     @Override
     public void create(MemberId memberId, CreatePostCommand command) {

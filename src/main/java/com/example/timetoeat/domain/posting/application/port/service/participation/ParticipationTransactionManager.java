@@ -28,7 +28,7 @@ public class ParticipationTransactionManager {
         // 공지가 무조건 있어야 되니까 예외 처리 jpa 단에서 해주기
 
         Participation participation = getParticipationQuery.getParticipationByPostId(post.getPostId());
-        // participation이 없을 수도 있기 때문에 예외 처리x
+
 
         if (!post.canApply(participation)) {
             throw new IllegalStateException("이미 마감되었거나 인원이 가득 찬 공고입니다");
