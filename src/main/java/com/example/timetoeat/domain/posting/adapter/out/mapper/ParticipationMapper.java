@@ -1,7 +1,7 @@
 package com.example.timetoeat.domain.posting.adapter.out.mapper;
 
 import com.example.timetoeat.domain.posting.adapter.out.persistence.participation.ParticipationEntity;
-import com.example.timetoeat.domain.posting.domain.model.Participation;
+import com.example.timetoeat.domain.posting.domain.model.participation.Participation;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import org.mapstruct.Mapper;

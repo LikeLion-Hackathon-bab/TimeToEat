@@ -1,4 +1,4 @@
-package com.example.timetoeat.domain.posting.domain.model;
+package com.example.timetoeat.domain.posting.domain.model.post;
 
 public enum Status {
     OPEN, CLOSED, COMPLETED;

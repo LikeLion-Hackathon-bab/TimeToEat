@@ -1,14 +1,10 @@
-package com.example.timetoeat.domain.posting.domain.model;
+package com.example.timetoeat.domain.posting.domain.model.participation;
 
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NonNull;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
