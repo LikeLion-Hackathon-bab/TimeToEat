@@ -3,8 +3,9 @@ package com.example.timetoeat.domain.posting.adapter.out.persistence.subscriptio
 import com.example.timetoeat.domain.posting.adapter.out.mapper.SubscriptionMapper;
 import com.example.timetoeat.domain.posting.adapter.out.persistence.post.PostEntity;
 import com.example.timetoeat.domain.posting.adapter.out.persistence.post.PostJpaRepository;
-import com.example.timetoeat.domain.posting.application.port.out.save.SubscriptionPort;
-import com.example.timetoeat.domain.posting.domain.model.Subscription;
+import com.example.timetoeat.domain.posting.application.port.out.subscription.GetSubscriptionPort;
+import com.example.timetoeat.domain.posting.application.port.out.subscription.SubscriptionPort;
+import com.example.timetoeat.domain.posting.domain.model.subscription.Subscription;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.global.auth.entity.MemberEntity;
@@ -12,20 +13,22 @@ import com.example.timetoeat.global.auth.repository.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 @RequiredArgsConstructor
-public class SubscriptionPersistenceAdapter implements SubscriptionPort {
+public class SubscriptionPersistenceAdapter implements SubscriptionPort, GetSubscriptionPort{
 
     private final SubscriptionJpaRepository subscriptionJpaRepository;
     private final PostJpaRepository postJpaRepository;
     private final MemberJpaRepository memberJpaRepository;
     private final SubscriptionMapper subscriptionMapper;
 
-
     @Override
     public void save(Subscription subscription) {
-        Long memberId = subscription.getMemberId().getId();
-        Long postId = subscription.getPostId().getId();
+        Long memberId = subscription.memberId().getId();
+        Long postId = subscription.postId().getId();
 
         MemberEntity memberEntity = memberJpaRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
@@ -39,5 +42,13 @@ public class SubscriptionPersistenceAdapter implements SubscriptionPort {
     @Override
     public boolean exists(MemberId memberId, PostId postId) {
         return subscriptionJpaRepository.checkSubscriptionExist(memberId.getId(), postId.getId());
+    }
+
+    @Override
+    public List<MemberId> findMembersByPostId(PostId postId) {
+        List<Long> memberIds = subscriptionJpaRepository.findMemberIdsByPostId(postId.getId());
+        return memberIds.stream()
+                .map(memberId -> new MemberId(memberId))
+                .collect(Collectors.toList());
     }
 }

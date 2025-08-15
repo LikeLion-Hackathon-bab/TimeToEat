@@ -2,7 +2,7 @@ package com.example.timetoeat.domain.posting.adapter.out.mapper;
 
 import com.example.timetoeat.domain.posting.adapter.out.persistence.post.PostEntity;
 import com.example.timetoeat.domain.posting.application.port.out.data.PostData;
-import com.example.timetoeat.domain.posting.domain.model.Post;
+import com.example.timetoeat.domain.posting.domain.model.post.Post;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.domain.posting.dto.response.PostRes;

@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.adapter.out.persistence.post;
 
-import com.example.timetoeat.domain.posting.domain.model.Status;
+import com.example.timetoeat.domain.posting.domain.model.post.Status;
 import com.example.timetoeat.global.auth.entity.MemberEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;

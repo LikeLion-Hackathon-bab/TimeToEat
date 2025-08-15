@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.adapter.in.web.participation;
 
-import com.example.timetoeat.domain.posting.application.port.in.usecase.ParticipationUseCase;
+import com.example.timetoeat.domain.posting.application.port.in.usecase.participation.ParticipationUseCase;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.global.auth.model.CustomOauth2User;

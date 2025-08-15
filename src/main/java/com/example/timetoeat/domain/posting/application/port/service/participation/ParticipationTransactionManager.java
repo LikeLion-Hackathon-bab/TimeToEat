@@ -1,12 +1,15 @@
 package com.example.timetoeat.domain.posting.application.port.service.participation;
 
-import com.example.timetoeat.domain.posting.application.port.out.Query.GetParticipationQuery;
-import com.example.timetoeat.domain.posting.application.port.out.Query.GetPostQuery;
-import com.example.timetoeat.domain.posting.application.port.out.save.SaveParticipationPort;
-import com.example.timetoeat.domain.posting.application.port.out.save.SavePostPort;
+import com.example.timetoeat.domain.posting.application.port.out.participation.GetParticipationQuery;
+import com.example.timetoeat.domain.posting.application.port.out.post.GetPostQuery;
+import com.example.timetoeat.domain.posting.application.port.out.participation.SaveParticipationPort;
+import com.example.timetoeat.domain.posting.application.port.out.post.SavePostPort;
+import com.example.timetoeat.domain.posting.application.port.out.postEvent.PostEventPort;
+import com.example.timetoeat.domain.posting.domain.model.postEvent.PostEvent;
+import com.example.timetoeat.domain.posting.domain.model.postEvent.PostEventType;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
-import com.example.timetoeat.domain.posting.domain.model.Participation;
-import com.example.timetoeat.domain.posting.domain.model.Post;
+import com.example.timetoeat.domain.posting.domain.model.participation.Participation;
+import com.example.timetoeat.domain.posting.domain.model.post.Post;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -20,6 +23,7 @@ public class ParticipationTransactionManager {
     private final GetParticipationQuery getParticipationQuery;
     private final SaveParticipationPort saveParticipationPort;
     private final SavePostPort savePostPort;
+    private final PostEventPort postEventPort;
 
     @Transactional
     public void apply(MemberId memberId, PostId postId) {
@@ -41,8 +45,10 @@ public class ParticipationTransactionManager {
         saveParticipationPort.save(newParticipation);
 
         if (newParticipation.isFull(post.getTargetCount())) {
-            Post newPost = post.close();
-            savePostPort.save(newPost);
+            Post closedPost = post.close();
+            Post savedPost = savePostPort.save(closedPost);
+            PostEvent postEvent = PostEvent.create(savedPost, PostEventType.POST_FILLED);
+            postEventPort.publish(postEvent);
         }
     }
 }

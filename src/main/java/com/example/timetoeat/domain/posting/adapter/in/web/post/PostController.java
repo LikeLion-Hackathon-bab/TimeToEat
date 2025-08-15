@@ -1,8 +1,8 @@
 package com.example.timetoeat.domain.posting.adapter.in.web.post;
 
 import com.example.timetoeat.domain.posting.application.port.in.command.CreatePostCommand;
-import com.example.timetoeat.domain.posting.application.port.in.usecase.GetPostUseCase;
-import com.example.timetoeat.domain.posting.application.port.in.usecase.PostUseCase;
+import com.example.timetoeat.domain.posting.application.port.in.usecase.post.GetPostUseCase;
+import com.example.timetoeat.domain.posting.application.port.in.usecase.post.PostUseCase;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.domain.posting.dto.request.PostReq;

@@ -1,8 +1,8 @@
 package com.example.timetoeat.domain.posting.application.port.service.subscription;
 
-import com.example.timetoeat.domain.posting.application.port.in.usecase.SubscriptionUseCase;
-import com.example.timetoeat.domain.posting.application.port.out.save.SubscriptionPort;
-import com.example.timetoeat.domain.posting.domain.model.Subscription;
+import com.example.timetoeat.domain.posting.application.port.in.usecase.subscription.SubscriptionUseCase;
+import com.example.timetoeat.domain.posting.application.port.out.subscription.SubscriptionPort;
+import com.example.timetoeat.domain.posting.domain.model.subscription.Subscription;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class SubscriptionService implements SubscriptionUseCase {
         if (subscriptionPort.exists(memberId, postId)) {
             throw new IllegalStateException("이미 알림을 구독한 공고입니다.");
         }
-        Subscription subscription = Subscription.create(memberId, postId);
+        Subscription subscription = new Subscription(memberId, postId);
         subscriptionPort.save(subscription);
     }
 }

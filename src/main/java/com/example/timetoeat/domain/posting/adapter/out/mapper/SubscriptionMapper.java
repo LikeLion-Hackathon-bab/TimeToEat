@@ -2,7 +2,7 @@ package com.example.timetoeat.domain.posting.adapter.out.mapper;
 
 import com.example.timetoeat.domain.posting.adapter.out.persistence.post.PostEntity;
 import com.example.timetoeat.domain.posting.adapter.out.persistence.subscription.SubscriptionEntity;
-import com.example.timetoeat.domain.posting.domain.model.Subscription;
+import com.example.timetoeat.domain.posting.domain.model.subscription.Subscription;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.global.auth.entity.MemberEntity;
@@ -17,6 +17,8 @@ public interface SubscriptionMapper {
     Subscription toDomain(SubscriptionEntity subscriptionEntity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(source = "postEntity", target = "post")
+    @Mapping(source = "memberEntity", target = "member")
     SubscriptionEntity toEntity(Subscription subscription, PostEntity postEntity, MemberEntity memberEntity);
 
     @Named("longToPostId")

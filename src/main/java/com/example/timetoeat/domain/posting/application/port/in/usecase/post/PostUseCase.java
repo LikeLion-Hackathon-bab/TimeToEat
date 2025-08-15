@@ -1,4 +1,4 @@
-package com.example.timetoeat.domain.posting.application.port.in.usecase;
+package com.example.timetoeat.domain.posting.application.port.in.usecase.post;
 
 import com.example.timetoeat.domain.posting.application.port.in.command.CreatePostCommand;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
