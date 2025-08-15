@@ -3,10 +3,10 @@ package com.example.timetoeat.domain.posting.adapter.out.persistence.post;
 import com.example.timetoeat.domain.posting.adapter.out.mapper.PostMapper;
 import com.example.timetoeat.domain.posting.adapter.out.persistence.participation.ParticipationEntity;
 import com.example.timetoeat.domain.posting.adapter.out.persistence.participation.ParticipationJpaRepository;
-import com.example.timetoeat.domain.posting.application.port.out.Query.GetPostQuery;
+import com.example.timetoeat.domain.posting.application.port.out.post.GetPostQuery;
 import com.example.timetoeat.domain.posting.application.port.out.data.PostData;
-import com.example.timetoeat.domain.posting.application.port.out.save.SavePostPort;
-import com.example.timetoeat.domain.posting.domain.model.Post;
+import com.example.timetoeat.domain.posting.application.port.out.post.SavePostPort;
+import com.example.timetoeat.domain.posting.domain.model.post.Post;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.global.error.GlobalErrorCode;
 import com.example.timetoeat.global.error.exception.CustomException;
@@ -62,14 +62,16 @@ public class PostPersistenceAdapter implements GetPostQuery, SavePostPort {
     }
 
     @Override
-    public void save(Post post) {
+    public Post save(Post post) {
         if (post.getPostId() == null) {
             PostEntity postEntity = postMapper.toPostEntity(post);
-            postJpaRepository.save(postEntity);
+            PostEntity savedPostEntity = postJpaRepository.save(postEntity);
+            return postMapper.toDomain(savedPostEntity);
         } else {
             PostEntity postEntity = postJpaRepository.findById(post.getPostId().getId())
                     .orElseThrow(() -> new IllegalStateException("수정할 공고를 찾을 수 없습니다."));
             postMapper.updateEntityFromDomain(post, postEntity);
+            return postMapper.toDomain(postEntity);
         }
     }
 }

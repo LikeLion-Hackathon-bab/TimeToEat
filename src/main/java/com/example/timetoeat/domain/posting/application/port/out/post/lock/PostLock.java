@@ -1,4 +1,4 @@
-package com.example.timetoeat.domain.posting.application.port.out.lock;
+package com.example.timetoeat.domain.posting.application.port.out.post.lock;
 
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 

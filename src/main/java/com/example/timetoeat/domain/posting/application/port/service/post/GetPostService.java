@@ -1,8 +1,8 @@
 package com.example.timetoeat.domain.posting.application.port.service.post;
 
 import com.example.timetoeat.domain.posting.adapter.out.mapper.PostMapper;
-import com.example.timetoeat.domain.posting.application.port.in.usecase.GetPostUseCase;
-import com.example.timetoeat.domain.posting.application.port.out.Query.GetPostQuery;
+import com.example.timetoeat.domain.posting.application.port.in.usecase.post.GetPostUseCase;
+import com.example.timetoeat.domain.posting.application.port.out.post.GetPostQuery;
 import com.example.timetoeat.domain.posting.application.port.out.data.PostData;
 import com.example.timetoeat.domain.posting.dto.response.PostRes;
 import lombok.RequiredArgsConstructor;

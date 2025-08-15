@@ -3,9 +3,9 @@ package com.example.timetoeat.domain.posting.adapter.out.persistence.participati
 import com.example.timetoeat.domain.posting.adapter.out.mapper.ParticipationMapper;
 import com.example.timetoeat.domain.posting.adapter.out.persistence.post.PostEntity;
 import com.example.timetoeat.domain.posting.adapter.out.persistence.post.PostJpaRepository;
-import com.example.timetoeat.domain.posting.application.port.out.Query.GetParticipationQuery;
-import com.example.timetoeat.domain.posting.application.port.out.save.SaveParticipationPort;
-import com.example.timetoeat.domain.posting.domain.model.Participation;
+import com.example.timetoeat.domain.posting.application.port.out.participation.GetParticipationQuery;
+import com.example.timetoeat.domain.posting.application.port.out.participation.SaveParticipationPort;
+import com.example.timetoeat.domain.posting.domain.model.participation.Participation;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.global.auth.entity.MemberEntity;
 import com.example.timetoeat.global.auth.repository.MemberJpaRepository;

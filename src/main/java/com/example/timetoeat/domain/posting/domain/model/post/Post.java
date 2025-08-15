@@ -1,5 +1,6 @@
-package com.example.timetoeat.domain.posting.domain.model;
+package com.example.timetoeat.domain.posting.domain.model.post;
 
+import com.example.timetoeat.domain.posting.domain.model.participation.Participation;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import lombok.AllArgsConstructor;

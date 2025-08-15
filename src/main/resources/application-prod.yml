@@ -14,6 +14,12 @@ spring:
       host: redis # Docker Compose 서비스 이름
       port: 6379
 
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: ${RABBITMQ_DEFAULT_USER}
+    password: ${RABBITMQ_DEFAULT_PASS}
+
   security:
     oauth2:
       client:
