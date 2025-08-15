@@ -1,10 +1,14 @@
 package com.example.timetoeat.domain.posting.application.port.service.post;
 
 import com.example.timetoeat.domain.posting.application.port.in.command.CreatePostCommand;
-import com.example.timetoeat.domain.posting.application.port.in.usecase.PostUseCase;
-import com.example.timetoeat.domain.posting.application.port.out.Query.GetPostQuery;
-import com.example.timetoeat.domain.posting.application.port.out.save.SavePostPort;
-import com.example.timetoeat.domain.posting.domain.model.*;
+import com.example.timetoeat.domain.posting.application.port.in.usecase.post.PostUseCase;
+import com.example.timetoeat.domain.posting.application.port.out.post.GetPostQuery;
+import com.example.timetoeat.domain.posting.application.port.out.post.SavePostPort;
+import com.example.timetoeat.domain.posting.application.port.out.postEvent.PostEventPort;
+import com.example.timetoeat.domain.posting.domain.model.post.Post;
+import com.example.timetoeat.domain.posting.domain.model.post.Status;
+import com.example.timetoeat.domain.posting.domain.model.postEvent.PostEvent;
+import com.example.timetoeat.domain.posting.domain.model.postEvent.PostEventType;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +24,7 @@ public class PostService implements PostUseCase {
 
     private final SavePostPort savePostPort;
     private final GetPostQuery getPostQuery;
+    private final PostEventPort postEventPort;
 
     @Override
     public void create(MemberId memberId, CreatePostCommand command) {
@@ -44,14 +49,17 @@ public class PostService implements PostUseCase {
             throw new SecurityException("공고를 마감할 권한이 없습니다.");
         }
         Post closedPost = post.close();
-        savePostPort.save(closedPost);
-        // 필요하면 마감 알림, 이벤트 등 발송 가능
+        Post savedPost = savePostPort.save(closedPost);
+        PostEvent postEvent = PostEvent.create(savedPost, PostEventType.POST_CLOSED);
+        postEventPort.publish(postEvent);
     }
 
     @Override
     public void expire(PostId postId) {
         Post post = getPostQuery.findById(postId);
         Post expiredPost = post.expire();
-        savePostPort.save(expiredPost);
+        Post savedPost = savePostPort.save(expiredPost);
+        PostEvent postEvent = PostEvent.create(savedPost, PostEventType.POST_EXPIRED);
+        postEventPort.publish(postEvent);
     }
 }
