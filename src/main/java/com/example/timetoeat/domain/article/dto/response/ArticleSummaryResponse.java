@@ -1,10 +1,7 @@
 package com.example.timetoeat.domain.article.dto.response;
 
 import com.example.timetoeat.domain.article.entity.Article;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,6 +14,7 @@ public class ArticleSummaryResponse {
 
     private Long articleId;
     private Long authorId;
+    private String authorUsername;
 
     private String imageUrl;
 
@@ -36,7 +34,7 @@ public class ArticleSummaryResponse {
     private List<Long> taggedMemberIds;
 
     @Builder
-    private ArticleSummaryResponse(Long articleId, Long authorId, String imageUrl,
+    private ArticleSummaryResponse(Long articleId, Long authorId, String authorUsername, String imageUrl,
                                    LocalDate mealDate, LocalTime mealTime, String restaurantName,
                                    int likeCount, int commentCount, boolean likedByMe,
                                    LocalDateTime createdAt, LocalDateTime expiresAt,
@@ -44,6 +42,7 @@ public class ArticleSummaryResponse {
 
         this.articleId = articleId;
         this.authorId = authorId;
+        this.authorUsername = authorUsername;
         this.imageUrl = imageUrl;
         this.mealDate = mealDate;
         this.mealTime = mealTime;
@@ -57,9 +56,11 @@ public class ArticleSummaryResponse {
     }
 
     public static ArticleSummaryResponse from(Article article, boolean likedByMe, List<Long> taggedMemberIds) {
+
         return ArticleSummaryResponse.builder()
                 .articleId(article.getId())
                 .authorId(article.getAuthor().getId())
+                .authorUsername(article.getAuthor().getUsername())
                 .imageUrl(article.getImageUrl())
                 .mealDate(article.getMealDate())
                 .mealTime(article.getMealTime())

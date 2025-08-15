@@ -1,14 +1,21 @@
 package com.example.timetoeat.domain.article.repository;
 
 import com.example.timetoeat.domain.article.entity.ArticleComment;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ArticleCommentRepository extends JpaRepository<ArticleComment, Long> {
 
-    // 댓글 (대댓글 X) 오름차순
+    // 댓글 (대댓글 X) 오름차순, 루트 댓글 한 번에
+    @EntityGraph(attributePaths = {"author","parentComment"})
     List<ArticleComment> findByArticle_IdAndParentCommentIsNullOrderByIdAsc(Long articleId);
+
+    // 여러 parentId에 대한 대댓글을 한 번에
+    @EntityGraph(attributePaths = {"author","parentComment"})
+    List<ArticleComment> findByParentComment_IdInOrderByIdAsc(Collection<Long> parentIds);
 
     // 특정 댓글의 대댓글 오름차순
     List<ArticleComment> findByParentComment_IdOrderByIdAsc(Long parentCommentId);

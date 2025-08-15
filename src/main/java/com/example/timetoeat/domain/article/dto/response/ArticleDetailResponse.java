@@ -17,6 +17,7 @@ public class ArticleDetailResponse {
 
     private Long articleId;
     private Long authorId;
+    private String authorUsername;
 
     private String imageUrl;
 
@@ -34,13 +35,14 @@ public class ArticleDetailResponse {
     private LocalDateTime expiresAt;
 
     @Builder
-    private ArticleDetailResponse(Long articleId, Long authorId, String imageUrl,
+    private ArticleDetailResponse(Long articleId, Long authorId, String authorUsername, String imageUrl,
                                   LocalDate mealDate, LocalTime mealTime, RestaurantInfo restaurant,
                                   int likeCount, int commentCount, boolean likedByMe,
                                   LocalDateTime createdAt, LocalDateTime expiresAt) {
 
         this.articleId = articleId;
         this.authorId = authorId;
+        this.authorUsername = authorUsername;
         this.imageUrl = imageUrl;
         this.mealDate = mealDate;
         this.mealTime = mealTime;
@@ -56,6 +58,7 @@ public class ArticleDetailResponse {
         return ArticleDetailResponse.builder()
                 .articleId(article.getId())
                 .authorId(article.getAuthor().getId())
+                .authorUsername(article.getAuthor().getUsername())
                 .imageUrl(article.getImageUrl())
                 .mealDate(article.getMealDate())
                 .mealTime(article.getMealTime())

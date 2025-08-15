@@ -14,16 +14,18 @@ public class CommentResponse {
 
     private Long commentId;
     private Long authorId;
+    private String authorUsername;
     private Long parentCommentId;
     private String content;
     private LocalDateTime createdAt;
 
     @Builder
-    CommentResponse(Long commentId, Long authorId, Long parentCommentId,
-                    String content, LocalDateTime createdAt) {
+    CommentResponse(Long commentId, Long authorId, String authorUsername,
+                    Long parentCommentId, String content, LocalDateTime createdAt) {
 
         this.commentId = commentId;
         this.authorId = authorId;
+        this.authorUsername = authorUsername;
         this.parentCommentId = parentCommentId;
         this.content = content;
         this.createdAt = createdAt;
@@ -33,6 +35,7 @@ public class CommentResponse {
         return CommentResponse.builder()
                 .commentId(comment.getId())
                 .authorId(comment.getAuthor().getId())
+                .authorUsername(comment.getAuthor().getUsername())
                 .parentCommentId(comment.getParentComment() != null ? comment.getParentComment().getId() : null)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
