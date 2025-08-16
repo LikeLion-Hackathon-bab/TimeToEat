@@ -6,6 +6,7 @@ import com.example.timetoeat.global.auth.model.Role;
 import com.example.timetoeat.global.auth.model.provider.Oauth2Provider;
 import com.example.timetoeat.global.auth.repository.MemberJpaRepository;
 import com.example.timetoeat.global.auth.repository.SocialAccountRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +37,7 @@ public class MemberService {
     }
 
     public MemberEntity getById(Long memberId) {
-        return memberJpaRepository.findById(memberId).orElse(null);
+        return memberJpaRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다. ID: " + memberId));
     }
 }

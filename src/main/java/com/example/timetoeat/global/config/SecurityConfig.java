@@ -4,13 +4,12 @@ import com.example.timetoeat.global.auth.filter.JwtExceptionFilter;
 import com.example.timetoeat.global.auth.filter.JwtVerificationFilter;
 import com.example.timetoeat.global.auth.handler.JwtAccessDeniedHandler;
 import com.example.timetoeat.global.auth.handler.LoginSuccessHandler;
+import com.example.timetoeat.global.auth.handler.OAuth2LoginFailureHandler;
 import com.example.timetoeat.global.auth.handler.Oauth2EntryPoint;
 import com.example.timetoeat.global.auth.service.CustomOauthUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
-import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -39,20 +38,12 @@ public class SecurityConfig {
     private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final JwtVerificationFilter jwtVerificationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
-    //private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+    private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public RoleHierarchy roleHierarchy() {
-        return RoleHierarchyImpl.withDefaultRolePrefix()
-                .role("MASTER").implies("ADMIN")
-                .role("ADMIN").implies("MEMBER")
-                .role("MEMBER").implies("GUEST")
-                .build();
     }
 
     @Bean
@@ -68,15 +59,12 @@ public class SecurityConfig {
 
         http
                 .oauth2Login(oauth2 -> oauth2
-/*                        .authorizationEndpoint(authorization -> authorization
-                                // 세션 대신 쿠키를 사용해서 요청 정보를 저장하도록 설정
-                                .authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
-                        )*/
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
                                         .userService(customOAuth2UserService)
                         )
                         .successHandler(oAuth2LoginSuccessHandler)
+                        .failureHandler(oAuth2LoginFailureHandler) // <-- 실패 핸들러 등록
                 );
 
         http
@@ -103,7 +91,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/login/**",
                                 "/oauth2/authorization/**",
-                                "/login/oauth2/code/**", // 콜백, 인증 시작 엔드포인트(permitAll)
+                                "/login/oauth2/code/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -120,8 +108,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-
-        configuration.setAllowedOriginPatterns(List.of("*")); // 모든 Origin 허용
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.addAllowedHeader("*");
         configuration.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
