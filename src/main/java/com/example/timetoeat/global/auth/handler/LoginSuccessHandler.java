@@ -32,7 +32,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         TokenDto tokenDto = jwtService.doTokenGenerationProcess(principal);
         log.info("tokenDto : accessToken={}, refreshToken={}", tokenDto.getAccessToken(), tokenDto.getRefreshToken());
 
-        CookieUtil.setRefreshCookie(response, tokenDto.getRefreshToken(), tokenDto.getRefreshTokenMaxAge());
+        CookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE_NAME, tokenDto.getRefreshToken(), tokenDto.getRefreshTokenMaxAge());
 
         response.setContentType("application/json;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
