@@ -37,6 +37,7 @@ out/
 .vscode/
 
 *.env
+.env.dev
 application-dev.yml
 docker-compose.yml
 default.local.conf
