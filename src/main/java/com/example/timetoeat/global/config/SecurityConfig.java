@@ -7,6 +7,7 @@ import com.example.timetoeat.global.auth.handler.LoginSuccessHandler;
 import com.example.timetoeat.global.auth.handler.OAuth2LoginFailureHandler;
 import com.example.timetoeat.global.auth.handler.Oauth2EntryPoint;
 import com.example.timetoeat.global.auth.service.CustomOauthUserService;
+import com.example.timetoeat.global.auth.util.CookieOAuth2AuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +17,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -40,6 +40,7 @@ public class SecurityConfig {
     private final JwtVerificationFilter jwtVerificationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository; // <-- 주입받도록 추가
 
 
     @Bean
@@ -61,9 +62,9 @@ public class SecurityConfig {
         http
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authorizationEndpointConfig ->
-                                authorizationEndpointConfig
-                                        .baseUri("/oauth2/authorization")
-                                        .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository())
+                                        authorizationEndpointConfig
+                                                .baseUri("/oauth2/authorization")
+                                                .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository)
                         )
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
