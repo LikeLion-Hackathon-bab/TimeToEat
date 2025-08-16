@@ -19,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 @Service
-public class CustomOauthUserService implements OAuth2UserService {
+public class CustomOauthUserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final MemberService memberService;
 
     @Override
