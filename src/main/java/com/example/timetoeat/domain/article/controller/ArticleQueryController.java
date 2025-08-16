@@ -35,7 +35,7 @@ public class ArticleQueryController {
     // 홈 피드 조회: 24시간 이내 + 최신순
     @GetMapping("/home")
     public Page<ArticleSummaryResponse> getHomeFeed(
-            @AuthenticationPrincipal(expression = "id") Long meId,
+            @AuthenticationPrincipal(expression = "memberId") Long meId,
             @ParameterObject @PageableDefault(size = 10) Pageable pageable
     ) {
         LocalDateTime now = LocalDateTime.now(clock);
@@ -45,7 +45,7 @@ public class ArticleQueryController {
     // 특정 사용자의 프로필(밥그릇): 전체 + 최신순
     @GetMapping("/by-author/{authorId}")
     public Page<ArticleSummaryResponse> getUserFeed(
-            @AuthenticationPrincipal(expression = "id") Long meId,
+            @AuthenticationPrincipal(expression = "memberId") Long meId,
             @PathVariable @Positive Long authorId,
             @ParameterObject @PageableDefault(size = 10) Pageable pageable
     ) {
@@ -56,7 +56,7 @@ public class ArticleQueryController {
     // 게시글 단건 조회
     @GetMapping("/{articleId}")
     public ArticleDetailResponse getDetail(
-            @AuthenticationPrincipal(expression = "id") Long meId,
+            @AuthenticationPrincipal(expression = "memberId") Long meId,
             @PathVariable @Positive Long articleId
     ) {
 

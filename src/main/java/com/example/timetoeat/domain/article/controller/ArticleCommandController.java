@@ -28,7 +28,7 @@ public class ArticleCommandController {
     @PostMapping
     public ResponseEntity<Void> createArticle(
             @Valid @RequestBody CreateArticleRequest createArticleRequest,
-            @AuthenticationPrincipal(expression = "id") Long meId,
+            @AuthenticationPrincipal(expression = "memberId") Long meId,
             UriComponentsBuilder uriComponentsBuilder) {
 
         Long id = articleCommandService.createArticle(createArticleRequest, meId);
@@ -41,7 +41,7 @@ public class ArticleCommandController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteArticle(
             @PathVariable @Positive Long articleId,
-            @AuthenticationPrincipal(expression = "id") Long meId
+            @AuthenticationPrincipal(expression = "memberId") Long meId
     ) {
 
         articleCommandService.deleteArticle(articleId, meId);
@@ -51,7 +51,7 @@ public class ArticleCommandController {
     @PostMapping("/{articleId}/like")
     public ArticleLikeToggleResponse toggleLike(
             @PathVariable @Positive Long articleId,
-            @AuthenticationPrincipal(expression = "id") Long meId
+            @AuthenticationPrincipal(expression = "memberId") Long meId
     ) {
 
         return articleCommandService.toggleLike(articleId, meId);
@@ -62,7 +62,7 @@ public class ArticleCommandController {
     public ResponseEntity<Long> addComment(
             @PathVariable @Positive Long articleId,
             @Valid @RequestBody CreateCommentRequest createCommentRequest,
-            @AuthenticationPrincipal(expression = "id") Long meId
+            @AuthenticationPrincipal(expression = "memberId") Long meId
     ) {
 
         Long id = articleCommandService.addComment(articleId, meId, createCommentRequest);
@@ -75,7 +75,7 @@ public class ArticleCommandController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(
             @PathVariable @Positive Long commentId,
-            @AuthenticationPrincipal(expression = "id") Long meId
+            @AuthenticationPrincipal(expression = "memberId") Long meId
     ) {
         articleCommandService.deleteComment(commentId, meId);
     }
