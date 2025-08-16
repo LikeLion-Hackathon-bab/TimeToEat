@@ -1,13 +1,11 @@
 # application.yml
 
-# application.yml
-
 server:
   port: 8080
-  forward-headers-strategy: native # 소셜 로그인 redirect_uri를 위해 유지
+  forward-headers-strategy: native
 
 springdoc:
-  server-url: https://babmuckdang.site # Swagger UI를 위해 추가
+  server-url: https://babmuckdang.site
 
 spring:
   config:
