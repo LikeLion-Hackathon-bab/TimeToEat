@@ -39,3 +39,4 @@ out/
 *.env
 application-dev.yml
 docker-compose.yml
+default.local.conf

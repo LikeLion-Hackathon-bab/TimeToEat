@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -59,12 +60,17 @@ public class SecurityConfig {
 
         http
                 .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authorizationEndpointConfig ->
+                                authorizationEndpointConfig
+                                        .baseUri("/oauth2/authorization")
+                                        .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository())
+                        )
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
                                         .userService(customOAuth2UserService)
                         )
                         .successHandler(oAuth2LoginSuccessHandler)
-                        .failureHandler(oAuth2LoginFailureHandler) // <-- 실패 핸들러 등록
+                        .failureHandler(oAuth2LoginFailureHandler)
                 );
 
         http
