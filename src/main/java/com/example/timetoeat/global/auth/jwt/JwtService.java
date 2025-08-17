@@ -1,10 +1,10 @@
 package com.example.timetoeat.global.auth.jwt;
 
 import com.example.timetoeat.global.auth.dto.TokenDto;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
-import com.example.timetoeat.global.auth.entity.RefreshToken;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.RefreshToken;
 import com.example.timetoeat.global.auth.model.CustomOauth2User;
-import com.example.timetoeat.global.auth.repository.RefreshTokenRepository;
+import com.example.timetoeat.domain.member.repository.RefreshTokenRepository;
 import com.example.timetoeat.global.auth.service.MemberService;
 import com.example.timetoeat.global.error.exception.CustomException;
 import com.example.timetoeat.global.error.GlobalErrorCode;

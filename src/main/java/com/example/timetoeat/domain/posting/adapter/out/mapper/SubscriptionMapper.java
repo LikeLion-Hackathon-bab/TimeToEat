@@ -5,7 +5,7 @@ import com.example.timetoeat.domain.posting.adapter.out.persistence.subscription
 import com.example.timetoeat.domain.posting.domain.model.subscription.Subscription;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

@@ -6,7 +6,7 @@ import com.example.timetoeat.domain.posting.domain.model.post.Post;
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
 import com.example.timetoeat.domain.posting.dto.response.PostRes;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

@@ -1,7 +1,6 @@
-package com.example.timetoeat.global.auth.entity;
+package com.example.timetoeat.domain.member.entity;
 
 import com.example.timetoeat.domain.posting.domain.vo.MemberId;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

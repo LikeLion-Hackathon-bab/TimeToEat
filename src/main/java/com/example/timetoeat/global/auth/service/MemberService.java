@@ -1,11 +1,11 @@
 package com.example.timetoeat.global.auth.service;
 
-import com.example.timetoeat.global.auth.entity.MemberEntity;
-import com.example.timetoeat.global.auth.entity.SocialAccount;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.SocialAccount;
 import com.example.timetoeat.global.auth.model.Role;
 import com.example.timetoeat.global.auth.model.provider.Oauth2Provider;
-import com.example.timetoeat.global.auth.repository.MemberJpaRepository;
-import com.example.timetoeat.global.auth.repository.SocialAccountRepository;
+import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
+import com.example.timetoeat.domain.member.repository.SocialAccountRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

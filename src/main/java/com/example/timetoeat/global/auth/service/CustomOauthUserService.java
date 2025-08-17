@@ -1,7 +1,7 @@
 package com.example.timetoeat.global.auth.service;
 
 import com.example.timetoeat.global.auth.dto.Oauth2UserInfo;
-import com.example.timetoeat.global.auth.entity.SocialAccount;
+import com.example.timetoeat.domain.member.entity.SocialAccount;
 import com.example.timetoeat.global.auth.model.CustomOauth2User;
 import com.example.timetoeat.global.auth.model.provider.Oauth2Provider;
 import lombok.RequiredArgsConstructor;
