@@ -1,4 +1,4 @@
-package com.example.timetoeat.global.auth.entity;
+package com.example.timetoeat.domain.member.entity;
 
 import com.example.timetoeat.global.auth.model.Role;
 import com.example.timetoeat.global.auth.model.provider.Oauth2Provider;

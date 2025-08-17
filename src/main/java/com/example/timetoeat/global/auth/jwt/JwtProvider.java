@@ -1,7 +1,7 @@
 package com.example.timetoeat.global.auth.jwt;
 
 import com.example.timetoeat.global.auth.dto.TokenDto;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.global.error.exception.CustomException;
 import com.example.timetoeat.global.error.GlobalErrorCode;
 import io.jsonwebtoken.*;

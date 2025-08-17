@@ -7,8 +7,8 @@ import com.example.timetoeat.domain.posting.application.port.out.participation.G
 import com.example.timetoeat.domain.posting.application.port.out.participation.SaveParticipationPort;
 import com.example.timetoeat.domain.posting.domain.model.participation.Participation;
 import com.example.timetoeat.domain.posting.domain.vo.PostId;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
-import com.example.timetoeat.global.auth.repository.MemberJpaRepository;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
+import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
