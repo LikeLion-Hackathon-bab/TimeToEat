@@ -1,7 +1,7 @@
 package com.example.timetoeat.domain.posting.adapter.out.persistence.participation;
 
 import com.example.timetoeat.domain.posting.adapter.out.persistence.post.PostEntity;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

@@ -1,6 +1,6 @@
-package com.example.timetoeat.global.auth.repository;
+package com.example.timetoeat.domain.member.repository;
 
-import com.example.timetoeat.global.auth.entity.RefreshToken;
+import com.example.timetoeat.domain.member.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

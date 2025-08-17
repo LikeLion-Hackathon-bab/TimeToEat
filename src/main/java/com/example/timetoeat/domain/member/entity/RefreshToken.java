@@ -1,4 +1,4 @@
-package com.example.timetoeat.global.auth.entity;
+package com.example.timetoeat.domain.member.entity;
 
 import com.example.timetoeat.global.util.BaseTimeEntity;
 import jakarta.persistence.*;
