@@ -6,6 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 public class Member {
+
     @Getter private final MemberId memberId;
 
 }
