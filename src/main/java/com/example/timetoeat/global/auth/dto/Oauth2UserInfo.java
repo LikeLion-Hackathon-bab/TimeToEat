@@ -1,6 +1,6 @@
 package com.example.timetoeat.global.auth.dto;
 
-import com.example.timetoeat.global.auth.entity.SocialAccount;
+import com.example.timetoeat.domain.member.entity.SocialAccount;
 import com.example.timetoeat.global.auth.model.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
