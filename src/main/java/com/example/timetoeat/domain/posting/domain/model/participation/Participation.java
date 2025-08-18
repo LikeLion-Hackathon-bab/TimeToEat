@@ -32,4 +32,6 @@ public class Participation {
     public boolean isFull(int targetCount) {
         return memberIds.size() >= targetCount;
     }
+
+
 }
