@@ -87,9 +87,9 @@ public class Post {
                 this.postId,
                 this.memberId,
                 this.targetCount,
-                Status.CLOSED, // 상태 변경
+                Status.CLOSED,
                 this.createdAt,
-                LocalDateTime.now(), // 만료 시간도 현재로 변경
+                LocalDateTime.now(),
                 this.meetingAt,
                 this.location,
                 this.message
@@ -104,9 +104,9 @@ public class Post {
                 this.postId,
                 this.memberId,
                 this.targetCount,
-                Status.CLOSED, // 만료 시에도 상태는 CLOSED로 변경
+                Status.CLOSED,
                 this.createdAt,
-                this.expiredAt, // expiredAt 시간은 그대로 유지
+                this.expiredAt,
                 this.meetingAt,
                 this.location,
                 this.message

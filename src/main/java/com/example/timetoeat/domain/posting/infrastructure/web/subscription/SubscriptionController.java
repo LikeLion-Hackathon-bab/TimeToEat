@@ -3,7 +3,6 @@ package com.example.timetoeat.domain.posting.infrastructure.web.subscription;
 import com.example.timetoeat.domain.posting.core.application.usecase.usecase.subscription.SubscriptionUseCase;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
-import com.example.timetoeat.global.auth.model.CustomOauth2User;
 import com.example.timetoeat.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,5 +34,4 @@ public class SubscriptionController {
 
         return ApiResponse.success("공고 구독 완료.");
     }
-
 }
