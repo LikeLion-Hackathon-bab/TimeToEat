@@ -1,7 +1,7 @@
 package com.example.timetoeat.domain.article.dto.request;
 
 import com.example.timetoeat.domain.article.entity.Article;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import jakarta.validation.Valid;

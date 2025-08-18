@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.article.entity;
 
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

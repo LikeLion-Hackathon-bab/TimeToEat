@@ -5,7 +5,7 @@ import com.example.timetoeat.domain.article.dto.request.CreateCommentRequest;
 import com.example.timetoeat.domain.article.dto.response.ArticleLikeToggleResponse;
 import com.example.timetoeat.domain.article.entity.*;
 import com.example.timetoeat.domain.article.repository.*;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

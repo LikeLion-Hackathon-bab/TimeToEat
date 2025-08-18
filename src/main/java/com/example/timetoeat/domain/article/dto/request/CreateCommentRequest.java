@@ -2,7 +2,7 @@ package com.example.timetoeat.domain.article.dto.request;
 
 import com.example.timetoeat.domain.article.entity.Article;
 import com.example.timetoeat.domain.article.entity.ArticleComment;
-import com.example.timetoeat.global.auth.entity.MemberEntity;
+import com.example.timetoeat.domain.member.entity.MemberEntity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
