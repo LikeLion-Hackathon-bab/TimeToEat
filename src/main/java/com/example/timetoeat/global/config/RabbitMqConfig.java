@@ -46,13 +46,11 @@ public class RabbitMqConfig {
 
     @Bean
     public Binding notificationBinding(Queue notificationQueue, TopicExchange exchange) {
-        // notification-queue는 "post.event.*" 패턴의 메시지만 받도록 설정
         return BindingBuilder.bind(notificationQueue).to(exchange).with(ROUTING_KEY);
     }
 
     @Bean
     public Binding matchingBinding(Queue matchingQueue, TopicExchange exchange) {
-        // matching-queue도 동일하게 "post.event.*" 패턴의 메시지만 받도록 설정
         return BindingBuilder.bind(matchingQueue).to(exchange).with(ROUTING_KEY);
     }
 
