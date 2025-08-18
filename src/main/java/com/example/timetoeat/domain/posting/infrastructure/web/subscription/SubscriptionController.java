@@ -24,18 +24,16 @@ public class SubscriptionController {
     @PostMapping
     @Operation(summary = "공지 구독 API")
     public ApiResponse<Object> subscribe(
-        @AuthenticationPrincipal CustomOauth2User customOauth2User,
+        @AuthenticationPrincipal(expression = "memberId") Long memberId,
         @PathVariable Long postId
     )
     {
-        if (customOauth2User == null) {
+        if (memberId == null) {
             throw new IllegalStateException("로그인이 필요한 서비스입니다.");
         }
-        MemberId memberId = new MemberId(customOauth2User.getMemberId());
-        subscriptionUseCase.subscribe(memberId, new PostId(postId));
+        subscriptionUseCase.subscribe(new MemberId(memberId), new PostId(postId));
 
         return ApiResponse.success("공고 구독 완료.");
     }
 
-    //공지 구독한 사람 조회하는 api 추가하기
 }

@@ -1,3 +1,4 @@
+<<<<<<<< HEAD:src/main/java/com/example/timetoeat/domain/posting/infrastructure/mapper/PostMapper.java
 package com.example.timetoeat.domain.posting.infrastructure.mapper;
 
 import com.example.timetoeat.domain.posting.core.application.gateway.data.PostData;
@@ -5,6 +6,15 @@ import com.example.timetoeat.domain.posting.infrastructure.persistence.post.Post
 import com.example.timetoeat.domain.posting.core.domain.model.post.Post;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
+========
+package com.example.timetoeat.domain.posting.api.mapper;
+
+import com.example.timetoeat.domain.posting.api.infra.post.PostEntity;
+import com.example.timetoeat.domain.posting.core.gateway.service.out.data.PostData;
+import com.example.timetoeat.domain.posting.domain.model.post.Post;
+import com.example.timetoeat.domain.posting.domain.vo.MemberId;
+import com.example.timetoeat.domain.posting.domain.vo.PostId;
+>>>>>>>> e45c9ea833a8d0c08bd90923d675e94d3e37d209:src/main/java/com/example/timetoeat/domain/posting/api/mapper/PostMapper.java
 import com.example.timetoeat.domain.posting.dto.response.PostRes;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import org.mapstruct.Mapper;

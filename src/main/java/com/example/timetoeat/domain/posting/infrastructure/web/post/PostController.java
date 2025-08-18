@@ -31,10 +31,10 @@ public class PostController {
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "공지 작성 API")
     public ApiResponse<Object> createPost(
-            @AuthenticationPrincipal CustomOauth2User customOauth2User,
+            @AuthenticationPrincipal(expression = "memberId") Long memberId,
             @RequestBody PostReq postReq
     ) {
-        if (customOauth2User == null) {
+        if (memberId == null) {
             throw new IllegalStateException("로그인이 필요한 서비스입니다.");
         }
 
@@ -46,7 +46,7 @@ public class PostController {
         );
         command.validateSelf();
 
-        postUseCase.create(new MemberId(customOauth2User.getMemberId()), command);
+        postUseCase.create(new MemberId(memberId), command);
 
         return ApiResponse.success("공고가 성공적으로 등록되었습니다.");
     }
@@ -54,13 +54,13 @@ public class PostController {
     @PostMapping("/{postId}/close")
     @Operation(summary = "공지 마감 API")
     public ApiResponse<Object> closePost(
-            @AuthenticationPrincipal CustomOauth2User customOauth2User,
+            @AuthenticationPrincipal(expression = "memberId") Long memberId,
             @PathVariable Long postId
     ) {
-        if (customOauth2User == null) {
+        if (memberId == null) {
             throw new IllegalStateException("로그인이 필요한 서비스입니다.");
         }
-        postUseCase.close(new MemberId(customOauth2User.getMemberId()), new PostId(postId));
+        postUseCase.close(new MemberId(memberId), new PostId(postId));
 
         return ApiResponse.success("공고가 성공적으로 마감되었습니다.");
     }

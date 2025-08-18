@@ -3,7 +3,6 @@ package com.example.timetoeat.domain.posting.infrastructure.web.participation;
 import com.example.timetoeat.domain.posting.core.application.usecase.usecase.participation.ParticipationUseCase;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
-import com.example.timetoeat.global.auth.model.CustomOauth2User;
 import com.example.timetoeat.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,14 +23,14 @@ public class ParticipationController {
     @PostMapping("/{postId}")
     @Operation(summary = "공지 참여 API")
     public ApiResponse<Object> participate(
-            @AuthenticationPrincipal CustomOauth2User customOauth2User,
+            @AuthenticationPrincipal(expression = "memberId") Long memberId,
             @PathVariable Long postId
     )
     {
-        if (customOauth2User == null || postId == null) {
+        if (memberId == null || postId == null) {
             throw new IllegalStateException("공지 참여 입력값이 유효하지 않습니다");
         }
-        participationUseCase.apply(new MemberId(customOauth2User.getMemberId()), new PostId(postId));
+        participationUseCase.apply(new MemberId(memberId), new PostId(postId));
         return ApiResponse.success("참가 신청이 완료되었습니다.");
     }
 }
