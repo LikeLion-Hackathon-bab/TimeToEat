@@ -27,18 +27,33 @@ public class RabbitMqConfig {
     private String password;
 
     public static final String EXCHANGE_NAME = "post-event-exchange";
-    public static final String QUEUE_NAME = "notification-queue";
+    private static final String NOTIFICATION_QUEUE_NAME = "notification-queue";
+    private static final String MATCHING_QUEUE_NAME = "matching-queue";
     public static final String ROUTING_KEY = "post.event.#";
 
     @Bean
     public TopicExchange exchange() { return new TopicExchange(EXCHANGE_NAME); }
 
     @Bean
-    public Queue queue() { return new Queue(QUEUE_NAME); }
+    public Queue notificationQueue() {
+        return new Queue(NOTIFICATION_QUEUE_NAME);
+    }
 
     @Bean
-    public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(ROUTING_KEY);
+    public Queue matchingQueue() {
+        return new Queue(MATCHING_QUEUE_NAME);
+    }
+
+    @Bean
+    public Binding notificationBinding(Queue notificationQueue, TopicExchange exchange) {
+        // notification-queue는 "post.event.*" 패턴의 메시지만 받도록 설정
+        return BindingBuilder.bind(notificationQueue).to(exchange).with(ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding matchingBinding(Queue matchingQueue, TopicExchange exchange) {
+        // matching-queue도 동일하게 "post.event.*" 패턴의 메시지만 받도록 설정
+        return BindingBuilder.bind(matchingQueue).to(exchange).with(ROUTING_KEY);
     }
 
     @Bean
