@@ -36,8 +36,20 @@ out/
 ### VS Code ###
 .vscode/
 
+### Env & Local Config ###
+.env
+.env.*
+**/.env
+**/.env.*
 *.env
 .env.dev
-application-dev.yml
-docker-compose.yml
+.env.prod
 default.local.conf
+
+src/main/resources/application-local.yml
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
+application-dev.yml
+
+### Docker ###
+docker-compose.yml

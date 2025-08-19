@@ -5,6 +5,7 @@ import com.example.timetoeat.global.error.GlobalErrorCode;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
@@ -81,5 +82,13 @@ public class CustomExceptionHandler {
         return ResponseEntity
                 .status(GlobalErrorCode.BAD_REQUEST.getHttpStatus())
                 .body(ApiResponse.fail(GlobalErrorCode.BAD_REQUEST, message));
+    }
+
+    @ExceptionHandler(SpelEvaluationException.class)
+    public ResponseEntity<ApiResponse> handleSpel(SpelEvaluationException ex) {
+        log.warn("Invalid principal (SpEL): {}", ex.getMessage());
+        return ResponseEntity
+                .status(GlobalErrorCode.UNAUTHORIZED.getHttpStatus())
+                .body(ApiResponse.fail(GlobalErrorCode.UNAUTHORIZED, "잘못된 사용자 정보입니다."));
     }
 }

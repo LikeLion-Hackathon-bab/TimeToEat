@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.post;
 
-import com.example.timetoeat.domain.posting.core.application.gateway.post.lock.PostLock;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.lock.PostLock;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
