@@ -1,8 +1,8 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.subscription;
 
-import com.example.timetoeat.domain.posting.core.application.gateway.subscription.GetSubscriptionPort;
-import com.example.timetoeat.domain.posting.core.application.gateway.subscription.SubscriptionPort;
-import com.example.timetoeat.domain.posting.infrastructure.mapper.SubscriptionMapper;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.subscription.GetSubscriptionPort;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.subscription.SubscriptionPort;
+import com.example.timetoeat.domain.posting.infrastructure.persistence.mapper.SubscriptionMapper;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.post.PostEntity;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.post.PostJpaRepository;
 import com.example.timetoeat.domain.posting.core.domain.model.subscription.Subscription;

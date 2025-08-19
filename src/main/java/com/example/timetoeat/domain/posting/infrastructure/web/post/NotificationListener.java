@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.infrastructure.web.post;
 
-import com.example.timetoeat.domain.posting.core.application.service.postEvent.PostEventDispatcher;
+import com.example.timetoeat.domain.posting.core.application.postEvent.PostEventDispatcher;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
