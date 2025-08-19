@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.infrastructure.web.participation;
 
-import com.example.timetoeat.domain.posting.core.application.usecase.usecase.participation.ParticipationUseCase;
+import com.example.timetoeat.domain.posting.core.application.port.in.usecase.usecase.participation.ParticipationUseCase;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
 import com.example.timetoeat.global.common.ApiResponse;

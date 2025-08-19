@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.infrastructure.web.post;
 
-import com.example.timetoeat.domain.posting.core.application.service.post.MatchingEventHandler;
+import com.example.timetoeat.domain.posting.core.application.post.MatchingEventHandler;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
