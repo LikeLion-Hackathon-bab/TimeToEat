@@ -1,9 +1,9 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.post;
 
-import com.example.timetoeat.domain.posting.core.application.gateway.data.PostData;
-import com.example.timetoeat.domain.posting.core.application.gateway.post.GetPostQuery;
-import com.example.timetoeat.domain.posting.core.application.gateway.post.SavePostPort;
-import com.example.timetoeat.domain.posting.infrastructure.mapper.PostMapper;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.data.PostData;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.GetPostQuery;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.SavePostPort;
+import com.example.timetoeat.domain.posting.infrastructure.persistence.mapper.PostMapper;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.participation.ParticipationEntity;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.participation.ParticipationJpaRepository;
 import com.example.timetoeat.domain.posting.core.domain.model.post.Post;

@@ -7,16 +7,19 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create # 운영 환경에서는 반드시 validate
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
 
   data:
     redis:
-      host: redis # Docker Compose 서비스 이름
-      port: 6379
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
 
   rabbitmq:
-    host: rabbitmq
-    port: 5672
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_DEFAULT_USER}
     password: ${RABBITMQ_DEFAULT_PASS}
 
@@ -30,11 +33,12 @@ spring:
             redirect-uri: ${CLIENT_REDIRECT_PATH}
             client-authentication-method: client_secret_post
             authorization-grant-type: authorization_code
-            scope:
-              - profile_nickname
-              - account_email
-              - profile_image
+            scope: [profile_nickname, account_email, profile_image]
             provider: kakao
+
+app:
+  rabbitmq:
+    enabled: true
 
 logging:
   level:

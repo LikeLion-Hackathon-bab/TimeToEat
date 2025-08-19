@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.postEvent;
 
-import com.example.timetoeat.domain.posting.core.application.gateway.postEvent.PostEventPort;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.postEvent.PostEventPort;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

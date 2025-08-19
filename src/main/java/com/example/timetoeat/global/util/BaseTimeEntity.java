@@ -16,14 +16,13 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @MappedSuperclass
 @Getter
-@Setter
 @JsonInclude(JsonInclude.Include.NON_NULL) //필드 기본 출력시 null이면 결과에서 제외하도록 설정
 public abstract class BaseTimeEntity implements Serializable {
     @CreatedDate
-    @Column(updatable = false, columnDefinition = "datetime default CURRENT_TIMESTAMP NOT NULL COMMENT '생성일자'")
+    @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(columnDefinition = "datetime default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL COMMENT '수정일자'")
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 }

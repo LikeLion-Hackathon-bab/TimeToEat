@@ -1,5 +1,3 @@
-# application.yml
-
 server:
   port: 8080
 
@@ -30,6 +28,10 @@ spring:
             user-name-attribute: id
 
 jwt:
-  access-token-expiration: 3600000  # 1시간
-  refresh-token-expiration: 604800000 # 7일
+  access-token-expiration: 3600000
+  refresh-token-expiration: 604800000
   secret: ${JWT_SECRET}
+
+logging:
+  level:
+    org.hibernate.SQL: debug

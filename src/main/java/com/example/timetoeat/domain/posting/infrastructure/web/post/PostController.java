@@ -1,12 +1,12 @@
 package com.example.timetoeat.domain.posting.infrastructure.web.post;
 
-import com.example.timetoeat.domain.posting.core.application.usecase.command.CreatePostCommand;
-import com.example.timetoeat.domain.posting.core.application.usecase.usecase.post.GetPostUseCase;
-import com.example.timetoeat.domain.posting.core.application.usecase.usecase.post.PostUseCase;
+import com.example.timetoeat.domain.posting.core.application.port.in.usecase.command.CreatePostCommand;
+import com.example.timetoeat.domain.posting.core.application.port.in.usecase.usecase.post.GetPostUseCase;
+import com.example.timetoeat.domain.posting.core.application.port.in.usecase.usecase.post.PostUseCase;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
-import com.example.timetoeat.domain.posting.dto.request.PostReq;
-import com.example.timetoeat.domain.posting.dto.response.PostRes;
+import com.example.timetoeat.domain.posting.core.domain.dto.request.PostReq;
+import com.example.timetoeat.domain.posting.core.domain.dto.response.PostRes;
 import com.example.timetoeat.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
