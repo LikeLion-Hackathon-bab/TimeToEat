@@ -1,3 +1,4 @@
+/*
 package com.example.timetoeat.domain.article.service;
 
 import com.example.timetoeat.domain.article.dto.request.CreateArticleRequest;
@@ -6,17 +7,22 @@ import com.example.timetoeat.domain.article.dto.response.ArticleLikeToggleRespon
 import com.example.timetoeat.domain.article.entity.*;
 import com.example.timetoeat.domain.article.repository.*;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
+import com.example.timetoeat.infra.ai.AiGateway;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 
 @Service
@@ -28,13 +34,17 @@ public class ArticleCommandService {
     private final ArticleLikeRepository likeRepository;
     private final ArticleCommentRepository commentRepository;
     private final ArticleTagRepository tagRepository;
-    private final EntityManager em;
+    private final EntityManager entityManager;
+    private final AiGateway aiGateway;
+
+    @Value("${app.ai.callback-base}")
+    private String callbackBase;
 
     private final Clock clock;
 
     // 게시글 작성
     public Long createArticle(CreateArticleRequest req, Long authorId) {
-        MemberEntity authorRef = em.getReference(MemberEntity.class, authorId);
+        MemberEntity authorRef = entityManager.getReference(MemberEntity.class, authorId);
 
         LocalDateTime nowKst = LocalDateTime.now(clock);
         var resolvedDate = req.isCamera() ? nowKst.toLocalDate() : req.getMealDate();
@@ -47,10 +57,25 @@ public class ArticleCommandService {
         var ids = new HashSet<>(req.getTaggedMemberIds());
         ids.remove(authorId);
         for (Long taggedId : ids) {
-            MemberEntity taggedRef = em.getReference(MemberEntity.class, taggedId);
+            MemberEntity taggedRef = entityManager.getReference(MemberEntity.class, taggedId);
             tagRepository.save(ArticleTag.of(taggedRef, article));
         }
-        return article.getId();
+
+        Long id = article.getId();
+
+        OffsetDateTime mealAtKst = LocalDateTime.of(resolvedDate, resolvedTime)
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .toOffsetDateTime();
+
+        String callbackUrl = UriComponentsBuilder
+                .fromHttpUrl(callbackBase)
+                .path("/api/v1/articles/{id}/ai/inference")
+                .buildAndExpand(id)
+                .toUriString();
+
+        aiGateway.requestInference(id, authorId, article.getImageUrl(), mealAtKst, callbackUrl);
+
+        return id;
     }
 
     // 게시글 삭제 (작성자만)
@@ -78,7 +103,7 @@ public class ArticleCommandService {
             return ArticleLikeToggleResponse.of(false, article.getLikeCount());
         } else {
             try {
-                MemberEntity memberRef = em.getReference(MemberEntity.class, memberId);
+                MemberEntity memberRef = entityManager.getReference(MemberEntity.class, memberId);
                 likeRepository.save(ArticleLike.builder()
                         .member(memberRef)
                         .article(article)
@@ -86,7 +111,7 @@ public class ArticleCommandService {
                 article.increaseLike();
                 return ArticleLikeToggleResponse.of(true, article.getLikeCount());
             } catch (DataIntegrityViolationException dup) {
-                em.refresh(article);
+                entityManager.refresh(article);
                 return ArticleLikeToggleResponse.of(true, article.getLikeCount());
             }
         }
@@ -96,7 +121,7 @@ public class ArticleCommandService {
     public Long addComment(Long articleId, Long memberId, CreateCommentRequest req) {
         Article article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new EntityNotFoundException("ARTICLE_NOT_FOUND"));
-        MemberEntity authorRef = em.getReference(MemberEntity.class, memberId);
+        MemberEntity authorRef = entityManager.getReference(MemberEntity.class, memberId);
 
         ArticleComment parent = null;
         if (req.getParentCommentId() != null) {
@@ -133,3 +158,4 @@ public class ArticleCommandService {
         comment.getArticle().decreaseCommentBy(delta);
     }
 }
+*/

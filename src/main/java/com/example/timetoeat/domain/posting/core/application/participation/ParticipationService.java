@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.core.application.participation;
 
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.lock.PostLock;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.PostLock;
 import com.example.timetoeat.domain.posting.core.application.port.in.usecase.usecase.participation.ParticipationUseCase;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;

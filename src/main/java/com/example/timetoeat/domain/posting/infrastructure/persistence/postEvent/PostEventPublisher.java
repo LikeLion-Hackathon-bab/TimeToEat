@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.postEvent;
 
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.postEvent.PostEventPort;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.postEvent.PublishPostEvent;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -10,7 +10,7 @@ import static com.example.timetoeat.global.config.RabbitMqConfig.EXCHANGE_NAME;
 
 @Component
 @RequiredArgsConstructor
-public class PostEventAdapter implements PostEventPort {
+public class PostEventPublisher implements PublishPostEvent {
 
     private final RabbitTemplate rabbitTemplate;
 

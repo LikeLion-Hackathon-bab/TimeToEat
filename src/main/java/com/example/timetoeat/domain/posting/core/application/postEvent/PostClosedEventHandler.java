@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.core.application.postEvent;
 
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.subscription.GetSubscriptionPort;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.subscription.LoadSubscription;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEvent;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEventType;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostClosedEventHandler implements PostEventHandler {
 
-    private final GetSubscriptionPort getSubscriptionPort;
+    private final LoadSubscription loadSubscription;
 
     @Override
     public boolean supports(PostEventType eventType) {
@@ -24,6 +24,6 @@ public class PostClosedEventHandler implements PostEventHandler {
     @Override
     public void handle(PostEvent event) {
         PostId postId = event.postId();
-        List<MemberId> memberId = getSubscriptionPort.findMembersByPostId(postId);
+        List<MemberId> memberId = loadSubscription.findMembersByPostId(postId);
     }
 }

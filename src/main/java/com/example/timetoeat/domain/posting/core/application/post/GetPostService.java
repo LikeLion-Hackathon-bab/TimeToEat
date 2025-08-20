@@ -2,7 +2,7 @@ package com.example.timetoeat.domain.posting.core.application.post;
 
 import com.example.timetoeat.domain.posting.core.application.port.in.usecase.usecase.post.GetPostUseCase;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.mapper.PostMapper;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.GetPostQuery;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.LoadPost;
 import com.example.timetoeat.domain.posting.core.application.port.out.gateway.data.PostData;
 import com.example.timetoeat.domain.posting.core.domain.dto.response.PostRes;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +16,12 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class GetPostService implements GetPostUseCase {
 
-    private final GetPostQuery getPostQuery;
+    private final LoadPost loadPost;
     private final PostMapper postMapper;
 
     @Override
     public List<PostRes> getPosts() {
-        List<PostData> postDataList = getPostQuery.findAllPosts();
+        List<PostData> postDataList = loadPost.findAllPosts();
         return postDataList.stream()
                 .map(postData -> new PostRes(
                         postData.getAuthorName(),

@@ -10,7 +10,11 @@ public record PostReq(
         @Schema(description = "인원 수")
         int targetCount,
         @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm", timezone = "Asia/Seoul")
-        @Schema(description = "시간", example = "2025-08-08T22:30")
+        @Schema(
+                description = "시간",
+                example = "2025-08-20T15:30",
+                pattern = "yyyy-MM-dd'T'HH:mm"
+        )
         LocalDateTime meetingAt,
         @Schema(description = "만날 장소")
         String location,

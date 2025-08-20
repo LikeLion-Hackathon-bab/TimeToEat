@@ -1,11 +1,11 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.post;
 
 import com.example.timetoeat.domain.posting.core.application.port.out.gateway.data.PostData;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.GetPostQuery;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.SavePostPort;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.LoadPost;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.SavePost;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.mapper.PostMapper;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.participation.ParticipationEntity;
-import com.example.timetoeat.domain.posting.infrastructure.persistence.participation.ParticipationJpaRepository;
+import com.example.timetoeat.domain.posting.infrastructure.persistence.participation.ParticipationRepository;
 import com.example.timetoeat.domain.posting.core.domain.model.post.Post;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
 import com.example.timetoeat.global.error.GlobalErrorCode;
@@ -19,28 +19,28 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class PostPersistenceAdapter implements GetPostQuery, SavePostPort {
+public class PostAdapter implements LoadPost, SavePost {
 
-    private final PostJpaRepository postJpaRepository;
-    private final ParticipationJpaRepository participationJpaRepository;
+    private final PostRepository postRepository;
+    private final ParticipationRepository participationRepository;
     private final PostMapper postMapper;
 
     @Override
     public Post findById(PostId postId) {
-        PostEntity postEntity = postJpaRepository.findById(postId.getId())
+        PostEntity postEntity = postRepository.findById(postId.getId())
                 .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND, "공고를 찾을 수 없습니다"));
         return postMapper.toDomain(postEntity);
     }
 
     @Override
     public List<PostData> findAllPosts() {
-        List<PostEntity> postEntities = postJpaRepository.findAllWithMember();
+        List<PostEntity> postEntities = postRepository.findAllWithMember();
 
         List<Long> postIds = postEntities.stream()
                 .map(postEntity -> postEntity.getId())
                 .collect(Collectors.toList());
 
-        List<ParticipationEntity> participations = participationJpaRepository.findMembersByPost(postIds);
+        List<ParticipationEntity> participations = participationRepository.findMembersByPost(postIds);
 
         Map<Long, List<String>> participantsMap = participations.stream()
                 .collect(Collectors.groupingBy(
@@ -48,7 +48,6 @@ public class PostPersistenceAdapter implements GetPostQuery, SavePostPort {
                         Collectors.mapping(p -> p.getMember().getUsername(), Collectors.toList())
                 ));
 
-        // 조회된 Post 목록을 순회하며 최종 데이터 구조로 조립
         return postEntities.stream()
                 .map(postEntity -> new PostData(
                         postEntity.getMember().getUsername(),
@@ -65,10 +64,10 @@ public class PostPersistenceAdapter implements GetPostQuery, SavePostPort {
     public Post save(Post post) {
         if (post.getPostId() == null) {
             PostEntity postEntity = postMapper.toPostEntity(post);
-            PostEntity savedPostEntity = postJpaRepository.save(postEntity);
+            PostEntity savedPostEntity = postRepository.save(postEntity);
             return postMapper.toDomain(savedPostEntity);
         } else {
-            PostEntity postEntity = postJpaRepository.findById(post.getPostId().getId())
+            PostEntity postEntity = postRepository.findById(post.getPostId().getId())
                     .orElseThrow(() -> new IllegalStateException("수정할 공고를 찾을 수 없습니다."));
             postMapper.updateEntityFromDomain(post, postEntity);
             return postMapper.toDomain(postEntity);

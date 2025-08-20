@@ -1,10 +1,10 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.participation;
 
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.GetParticipationQuery;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.SaveParticipationPort;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.LoadParticipation;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.SaveParticipation;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.mapper.ParticipationMapper;
 import com.example.timetoeat.domain.posting.infrastructure.persistence.post.PostEntity;
-import com.example.timetoeat.domain.posting.infrastructure.persistence.post.PostJpaRepository;
+import com.example.timetoeat.domain.posting.infrastructure.persistence.post.PostRepository;
 import com.example.timetoeat.domain.posting.core.domain.model.participation.Participation;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class ParticipationPersistenceAdapter implements GetParticipationQuery, SaveParticipationPort {
+public class ParticipationAdapter implements LoadParticipation, SaveParticipation {
 
-    private final ParticipationJpaRepository participationRepository;
+    private final ParticipationRepository participationRepository;
     private final ParticipationMapper participationMapper;
-    private final PostJpaRepository postRepository;
+    private final PostRepository postRepository;
     private final MemberJpaRepository memberRepository;
 
     @Override

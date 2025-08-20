@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.posting.infrastructure.persistence.post;
 
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.lock.PostLock;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.PostLock;
 import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
-public class PortLockAdapter implements PostLock {
+public class PostLockManager implements PostLock {
 
     private final RedissonClient redissonClient;
     private final ThreadLocal<RLock> lockHolder = new ThreadLocal<>();
