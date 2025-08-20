@@ -31,10 +31,16 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_ID }}" --password-stdin
 
-      - name: Build and push Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_ID }}/timetoeat-server:latest .
-          docker push ${{ secrets.DOCKERHUB_ID }}/timetoeat-server:latest
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image for ARM64
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_ID }}/timetoeat-server:latest
+          platforms: linux/arm64
 
       - name: Copy configuration files to EC2
         uses: appleboy/scp-action@v1.0.0
@@ -56,9 +62,6 @@ jobs:
             cd /home/ubuntu/TimeToEat
             
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_ID }}" --password-stdin
-            
             sudo docker compose -f docker-compose.prod.yml pull application
-            
             sudo docker compose -f docker-compose.prod.yml up -d
-            
             sudo docker image prune -f
