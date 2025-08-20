@@ -62,6 +62,6 @@ jobs:
             cd /home/ubuntu/TimeToEat
             
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_ID }}" --password-stdin
-            sudo docker compose -f docker-compose.prod.yml pull application
+            sudo docker compose -f docker-compose.prod.yml pull --platform linux/arm64 application
             sudo docker compose -f docker-compose.prod.yml up -d
             sudo docker image prune -f
