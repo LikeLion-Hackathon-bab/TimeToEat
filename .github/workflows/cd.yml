@@ -59,6 +59,6 @@ jobs:
             
             sudo docker compose -f docker-compose.prod.yml pull application
             
-            sudo docker compose -f docker-compose.prod.yml up -d --force-recreate --remove-orphans
+            sudo docker compose -f docker-compose.prod.yml up -d
             
             sudo docker image prune -f
