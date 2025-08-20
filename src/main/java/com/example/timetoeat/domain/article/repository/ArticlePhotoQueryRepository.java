@@ -7,8 +7,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface ArticlePhotoQueryRepository extends JpaRepository<Article, Long> {
 
@@ -34,4 +34,24 @@ public interface ArticlePhotoQueryRepository extends JpaRepository<Article, Long
                order by a.createdAt desc, a.id desc
             """)
     Page<ArticlePhotoProjection> findTaggedPhotos(Long memberId, LocalDateTime since, Pageable pageable);
+
+    @Query(nativeQuery = true, value = """
+        SELECT articleId, imageUrl, createdAt, mealDate, mealTime FROM (
+            SELECT a.id AS articleId, a.image_url AS imageUrl, a.created_at AS createdAt,
+                   a.meal_date AS mealDate, a.meal_time AS mealTime
+            FROM article a
+            WHERE a.member_id = :memberId
+              AND a.created_at >= :since
+            UNION
+            SELECT a.id AS articleId, a.image_url AS imageUrl, a.created_at AS createdAt,
+                   a.meal_date AS mealDate, a.meal_time AS mealTime
+            FROM article_tag t
+            JOIN article a ON t.article_id = a.id
+            WHERE t.tagged_member_id = :memberId
+              AND a.created_at >= :since
+        ) AS combined_articles
+        ORDER BY createdAt DESC, articleId DESC
+    """)
+    List<ArticlePhotoProjection> findAllUserPhotosSince(Long memberId, LocalDateTime since);
+
 }

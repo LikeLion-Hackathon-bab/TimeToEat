@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface ParticipationJpaRepository extends JpaRepository<ParticipationEntity, Long> {
+public interface ParticipationRepository extends JpaRepository<ParticipationEntity, Long> {
     List<ParticipationEntity> findAllByPostId(Long postId);
 
     void deleteAllByPostId(Long id);
@@ -13,3 +13,5 @@ public interface ParticipationJpaRepository extends JpaRepository<ParticipationE
     @Query("SELECT P FROM ParticipationEntity P JOIN FETCH P.member WHERE P.post.id IN :postIds")
     List<ParticipationEntity> findMembersByPost(List<Long> postIds);
 }
+
+

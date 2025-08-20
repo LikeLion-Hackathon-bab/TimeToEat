@@ -1,3 +1,4 @@
+/*
 package com.example.timetoeat.domain.article.service;
 
 import com.example.timetoeat.domain.article.dto.request.CreateArticleRequest;
@@ -157,3 +158,4 @@ public class ArticleCommandService {
         comment.getArticle().decreaseCommentBy(delta);
     }
 }
+*/

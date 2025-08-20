@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface SubscriptionJpaRepository extends JpaRepository<SubscriptionEntity, Long> {
+public interface SubscriptionRepository extends JpaRepository<SubscriptionEntity, Long> {
 
     @Query("SELECT COUNT(S) > 0 FROM SubscriptionEntity S WHERE S.member.id = :memberId AND S.post.id = :postId")
     boolean checkSubscriptionExist(@Param("memberId") Long memberId, @Param("postId") Long postId);

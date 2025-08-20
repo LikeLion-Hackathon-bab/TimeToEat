@@ -1,10 +1,10 @@
 package com.example.timetoeat.domain.posting.core.application.participation;
 
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.GetParticipationQuery;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.SaveParticipationPort;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.GetPostQuery;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.SavePostPort;
-import com.example.timetoeat.domain.posting.core.application.port.out.gateway.postEvent.PostEventPort;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.LoadParticipation;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation.SaveParticipation;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.LoadPost;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.post.SavePost;
+import com.example.timetoeat.domain.posting.core.application.port.out.gateway.postEvent.PublishPostEvent;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEvent;
 import com.example.timetoeat.domain.posting.core.domain.model.postEvent.PostEventType;
 import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
@@ -19,19 +19,19 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ParticipationTransactionManager {
 
-    private final GetPostQuery getPostQuery;
-    private final GetParticipationQuery getParticipationQuery;
-    private final SaveParticipationPort saveParticipationPort;
-    private final SavePostPort savePostPort;
-    private final PostEventPort postEventPort;
+    private final LoadPost loadPost;
+    private final LoadParticipation loadParticipation;
+    private final SaveParticipation saveParticipation;
+    private final SavePost savePost;
+    private final PublishPostEvent publishPostEvent;
 
     @Transactional
     public void apply(MemberId memberId, PostId postId) {
 
-        Post post = getPostQuery.findById(postId);
+        Post post = loadPost.findById(postId);
         // 공지가 무조건 있어야 되니까 예외 처리 jpa 단에서 해주기
 
-        Participation participation = getParticipationQuery.getParticipationByPostId(post.getPostId());
+        Participation participation = loadParticipation.getParticipationByPostId(post.getPostId());
 
 
         if (!post.canApply(participation)) {
@@ -42,13 +42,13 @@ public class ParticipationTransactionManager {
         }
 
         Participation newParticipation = participation.add(memberId);
-        saveParticipationPort.save(newParticipation);
+        saveParticipation.save(newParticipation);
 
         if (newParticipation.isFull(post.getTargetCount())) {
             Post closedPost = post.close();
-            Post savedPost = savePostPort.save(closedPost);
+            Post savedPost = savePost.save(closedPost);
             PostEvent postEvent = PostEvent.create(savedPost, PostEventType.POST_FILLED);
-            postEventPort.publish(postEvent);
+            publishPostEvent.publish(postEvent);
         }
     }
 }

@@ -1,3 +1,4 @@
+/*
 package com.example.timetoeat.infra.ai;
 
 import lombok.RequiredArgsConstructor;
@@ -46,3 +47,4 @@ public class HttpAiGateway implements AiGateway {
     }
 }
 
+*/

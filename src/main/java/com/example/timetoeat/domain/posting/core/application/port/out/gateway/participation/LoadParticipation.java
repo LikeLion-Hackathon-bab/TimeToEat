@@ -1,7 +1,8 @@
 package com.example.timetoeat.domain.posting.core.application.port.out.gateway.participation;
 
 import com.example.timetoeat.domain.posting.core.domain.model.participation.Participation;
+import com.example.timetoeat.domain.posting.core.domain.vo.post.PostId;
 
-public interface SaveParticipationPort {
-    void save(Participation participation);
+public interface LoadParticipation {
+    Participation getParticipationByPostId(PostId postId);
 }

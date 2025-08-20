@@ -2,6 +2,6 @@ package com.example.timetoeat.domain.posting.core.application.port.out.gateway.p
 
 import com.example.timetoeat.domain.posting.core.domain.model.post.Post;
 
-public interface SavePostPort {
+public interface SavePost {
     Post save(Post post);
 }
