@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: framework
 
 spring:
   config:
@@ -37,6 +38,7 @@ jwt:
 logging:
   level:
     org.hibernate.SQL: debug
+
 
 management:
   metrics:
