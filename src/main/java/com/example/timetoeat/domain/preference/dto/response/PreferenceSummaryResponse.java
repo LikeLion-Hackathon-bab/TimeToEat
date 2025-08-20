@@ -16,10 +16,16 @@ public class PreferenceSummaryResponse {
     private List<Item> allergies;
 
     @Getter
-    @Builder
+    @NoArgsConstructor(access = AccessLevel.PROTECTED)
     public static class Item {
         private String code;
         private String label;
+
+        @Builder
+        private Item(String code, String label) {
+            this.code = code;
+            this.label = label;
+        }
     }
 
     public static PreferenceSummaryResponse of(List<Item> likes, List<Item> dislikes, List<Item> allergies) {
