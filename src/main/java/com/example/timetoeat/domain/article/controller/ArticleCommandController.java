@@ -1,4 +1,3 @@
-/*
 package com.example.timetoeat.domain.article.controller;
 
 import com.example.timetoeat.domain.article.dto.request.CreateArticleRequest;
@@ -81,4 +80,3 @@ public class ArticleCommandController {
         articleCommandService.deleteComment(commentId, meId);
     }
 }
-*/

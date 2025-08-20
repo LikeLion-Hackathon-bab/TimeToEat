@@ -5,8 +5,6 @@ services:
     container_name: timetoeat-application
     env_file:
       - .env
-    environment:
-      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
     depends_on:
       mysql:
         condition: service_healthy
