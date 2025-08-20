@@ -35,3 +35,8 @@ jwt:
 logging:
   level:
     org.hibernate.SQL: debug
+
+management:
+  metrics:
+    enable:
+      process.cpu: false
