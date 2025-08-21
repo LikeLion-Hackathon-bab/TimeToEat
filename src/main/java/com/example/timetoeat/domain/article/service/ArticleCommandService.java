@@ -6,24 +6,29 @@ import com.example.timetoeat.domain.article.dto.response.ArticleLikeToggleRespon
 import com.example.timetoeat.domain.article.entity.*;
 import com.example.timetoeat.domain.article.repository.*;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
-import com.example.timetoeat.infra.ai.AiGateway;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.OffsetDateTime;
 import java.util.HashSet;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -34,9 +39,7 @@ public class ArticleCommandService {
     private final ArticleCommentRepository commentRepository;
     private final ArticleTagRepository tagRepository;
     private final EntityManager entityManager;
-
-    @Value("${app.ai.callback-base}")
-    private String callbackBase;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private final Clock clock;
 
@@ -61,15 +64,14 @@ public class ArticleCommandService {
 
         Long id = article.getId();
 
-        OffsetDateTime mealAtKst = LocalDateTime.of(resolvedDate, resolvedTime)
-                .atZone(ZoneId.of("Asia/Seoul"))
-                .toOffsetDateTime();
+        LocalDateTime mealAtKst = LocalDateTime.of(resolvedDate, resolvedTime);
 
-        String callbackUrl = UriComponentsBuilder
-                .fromHttpUrl(callbackBase)
-                .path("/api/v1/articles/{id}/ai/inference")
-                .buildAndExpand(id)
-                .toUriString();
+        // 커밋 이후 처리할 이벤트 발행
+        applicationEventPublisher.publishEvent(
+                new com.example.timetoeat.domain.article.event.ArticleCreatedEvent(
+                        id, authorId, article.getImageUrl(), mealAtKst
+                )
+        );
 
         return id;
     }
@@ -154,4 +156,3 @@ public class ArticleCommandService {
         comment.getArticle().decreaseCommentBy(delta);
     }
 }
-

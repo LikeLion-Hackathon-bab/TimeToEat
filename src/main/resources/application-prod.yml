@@ -44,10 +44,10 @@ app:
     enabled: ${APP_RABBITMQ_ENABLED:true}
   ai:
     food-base-url: ${FOOD_AI_BASE_URL:http://food-ai:8000}
-
-food:
-  ai:
-    base-url: ${FOOD_AI_BASE_URL:http://food-ai:8000}
+    reco-base-url: ${RECO_AI_BASE_URL:http://recommend-ai:8010}
+    taste-base-url: ${TASTE_BASE_URL:http://taste-service:8020}
+    outbound-key: ${AI_OUTBOUND_KEY:prod-ai-key-xxx}
+    timeout-millis: ${AI_HTTP_TIMEOUT_MILLIS:3000}
 
 logging:
   level:
