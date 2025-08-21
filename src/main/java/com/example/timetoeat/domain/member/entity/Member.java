@@ -1,6 +1,6 @@
 package com.example.timetoeat.domain.member.entity;
 
-import com.example.timetoeat.domain.posting.core.domain.vo.member.MemberId;
+import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
