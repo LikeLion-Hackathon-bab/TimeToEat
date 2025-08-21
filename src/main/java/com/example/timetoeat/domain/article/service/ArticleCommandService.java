@@ -34,7 +34,6 @@ public class ArticleCommandService {
     private final ArticleCommentRepository commentRepository;
     private final ArticleTagRepository tagRepository;
     private final EntityManager entityManager;
-    private final AiGateway aiGateway;
 
     @Value("${app.ai.callback-base}")
     private String callbackBase;
@@ -71,8 +70,6 @@ public class ArticleCommandService {
                 .path("/api/v1/articles/{id}/ai/inference")
                 .buildAndExpand(id)
                 .toUriString();
-
-        aiGateway.requestInference(id, authorId, article.getImageUrl(), mealAtKst, callbackUrl);
 
         return id;
     }
