@@ -15,7 +15,7 @@ public interface ArticleTagRepository extends JpaRepository<ArticleTag, Long> {
 
     // 특정 게시글의 태그된 멤버 ID만 조회
     @Query("select t.taggedMember.id from ArticleTag t where t.article.id = :articleId")
-    List<Long> findTaggedMemberIdsByArticleId(Long articleId);
+    List<Long> findTaggedMemberIdsByArticleId(@Param("articleId") Long articleId);
 
     // 특정 게시글의 모든 태그를 한 번에 삭제
     void deleteByArticle_Id(Long articleId);
