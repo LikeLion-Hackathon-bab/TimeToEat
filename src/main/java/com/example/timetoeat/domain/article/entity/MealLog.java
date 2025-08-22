@@ -15,12 +15,17 @@ import java.util.Objects;
 
 @Getter
 @Entity
-@Table(name = "meal_log",
-        uniqueConstraints = @UniqueConstraint(name = "uk_meal_log_article", columnNames = "article_id"),
+@Table(
+        name = "meal_log",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_meal_article_member", columnNames = {"article_id","member_id"}
+        ),
         indexes = {
-                @Index(name = "idx_meal_log_member_ts", columnList = "member_id, ts_utc"),
-                @Index(name = "idx_meal_log_code", columnList = "code")
-        })
+                @Index(name="idx_meal_member_ts", columnList="member_id, ts_utc"),
+                @Index(name="idx_meal_article", columnList="article_id"),
+                @Index(name="idx_meal_code", columnList="code")
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MealLog extends BaseTimeEntity {
 
