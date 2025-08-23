@@ -40,8 +40,6 @@ springdoc:
   server-url: https://babmuckdang.site
 
 app:
-  rabbitmq:
-    enabled: ${APP_RABBITMQ_ENABLED:true}
   ai:
     food-base-url: ${FOOD_AI_BASE_URL:http://food-ai:8000}
     reco-base-url: ${RECO_AI_BASE_URL:http://recommend-ai:8010}

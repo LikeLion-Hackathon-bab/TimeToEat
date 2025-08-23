@@ -13,19 +13,30 @@ import java.util.*;
 public class CustomOauth2User implements OAuth2User {
     private final Map<String, Object> attributes;
     private final Oauth2UserInfo oAuth2UserInfo;
+    private final boolean signupRequired;
 
     public CustomOauth2User(Oauth2UserInfo oAuth2UserInfo, Oauth2Provider oauth2Provider) {
-        this.oAuth2UserInfo = oAuth2UserInfo;
-        this.attributes = oauth2Provider.getAttributes();
-    }
-
-    public static CustomOauth2User of(Oauth2UserInfo dto, Oauth2Provider oauth2Provider) {
-        return new CustomOauth2User(dto, oauth2Provider);
+        this(oAuth2UserInfo, oauth2Provider, false);
     }
 
     public CustomOauth2User(Oauth2UserInfo oAuth2UserInfo) {
-        this.oAuth2UserInfo = oAuth2UserInfo;
-        this.attributes = Collections.emptyMap(); // JWT에는 attributes 정보가 없으므로 비워둠
+        this(oAuth2UserInfo, null, false);
+    }
+
+    // NEW: 내부 생성자
+    public CustomOauth2User(Oauth2UserInfo info, Oauth2Provider provider, boolean signupRequired) {
+        this.oAuth2UserInfo = info;
+        this.attributes = (provider != null ? provider.getAttributes() : Collections.emptyMap());
+        this.signupRequired = signupRequired;
+    }
+
+    public static CustomOauth2User of(Oauth2UserInfo dto, Oauth2Provider oauth2Provider) {
+        return new CustomOauth2User(dto, oauth2Provider, false);
+    }
+
+    // NEW: 팩토리 with flag
+    public static CustomOauth2User of(Oauth2UserInfo dto, Oauth2Provider provider, boolean signupRequired) {
+        return new CustomOauth2User(dto, provider, signupRequired);
     }
 
     @Override

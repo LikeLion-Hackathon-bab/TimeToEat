@@ -1,5 +1,6 @@
 package com.example.timetoeat.global.auth.service;
 
+import com.example.timetoeat.domain.member.repository.SocialAccountRepository;
 import com.example.timetoeat.global.auth.dto.Oauth2UserInfo;
 import com.example.timetoeat.domain.member.entity.SocialAccount;
 import com.example.timetoeat.global.auth.model.CustomOauth2User;
@@ -21,6 +22,7 @@ import java.util.Map;
 @Service
 public class CustomOauthUserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     private final MemberService memberService;
+    private final SocialAccountRepository socialAccountRepository;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -29,11 +31,16 @@ public class CustomOauthUserService implements OAuth2UserService<OAuth2UserReque
         OAuth2User oAuth2User = oAuth2UserService.loadUser(userRequest); // 인가 서버와 통신해서 실제 사용자 정보 조회
         Oauth2Provider oauth2Provider = this.getOauth2ProviderUsers(clientRegistration, oAuth2User);
 
-        SocialAccount socialAccount = memberService.findByProviderId(oauth2Provider);
-        log.info("소셜 로그인 - 유저 아이디: {}, 유저명: {}, 이메일: {},", socialAccount.getProviderId(), socialAccount.getUsername(), socialAccount.getEmail());
-
+        String providerId = oauth2Provider.getProviderId();
+        boolean signupRequired = false;
+        SocialAccount socialAccount = socialAccountRepository.findByProviderId(providerId)
+                .orElse(null);
+        if (socialAccount == null) {
+            signupRequired = true;
+            socialAccount = memberService.registerByOAuth2(oauth2Provider);
+        }
         Oauth2UserInfo dto = Oauth2UserInfo.from(socialAccount);
-        return CustomOauth2User.of(dto, oauth2Provider);
+        return CustomOauth2User.of(dto, oauth2Provider,signupRequired);
     }
 
     private Oauth2Provider getOauth2ProviderUsers(ClientRegistration clientRegistration, OAuth2User oAuth2User) {
