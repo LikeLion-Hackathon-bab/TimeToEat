@@ -12,7 +12,9 @@ public enum ArticleErrorCode implements BaseError {
     NOT_OWNED_IMAGE(HttpStatus.FORBIDDEN, "작성자의 이미지가 아닙니다."),
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
     PARENT_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "부모 댓글을 찾을 수 없습니다."),
-    PARENT_COMMENT_NOT_IN_ARTICLE(HttpStatus.FORBIDDEN, "부모 댓글이 해당 게시글에 속하지 않습니다.");
+    PARENT_COMMENT_NOT_IN_ARTICLE(HttpStatus.FORBIDDEN, "부모 댓글이 해당 게시글에 속하지 않습니다."),
+    UNAUTHENTICATED(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."),
+    NO_PERMISSION(HttpStatus.FORBIDDEN, "권한이 없습니다.");
 
     private final HttpStatus status;
     private final String message;
