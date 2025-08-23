@@ -5,14 +5,16 @@ import com.example.timetoeat.domain.article.dto.response.ArticleSummaryResponse;
 import com.example.timetoeat.domain.article.dto.response.CommentResponse;
 import com.example.timetoeat.domain.article.entity.Article;
 import com.example.timetoeat.domain.article.entity.ArticleComment;
+import com.example.timetoeat.domain.article.exception.ArticleErrorCode;
 import com.example.timetoeat.domain.article.repository.ArticleCommentRepository;
 import com.example.timetoeat.domain.article.repository.ArticleLikeRepository;
 import com.example.timetoeat.domain.article.repository.ArticleRepository;
 import com.example.timetoeat.domain.article.repository.ArticleTagRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.timetoeat.global.error.exception.CustomException;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.*;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +33,7 @@ public class ArticleQueryService {
 
     // 로그인 필수
     private static Long requireLogin(Long meId) {
-        if (meId == null) throw new AccessDeniedException("UNAUTHENTICATED");
+        if (meId == null) throw new CustomException(ArticleErrorCode.UNAUTHENTICATED);
         return meId;
     }
 
@@ -94,7 +96,7 @@ public class ArticleQueryService {
         Long loginId = requireLogin(meId);
 
         Article a = articleRepository.findById(articleId)
-                .orElseThrow(() -> new EntityNotFoundException("ARTICLE_NOT_FOUND"));
+                .orElseThrow(() -> new CustomException(ArticleErrorCode.ARTICLE_NOT_FOUND));
 
         boolean likedByMe = likeRepository.existsByArticle_IdAndMember_Id(articleId, loginId);
 
@@ -104,7 +106,7 @@ public class ArticleQueryService {
     public List<CommentResponse> getCommentsFlat(Long articleId) {
 
         if (!articleRepository.existsById(articleId)) {
-            throw new EntityNotFoundException("ARTICLE_NOT_FOUND");
+            throw new CustomException(ArticleErrorCode.ARTICLE_NOT_FOUND);
         }
 
         // 루트 댓글 한 번에
