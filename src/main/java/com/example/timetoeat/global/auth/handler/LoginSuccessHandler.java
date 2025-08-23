@@ -28,7 +28,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         CustomOauth2User principal = (CustomOauth2User) authentication.getPrincipal();
         if (principal.isSignupRequired()) {
-            response.sendRedirect("https://babmuckdang.site/onboarding");
+            response.sendRedirect("https://bab-muk-dang-client.vercel.app/");
             return;
         }
         TokenDto tokenDto = jwtService.doTokenGenerationProcess(principal);
