@@ -16,7 +16,7 @@ import java.util.Optional;
 public class CookieUtil {
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
     private static final String COOKIE_DOMAIN = ".babmuckdang.site";
-    private static final String SAME_SITE = "Lax";
+    private static final String SAME_SITE_DEFAULT = "None";
 
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
@@ -31,7 +31,7 @@ public class CookieUtil {
     }
 
     public static void addCookie(HttpServletResponse response, String name, String value, int maxAgeSeconds) {
-        addCookie(response, name, value, maxAgeSeconds, ".babmuckdang.site", "Lax"); // 기본값 유지
+        addCookie(response, name, value, maxAgeSeconds, COOKIE_DOMAIN, SAME_SITE_DEFAULT);
     }
 
     public static void addCookie(HttpServletResponse response, String name, String value,
@@ -48,15 +48,13 @@ public class CookieUtil {
     }
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
-        // 도메인 지정 쿠키 삭제
         ResponseCookie c1 = ResponseCookie.from(name, "")
                 .httpOnly(true).secure(true).path("/")
-                .domain(COOKIE_DOMAIN).maxAge(0).sameSite(SAME_SITE).build();
+                .domain(COOKIE_DOMAIN).maxAge(0).sameSite(SAME_SITE_DEFAULT).build();
         response.addHeader(HttpHeaders.SET_COOKIE, c1.toString());
 
-        // 과거에 domain 없이 심긴 쿠키도 함께 삭제
         ResponseCookie c2 = ResponseCookie.from(name, "")
-                .httpOnly(true).secure(true).path("/").maxAge(0).sameSite(SAME_SITE).build();
+                .httpOnly(true).secure(true).path("/").maxAge(0).sameSite(SAME_SITE_DEFAULT).build();
         response.addHeader(HttpHeaders.SET_COOKIE, c2.toString());
     }
 
