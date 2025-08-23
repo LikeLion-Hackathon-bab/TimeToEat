@@ -123,7 +123,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:3001",
                 "https://babmuckdang.site",
-                "https://www.babmuckdang.site"));
+                "https://www.babmuckdang.site",
+                "https://bab-muk-dang-client.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
                 "Content-Type",
