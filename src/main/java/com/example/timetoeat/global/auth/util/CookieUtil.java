@@ -71,4 +71,16 @@ public class CookieUtil {
             throw new RuntimeException("Cookie deserialization failed", e);
         }
     }
+
+    public static String extractFromCookieHeader(String cookieHeader, String name) {
+        if (cookieHeader == null) return null;
+        String[] parts = cookieHeader.split(";");
+        for (String part : parts) {
+            String[] nv = part.trim().split("=", 2);
+            if (nv.length == 2 && nv[0].trim().equals(name)) {
+                return nv[1].trim();
+            }
+        }
+        return null;
+    }
 }
