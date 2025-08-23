@@ -4,9 +4,9 @@ server:
 
 spring:
   config:
-    import:
-      - optional:file:.env[.properties]
-      - optional:file:.env.${spring.profiles.active:dev}[.properties]
+    import: optional:file:.env[.properties]
+  profiles:
+    active: prod
 
   jpa:
     show-sql: true

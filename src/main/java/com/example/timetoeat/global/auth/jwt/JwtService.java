@@ -34,24 +34,23 @@ public class JwtService {
     }
 
     @Transactional
-    public TokenDto reissue(String bearerRefreshToken) {
-        String refreshToken = getTokenFromBearer(bearerRefreshToken);
+    public TokenDto reissue(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
+        }
+        jwtProvider.validate(refreshToken);
         if (!refreshTokenRepository.existsByToken(refreshToken)) {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
         Long memberId = jwtProvider.getId(refreshToken);
-        MemberEntity memberEntity = memberService.getById(memberId);
-        TokenDto tokenDto = jwtProvider.issueToken(memberEntity, new Date());
+        MemberEntity member = memberService.getById(memberId);
 
-        refreshTokenRepository.deleteByMemberId(memberId); //원래 deleteAllByMemberId 였다가 수정
+        TokenDto tokenDto = jwtProvider.issueToken(member, new Date());
+        refreshTokenRepository.deleteByMemberId(memberId);
         refreshTokenRepository.save(
-                RefreshToken.create(
-                        memberId,
-                        tokenDto.getRefreshToken(),
-                        jwtProvider.getRefreshTokenExpiration(new Date())
-                )
+                RefreshToken.create(memberId, tokenDto.getRefreshToken(),
+                        jwtProvider.getRefreshTokenExpiration(new Date()))
         );
-
         return tokenDto;
     }
 

@@ -24,8 +24,14 @@ public class CookieOAuth2AuthorizationRequestRepository implements Authorization
             CookieUtil.deleteCookie(request, response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
             return;
         }
-
-        CookieUtil.addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, CookieUtil.serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
+        CookieUtil.addCookie(
+                response,
+                OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME,
+                CookieUtil.serialize(authorizationRequest),
+                COOKIE_EXPIRE_SECONDS,
+                ".babmuckdang.site",
+                "None"
+        );
     }
 
     @Override

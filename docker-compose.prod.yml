@@ -13,10 +13,6 @@ services:
         condition: service_healthy
       food-ai:
         condition: service_healthy
-      recommend-ai:
-        condition: service_healthy
-      taste-service:
-        condition: service_started   # healthz 없으면 started
     ports:
       - "8080:8080"
     networks: [ my-network ]
@@ -87,22 +83,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-
-  recommend-ai:
-    image: gosua/recommend-ai:1.0.0
-    container_name: recommend-ai
-    networks: [ my-network ]
-    healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://localhost:8010/healthz" ]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-
-  taste-service:
-    image: gosua/taste-service:1.0.0
-    container_name: taste-service
-    networks: [ my-network ]
-    # healthz가 없다면 헬스체크 생략
 
 networks:
   my-network:

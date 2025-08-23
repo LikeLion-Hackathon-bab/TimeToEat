@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,22 +26,18 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
-        log.info("소셜 로그인 성공 핸들러 동작: req {}", request.toString());
         CustomOauth2User principal = (CustomOauth2User) authentication.getPrincipal();
-        log.info("principal : {}", principal);
-
+        if (principal.isSignupRequired()) {
+            response.sendRedirect("https://babmuckdang.site/onboarding");
+            return;
+        }
         TokenDto tokenDto = jwtService.doTokenGenerationProcess(principal);
-        log.info("tokenDto : accessToken={}, refreshToken={}", tokenDto.getAccessToken(), tokenDto.getRefreshToken());
-
-        CookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE_NAME, tokenDto.getRefreshToken(), tokenDto.getRefreshTokenMaxAge());
-
-        response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_OK);
-        String tokenJson = String.format(
-                "{\"accessToken\":\"%s\"}",
-                tokenDto.getAccessToken()
+        CookieUtil.addCookie(
+                response,
+                CookieUtil.REFRESH_TOKEN_COOKIE_NAME,
+                tokenDto.getRefreshToken(),
+                (int) TimeUnit.MILLISECONDS.toSeconds(tokenDto.getRefreshTokenMaxAge())
         );
-        response.getWriter().write(tokenJson);
-        response.getWriter().flush();
+        response.sendRedirect("https://babmuckdang.site/");
     }
 }
