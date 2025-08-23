@@ -12,7 +12,7 @@ services:
       rabbitmq:
         condition: service_healthy
       food-ai:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "8080:8080"
     networks: [ my-network ]
@@ -79,11 +79,11 @@ services:
     container_name: food-ai
     networks: [ my-network ]
     healthcheck:
-      test: [ "CMD", "wget", "-qO-", "http://localhost:8000/healthz" ]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/healthz || curl -fsS http://127.0.0.1:8000/health || wget -qO- http://127.0.0.1:8000/healthz || wget -qO- http://127.0.0.1:8000/health || exit 1"]
       interval: 10s
-      timeout: 3s
-      retries: 5
-
+      timeout: 5s
+      retries: 12          # 총 2분 정도 시도
+      start_period: 90s
 networks:
   my-network:
     driver: bridge
