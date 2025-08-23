@@ -2,6 +2,7 @@ package com.example.timetoeat.domain.article.dto.request;
 
 import com.example.timetoeat.domain.article.entity.Article;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import jakarta.validation.Valid;
@@ -18,12 +19,23 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CreateArticleRequest {
 
-    public enum Method { CAMERA, ALBUM }  // <카메라로 직접 찍어서 업로드 or 앨범에서 업로드>
+    // <카메라로 직접 찍어서 업로드 or 앨범에서 업로드>
+    public enum Method {
+        CAMERA, ALBUM;
+
+        @JsonCreator
+        public static Method from(Object v) {
+            if (v == null) return null;
+            String s = v.toString().trim().toUpperCase(Locale.ROOT);
+            return Method.valueOf(s);
+        }
+    }
 
     @NotBlank
     @Size(max = 1024)
