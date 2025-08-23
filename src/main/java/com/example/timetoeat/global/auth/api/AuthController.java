@@ -21,11 +21,31 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ApiResponse<TokenDto> refresh(
-                                          @CookieValue(name = "refreshToken", required = true) String refreshToken,
-                                          HttpServletResponse response
+            @CookieValue(name = CookieUtil.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshTokenCookie,
+            @org.springframework.web.bind.annotation.RequestHeader(value = "Cookie", required = false) String rawCookieHeader,
+            HttpServletResponse response
     ) {
+        String refreshToken = refreshTokenCookie;
+
+        if (refreshToken == null && rawCookieHeader != null) {
+            refreshToken = CookieUtil.extractFromCookieHeader(rawCookieHeader, CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
+        }
+
+        if (refreshToken == null || refreshToken.isBlank()) {
+            // 쿠키가 정말 없는 경우에만 명확한 에러 반환
+            throw new com.example.timetoeat.global.error.exception.CustomException(
+                    com.example.timetoeat.global.error.GlobalErrorCode.INVALID_REFRESH_TOKEN
+            );
+        }
+
         TokenDto tokenDto = jwtService.reissue(refreshToken);
-        CookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE_NAME, tokenDto.getRefreshToken(),(int) java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(tokenDto.getRefreshTokenMaxAge()));
+
+        CookieUtil.addCookie(
+                response,
+                CookieUtil.REFRESH_TOKEN_COOKIE_NAME,
+                tokenDto.getRefreshToken(),
+                (int) java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(tokenDto.getRefreshTokenMaxAge())
+        );
         return ApiResponse.success(tokenDto);
     }
 
