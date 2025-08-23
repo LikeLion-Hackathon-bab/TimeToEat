@@ -2,6 +2,7 @@ package com.example.timetoeat.domain.article.dto.request;
 
 import com.example.timetoeat.domain.article.entity.RestaurantSnapshot;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -14,10 +15,15 @@ public class RestaurantRequest {
     private String addressName;
     private String roadAddressName;
     private String phoneNumber;
-    @Size(max = 1024) private String placeUrl;
+
+    @Size(max = 1024)
+    @Pattern(regexp = "^https?://.+$", message = "placeUrl은 http(s)로 시작해야 합니다.")
+    private String placeUrl;
+
     private String categoryGroupCode;
     private String categoryGroupName;
     private String categoryName;
+
     private Double x;
     private Double y;
 

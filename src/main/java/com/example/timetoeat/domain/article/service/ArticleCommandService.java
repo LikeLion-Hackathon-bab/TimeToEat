@@ -4,18 +4,18 @@ import com.example.timetoeat.domain.article.dto.request.CreateArticleRequest;
 import com.example.timetoeat.domain.article.dto.request.CreateCommentRequest;
 import com.example.timetoeat.domain.article.dto.response.ArticleLikeToggleResponse;
 import com.example.timetoeat.domain.article.entity.*;
+import com.example.timetoeat.domain.article.exception.ArticleErrorCode;
 import com.example.timetoeat.domain.article.repository.*;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 
+import com.example.timetoeat.global.error.exception.CustomException;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,15 +81,15 @@ public class ArticleCommandService {
 
         // 아무 것도 안 지워졌으면 이유 판별(403 / 404)
         if (articleRepository.existsById(articleId)) {
-            throw new AccessDeniedException("NO_PERMISSION");
+            throw new CustomException(ArticleErrorCode.NO_PERMISSION);
         }
-        throw new EntityNotFoundException("ARTICLE_NOT_FOUND");
+        throw new CustomException(ArticleErrorCode.ARTICLE_NOT_FOUND);
     }
 
     // '좋아요' 토글
     public ArticleLikeToggleResponse toggleLike(Long articleId, Long memberId) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new EntityNotFoundException("ARTICLE_NOT_FOUND"));
+                .orElseThrow(() -> new CustomException(ArticleErrorCode.ARTICLE_NOT_FOUND));
 
         var existing = likeRepository.findByArticle_IdAndMember_Id(articleId, memberId);
         if (existing.isPresent()) {
@@ -116,16 +116,16 @@ public class ArticleCommandService {
     // 댓글/대댓글 작성
     public Long addComment(Long articleId, Long memberId, CreateCommentRequest req) {
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() -> new EntityNotFoundException("ARTICLE_NOT_FOUND"));
+                .orElseThrow(() -> new CustomException(ArticleErrorCode.ARTICLE_NOT_FOUND));
         MemberEntity authorRef = entityManager.getReference(MemberEntity.class, memberId);
 
         ArticleComment parent = null;
         if (req.getParentCommentId() != null) {
             parent = commentRepository.findById(req.getParentCommentId())
-                    .orElseThrow(() -> new EntityNotFoundException("PARENT_COMMENT_NOT_FOUND"));
+                    .orElseThrow(() -> new CustomException(ArticleErrorCode.PARENT_COMMENT_NOT_FOUND));
             // 부모 댓글이 같은 글인지 확인
             if (!parent.getArticle().getId().equals(article.getId())) {
-                throw new AccessDeniedException("PARENT_COMMENT_NOT_IN_ARTICLE");
+                throw new CustomException(ArticleErrorCode.PARENT_COMMENT_NOT_IN_ARTICLE);
             }
         }
 
@@ -139,11 +139,11 @@ public class ArticleCommandService {
     // 댓글 삭제 (글 소유자: 모든 댓글 / 댓글 작성자: 본인 댓글만)
     public void deleteComment(Long commentId, Long requesterId) {
         ArticleComment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("COMMENT_NOT_FOUND"));
+                .orElseThrow(() -> new CustomException(ArticleErrorCode.COMMENT_NOT_FOUND));
 
         boolean isArticleOwner = comment.getArticle().isAuthoredBy(requesterId);
         boolean isCommentAuthor = comment.isWrittenBy(requesterId);
-        if (!isArticleOwner && !isCommentAuthor) throw new AccessDeniedException("NO_PERMISSION");
+        if (!isArticleOwner && !isCommentAuthor) throw new CustomException(ArticleErrorCode.NO_PERMISSION);
 
         int delta = 1;
         if (comment.getParentComment() == null) {
