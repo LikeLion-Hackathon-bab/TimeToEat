@@ -42,6 +42,7 @@ public class SecurityConfig {
     private final JwtVerificationFilter jwtVerificationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
+    private final CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository;
 
 
     @Bean
@@ -66,7 +67,7 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorizationEndpointConfig ->
                                         authorizationEndpointConfig
                                                 .baseUri("/oauth2/authorization")
-                                                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository())
+                                                .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository) // ⬅️ 교체
                         )
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
@@ -84,7 +85,6 @@ public class SecurityConfig {
                         .logoutSuccessHandler(jwtLogoutSuccessHandler)
                 );
 
-        // 커스텀 필터 등록 (순서 중요!)
         http
                 .addFilterBefore(jwtVerificationFilter,  UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtExceptionFilter, JwtVerificationFilter.class);
