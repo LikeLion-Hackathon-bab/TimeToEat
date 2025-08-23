@@ -38,6 +38,6 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
                 tokenDto.getRefreshToken(),
                 (int) TimeUnit.MILLISECONDS.toSeconds(tokenDto.getRefreshTokenMaxAge())
         );
-        response.sendRedirect("https://babmuckdang.site/");
+        response.sendRedirect("https://bab-muk-dang-client.vercel.app/");
     }
 }
