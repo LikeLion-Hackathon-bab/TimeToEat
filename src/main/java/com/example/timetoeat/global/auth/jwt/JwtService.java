@@ -30,7 +30,20 @@ public class JwtService {
     public TokenDto doTokenGenerationProcess(CustomOauth2User principal) {
         Long memberId = principal.getMemberId();
         MemberEntity memberEntity = memberService.getById(memberId);
-        return jwtProvider.issueToken(memberEntity, new Date());
+
+        Date now = new Date();
+        TokenDto tokenDto = jwtProvider.issueToken(memberEntity, now);
+
+        refreshTokenRepository.deleteAllByMemberId(memberId);
+
+        refreshTokenRepository.save(
+                RefreshToken.create(
+                        memberId,
+                        tokenDto.getRefreshToken(),
+                        jwtProvider.getRefreshTokenExpiration(now)
+                )
+        );
+        return tokenDto;
     }
 
     @Transactional
@@ -38,28 +51,52 @@ public class JwtService {
         if (!StringUtils.hasText(refreshToken)) {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
+
         jwtProvider.validate(refreshToken);
+
+        String typ = jwtProvider.getPayload(refreshToken).get("typ", String.class);
+        if (!"refresh".equals(typ)) {
+            throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
         if (!refreshTokenRepository.existsByToken(refreshToken)) {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
+
         Long memberId = jwtProvider.getId(refreshToken);
         MemberEntity member = memberService.getById(memberId);
 
-        TokenDto tokenDto = jwtProvider.issueToken(member, new Date());
-        refreshTokenRepository.deleteByMemberId(memberId);
+        Date now = new Date();
+        TokenDto tokenDto = jwtProvider.issueToken(member, now);
+
+        refreshTokenRepository.deleteAllByMemberId(memberId);
         refreshTokenRepository.save(
-                RefreshToken.create(memberId, tokenDto.getRefreshToken(),
-                        jwtProvider.getRefreshTokenExpiration(new Date()))
+                RefreshToken.create(
+                        memberId,
+                        tokenDto.getRefreshToken(),
+                        jwtProvider.getRefreshTokenExpiration(now)
+                )
         );
+
         return tokenDto;
     }
 
 
     @Transactional
-    public void logout(String bearRefreshToken) {
-        String refreshToken = this.getTokenFromBearer(bearRefreshToken);
-        jwtProvider.validate(bearRefreshToken);
-        refreshTokenRepository.deleteAllByMemberId(jwtProvider.getId(refreshToken));
+    public void logout(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) return;
+
+        // 검증
+        jwtProvider.validate(refreshToken);
+
+        // (안전장치) refresh 토큰 타입 확인
+        String typ = jwtProvider.getPayload(refreshToken).get("typ", String.class);
+        if (!"refresh".equals(typ)) {
+            throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long memberId = jwtProvider.getId(refreshToken);
+        refreshTokenRepository.deleteAllByMemberId(memberId);
     }
 
     public String getTokenFromBearer(String bearerToken) {
