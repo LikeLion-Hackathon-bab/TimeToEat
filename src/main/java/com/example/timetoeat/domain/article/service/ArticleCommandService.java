@@ -1,4 +1,3 @@
-/*
 package com.example.timetoeat.domain.article.service;
 
 import com.example.timetoeat.domain.article.dto.request.CreateArticleRequest;
@@ -7,24 +6,24 @@ import com.example.timetoeat.domain.article.dto.response.ArticleLikeToggleRespon
 import com.example.timetoeat.domain.article.entity.*;
 import com.example.timetoeat.domain.article.repository.*;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
-import com.example.timetoeat.infra.ai.AiGateway;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.OffsetDateTime;
 import java.util.HashSet;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -35,10 +34,7 @@ public class ArticleCommandService {
     private final ArticleCommentRepository commentRepository;
     private final ArticleTagRepository tagRepository;
     private final EntityManager entityManager;
-    private final AiGateway aiGateway;
-
-    @Value("${app.ai.callback-base}")
-    private String callbackBase;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private final Clock clock;
 
@@ -47,8 +43,11 @@ public class ArticleCommandService {
         MemberEntity authorRef = entityManager.getReference(MemberEntity.class, authorId);
 
         LocalDateTime nowKst = LocalDateTime.now(clock);
-        var resolvedDate = req.isCamera() ? nowKst.toLocalDate() : req.getMealDate();
-        var resolvedTime = req.isCamera() ? nowKst.toLocalTime() : req.getMealTime();
+
+        // mealDate는 업로드 시각의 '날짜'로 고정
+        var resolvedDate = nowKst.toLocalDate();
+        // mealTime은 프론트가 보낸 HH:mm:ss를 그대로 사용(없으면 now 기준으로 폴백)
+        var resolvedTime = (req.getMealTime() != null) ? req.getMealTime() : nowKst.toLocalTime();
 
         Article article = req.toEntity(authorRef, resolvedDate, resolvedTime);
         articleRepository.save(article);
@@ -63,17 +62,14 @@ public class ArticleCommandService {
 
         Long id = article.getId();
 
-        OffsetDateTime mealAtKst = LocalDateTime.of(resolvedDate, resolvedTime)
-                .atZone(ZoneId.of("Asia/Seoul"))
-                .toOffsetDateTime();
+        LocalDateTime mealAtKst = LocalDateTime.of(resolvedDate, resolvedTime);
 
-        String callbackUrl = UriComponentsBuilder
-                .fromHttpUrl(callbackBase)
-                .path("/api/v1/articles/{id}/ai/inference")
-                .buildAndExpand(id)
-                .toUriString();
-
-        aiGateway.requestInference(id, authorId, article.getImageUrl(), mealAtKst, callbackUrl);
+        // 커밋 이후 처리할 이벤트 발행
+        applicationEventPublisher.publishEvent(
+                new com.example.timetoeat.domain.article.event.ArticleCreatedEvent(
+                        id, authorId, article.getImageUrl(), mealAtKst
+                )
+        );
 
         return id;
     }
@@ -158,4 +154,3 @@ public class ArticleCommandService {
         comment.getArticle().decreaseCommentBy(delta);
     }
 }
-*/

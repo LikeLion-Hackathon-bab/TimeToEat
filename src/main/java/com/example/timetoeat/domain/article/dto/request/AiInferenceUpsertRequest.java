@@ -1,5 +1,6 @@
 package com.example.timetoeat.domain.article.dto.request;
 
+import com.example.timetoeat.domain.article.dto.ai.InferenceResultDto;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -33,5 +34,14 @@ public class AiInferenceUpsertRequest {
         this.label = label;
         this.confidence = confidence;
         this.timestamp = timestamp;
+    }
+
+    public static AiInferenceUpsertRequest from(InferenceResultDto r) {
+        return AiInferenceUpsertRequest.builder()
+                .code(r.getCode())
+                .label(r.getLabel())
+                .confidence(r.getConfidence())
+                .timestamp(r.getTimestamp())
+                .build();
     }
 }
