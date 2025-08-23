@@ -4,10 +4,15 @@ import com.example.timetoeat.global.auth.model.Role;
 import com.example.timetoeat.global.auth.model.provider.Oauth2Provider;
 import com.example.timetoeat.global.util.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "member")
 @Entity
 public class MemberEntity extends BaseTimeEntity {
@@ -35,10 +40,6 @@ public class MemberEntity extends BaseTimeEntity {
     @Column(name = "role", nullable = false, length = 20)
     private Role role;
 
-    // 지금까지의 밥 약속 참여 횟수
-    @Column(nullable = false)
-    private int meetingCount;
-
     // 선호 메뉴 (예: "한식, 중식, 샐러드", json, enum 등 선택 가능)
     @Column(nullable = true, length = 100)
     private String preferredMenus;
@@ -47,17 +48,9 @@ public class MemberEntity extends BaseTimeEntity {
     @Column(nullable = true, length = 100)
     private String dislikedMenus;
 
-    @Builder
-    private MemberEntity(String username, String email, String profileImageUrl,
-                         String bio, int age, Role role, int meetingCount) {
-        this.username = username;
-        this.email = email;
-        this.profileImageUrl = profileImageUrl;
-        this.bio = bio;
-        this.age = age;
-        this.role = role;
-        this.meetingCount = meetingCount;
-    }
+    // 지금까지의 밥 약속 참여 횟수
+    @Column(nullable = false)
+    private int meetingCount;
 
     public static MemberEntity from(Oauth2Provider oauth2Provider, Role role) {
         return MemberEntity.builder()
@@ -65,7 +58,6 @@ public class MemberEntity extends BaseTimeEntity {
                 .email(oauth2Provider.getEmail())
                 .profileImageUrl(oauth2Provider.getProfileUrl())
                 .role(role)
-                .meetingCount(0)
                 .build();
     }
 
