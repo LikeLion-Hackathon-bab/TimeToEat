@@ -122,6 +122,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:3001",
+                "https://13.125.49.103:3000",
                 "https://babmuckdang.site",
                 "https://www.babmuckdang.site",
                 "https://bab-muk-dang-client.vercel.app"));
