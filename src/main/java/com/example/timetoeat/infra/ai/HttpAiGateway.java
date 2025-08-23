@@ -3,6 +3,8 @@ package com.example.timetoeat.infra.ai;
 import com.example.timetoeat.domain.article.dto.ai.InferenceResultDto;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -14,11 +16,12 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class HttpAiGateway implements AiGateway {
 
-    private final WebClient aiWebClient;
+    private final @Qualifier("aiWebClient") WebClient aiWebClient;
     private final AiProperties props;
 
     @Override
@@ -39,11 +42,16 @@ public class HttpAiGateway implements AiGateway {
                 .uri(props.getFoodBaseUrl() + "/v1/infer")
                 .header("X-AI-KEY", props.getOutboundKey())
                 .contentType(MediaType.MULTIPART_FORM_DATA)
+                .accept(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromMultipartData(mb.build()))
                 .retrieve()
                 .onStatus(s -> s.is4xxClientError() || s.is5xxServerError(),
-                        resp -> resp.bodyToMono(String.class)
-                                .map(msg -> new RuntimeException("AI infer failed: " + msg)))
+                        resp -> resp.bodyToMono(String.class).flatMap(msg -> {
+                            log.warn("AI infer failed: status={} url={} articleId={} authorId={} msg={}",
+                                    resp.statusCode(), props.getFoodBaseUrl() + "/v1/infer", articleId, authorId, msg);
+                            return reactor.core.publisher.Mono.error(new RuntimeException("AI infer failed: " + msg));
+                        })
+                )
                 .bodyToMono(JsonNode.class)
                 .block();
 

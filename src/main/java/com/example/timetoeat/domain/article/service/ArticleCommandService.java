@@ -19,11 +19,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -48,8 +43,11 @@ public class ArticleCommandService {
         MemberEntity authorRef = entityManager.getReference(MemberEntity.class, authorId);
 
         LocalDateTime nowKst = LocalDateTime.now(clock);
-        var resolvedDate = req.isCamera() ? nowKst.toLocalDate() : req.getMealDate();
-        var resolvedTime = req.isCamera() ? nowKst.toLocalTime() : req.getMealTime();
+
+        // mealDate는 업로드 시각의 '날짜'로 고정
+        var resolvedDate = nowKst.toLocalDate();
+        // mealTime은 프론트가 보낸 HH:mm:ss를 그대로 사용(없으면 now 기준으로 폴백)
+        var resolvedTime = (req.getMealTime() != null) ? req.getMealTime() : nowKst.toLocalTime();
 
         Article article = req.toEntity(authorRef, resolvedDate, resolvedTime);
         articleRepository.save(article);
