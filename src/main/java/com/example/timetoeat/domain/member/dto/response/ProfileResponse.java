@@ -19,6 +19,7 @@ public class ProfileResponse {
     @Builder
     private ProfileResponse(Long memberId, String userName, String profileImageUrl,
                              String bio, int meetingCount) {
+
         this.memberId = memberId;
         this.userName = userName;
         this.profileImageUrl = profileImageUrl;
