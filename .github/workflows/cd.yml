@@ -63,12 +63,23 @@ jobs:
             i=0
             until [ $i -ge 3 ]; do
             if sudo docker compose -f docker-compose.prod.yml pull --no-parallel application; then
-            break
+              break
             fi
-            i=$((i+1))
-            echo "pull 실패(${i}/3). 10초 후 재시도..."
-            sleep 10
+              i=$((i+1))
+              echo "pull 실패(${i}/3). 10초 후 재시도..."
+              sleep 10
             done
+  
+            sudo docker compose -f docker-compose.prod.yml up -d --no-deps application
       
-            sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            if sudo docker ps --format '{{.Names}}' | grep -q '^timetoeat-nginx$'; then
+              echo "Nginx 설정 문법 검사..."
+              sudo docker exec timetoeat-nginx nginx -t
+              echo "Nginx graceful reload..."
+              sudo docker exec timetoeat-nginx nginx -s reload
+            else
+              echo "Nginx 컨테이너가 없거나 종료됨 → 생성/기동"
+              sudo docker compose -f docker-compose.prod.yml up -d nginx
+            fi
+      
             sudo docker image prune -f
