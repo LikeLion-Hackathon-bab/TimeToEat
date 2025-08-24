@@ -10,6 +10,7 @@ import com.example.timetoeat.global.error.exception.CustomException;
 import com.example.timetoeat.global.error.GlobalErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -35,13 +36,7 @@ public class JwtService {
         TokenDto tokenDto = jwtProvider.issueToken(memberEntity, now);
         Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
-        refreshTokenRepository.findByMemberId(memberId)
-                .ifPresentOrElse(
-                        rt -> rt.refresh(tokenDto.getRefreshToken(), refreshExp),
-                        () -> refreshTokenRepository.save(
-                                RefreshToken.create(memberId, tokenDto.getRefreshToken(), refreshExp)
-                        )
-                );
+        upsertRefreshToken(memberId, tokenDto.getRefreshToken(), refreshExp);
 
         return tokenDto;
     }
@@ -68,24 +63,19 @@ public class JwtService {
 
         Date now = new Date();
         TokenDto tokenDto = jwtProvider.issueToken(member, now);
+        Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
-        refreshTokenRepository.deleteAllByMemberId(memberId);
-        refreshTokenRepository.save(
-                RefreshToken.create(
-                        memberId,
-                        tokenDto.getRefreshToken(),
-                        jwtProvider.getRefreshTokenExpiration(now)
-                )
-        );
+        upsertRefreshToken(memberId, tokenDto.getRefreshToken(), refreshExp);
 
         return tokenDto;
     }
 
-
     @Transactional
     public void logout(String refreshToken) {
         if (!StringUtils.hasText(refreshToken)) return;
+
         jwtProvider.validate(refreshToken);
+
         String typ = jwtProvider.getPayload(refreshToken).get("typ", String.class);
         if (!"refresh".equals(typ)) {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
@@ -96,12 +86,31 @@ public class JwtService {
     }
 
     public String getTokenFromBearer(String bearerToken) {
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             String[] parts = bearerToken.split(" ");
             if (parts.length == 2) {
                 return parts[1];
             }
         }
         return null;
+    }
+
+    private void upsertRefreshToken(Long memberId, String newToken, Date newExpiredAt) {
+        var locked = refreshTokenRepository.findByMemberIdForUpdate(memberId);
+        if (locked.isPresent()) {
+            locked.get().refresh(newToken, newExpiredAt);
+            return;
+        }
+
+        try {
+            refreshTokenRepository.save(RefreshToken.create(memberId, newToken, newExpiredAt));
+        } catch (DataIntegrityViolationException e) {
+            log.warn("UPSERT race detected for memberId={}, falling back to update.", memberId);
+            refreshTokenRepository.findByMemberIdForUpdate(memberId)
+                    .ifPresentOrElse(
+                            exist -> exist.refresh(newToken, newExpiredAt),
+                            () -> { throw e; }
+                    );
+        }
     }
 }
