@@ -1,5 +1,6 @@
 package com.example.timetoeat.domain.post.adap.out.persistence;
 
+import com.example.timetoeat.domain.post.application.port.data.ParticipationData;
 import com.example.timetoeat.domain.post.application.port.data.PostData;
 import com.example.timetoeat.domain.post.application.port.out.LoadPost;
 import com.example.timetoeat.domain.post.application.port.out.SavePost;
@@ -42,20 +43,27 @@ public class PostAdap implements LoadPost, SavePost {
 
         List<ParticipationEntity> participations = participationRepository.findMembersByPost(postIds);
 
-        Map<Long, List<String>> participantsMap = participations.stream()
+        Map<Long, List<ParticipationData>> participantsMap = participations.stream()
                 .collect(Collectors.groupingBy(
                         p -> p.getPost().getId(),
-                        Collectors.mapping(p -> p.getMember().getUsername(), Collectors.toList())
+                        Collectors.mapping(
+                                p -> new ParticipationData(
+                                        p.getMember().getUsername(),
+                                        p.getMember().getProfileImageUrl()
+                                ),
+                                Collectors.toList()
+                        )
                 ));
-
         return postEntities.stream()
                 .map(postEntity -> new PostData(
+                        postEntity.getId(),
                         postEntity.getMember().getUsername(),
-                        postEntity.getCreatedAt(),
+                        postEntity.getMember().getProfileImageUrl(),
                         postEntity.getMessage(),
                         postEntity.getMeetingAt(),
                         postEntity.getLocation(),
-                        participantsMap.getOrDefault(postEntity.getId(), List.of()) // Map에서 참여자 목록을 찾아 결합
+                        participantsMap.getOrDefault(postEntity.getId(), List.of()),
+                        postEntity.getTargetCount()
                 ))
                 .collect(Collectors.toList());
     }

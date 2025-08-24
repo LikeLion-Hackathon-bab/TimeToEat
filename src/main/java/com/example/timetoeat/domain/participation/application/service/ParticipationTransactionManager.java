@@ -5,8 +5,7 @@ import com.example.timetoeat.domain.participation.application.port.out.SaveParti
 import com.example.timetoeat.domain.post.application.port.out.LoadPost;
 import com.example.timetoeat.domain.post.application.port.out.SavePost;
 import com.example.timetoeat.domain.post.application.port.out.PublishPostEvent;
-import com.example.timetoeat.domain.post.domain.PostEvent;
-import com.example.timetoeat.domain.post.domain.PostEventType;
+import com.example.timetoeat.domain.post.domain.event.PostCompletedEvent;
 import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.participation.domain.Participation;
 import com.example.timetoeat.domain.post.domain.Post;
@@ -27,10 +26,7 @@ public class ParticipationTransactionManager {
 
     @Transactional
     public void apply(MemberId memberId, PostId postId) {
-
         Post post = loadPost.findById(postId);
-        // 공지가 무조건 있어야 되니까 예외 처리 jpa 단에서 해주기
-
         Participation participation = loadParticipation.getParticipationByPostId(post.getPostId());
 
 
@@ -47,8 +43,7 @@ public class ParticipationTransactionManager {
         if (newParticipation.isFull(post.getTargetCount())) {
             Post closedPost = post.close();
             Post savedPost = savePost.save(closedPost);
-            PostEvent postEvent = PostEvent.create(savedPost, PostEventType.POST_FILLED);
-            publishPostEvent.publish(postEvent);
+            publishPostEvent.publish(new PostCompletedEvent(savedPost));
         }
     }
 }
