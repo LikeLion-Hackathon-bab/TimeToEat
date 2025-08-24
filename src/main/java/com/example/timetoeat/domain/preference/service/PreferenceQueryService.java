@@ -12,8 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class PreferenceQueryService {
@@ -25,11 +23,11 @@ public class PreferenceQueryService {
     public PreferenceSummaryResponse getMySummary(Long memberId) {
         if (memberId == null) throw new CustomException(PreferenceErrorCode.UNAUTHENTICATED);
 
-        var likes = prefRepo.findByMember_IdAndType(memberId, PreferenceType.LIKE)
+        var likes = prefRepo.findByMember_IdAndTypeOrderByFoodCode_LabelAsc(memberId, PreferenceType.LIKE)
                 .stream().map(this::toItem).toList();
-        var dislikes = prefRepo.findByMember_IdAndType(memberId, PreferenceType.DISLIKE)
+        var dislikes = prefRepo.findByMember_IdAndTypeOrderByFoodCode_LabelAsc(memberId, PreferenceType.DISLIKE)
                 .stream().map(this::toItem).toList();
-        var allergies = prefRepo.findByMember_IdAndType(memberId, PreferenceType.ALLERGY)
+        var allergies = prefRepo.findByMember_IdAndTypeOrderByFoodCode_LabelAsc(memberId, PreferenceType.ALLERGY)
                 .stream().map(this::toItem).toList();
 
         return PreferenceSummaryResponse.of(likes, dislikes, allergies);

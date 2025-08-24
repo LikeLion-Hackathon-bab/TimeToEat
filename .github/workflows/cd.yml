@@ -52,14 +52,23 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_PRIVATE_KEY }}
+          command_timeout: 30m
           script: |
             set -e
             cd /home/ubuntu/TimeToEat
-            
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_ID }}" --password-stdin
+            export COMPOSE_HTTP_TIMEOUT=1200
             
-            sudo docker compose -f docker-compose.prod.yml pull application
-            
-            sudo docker compose -f docker-compose.prod.yml up -d
-            
+            # 느린 네트워크 대비: pull 재시도(최대 3회) + 병렬 끔
+            i=0
+            until [ $i -ge 3 ]; do
+            if sudo docker compose -f docker-compose.prod.yml pull --no-parallel application; then
+            break
+            fi
+            i=$((i+1))
+            echo "pull 실패(${i}/3). 10초 후 재시도..."
+            sleep 10
+            done
+      
+            sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
             sudo docker image prune -f
