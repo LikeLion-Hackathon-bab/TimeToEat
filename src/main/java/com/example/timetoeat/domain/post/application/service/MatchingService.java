@@ -1,9 +1,9 @@
+/*
 package com.example.timetoeat.domain.post.application.service;
 
 import com.example.timetoeat.domain.participation.application.port.out.LoadParticipation;
 import com.example.timetoeat.domain.post.application.port.out.LoadPreferenceFood;
 import com.example.timetoeat.domain.participation.domain.Participation;
-import com.example.timetoeat.domain.post.domain.PostEvent;
 import com.example.timetoeat.domain.post.domain.PostEventType;
 import com.example.timetoeat.domain.post.domain.vo.post.PostId;
 import lombok.RequiredArgsConstructor;
@@ -48,3 +48,4 @@ public class MatchingService implements PostEventHandler {
         }
     }
 }
+*/
