@@ -21,11 +21,18 @@ public class MemberEntity extends BaseTimeEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "username", nullable = false, length = 50, unique = true)
+    @Column(name = "username", nullable = false, length = 50)
     private String username;
 
     @Column(name = "email", nullable = false, length = 255, unique = true)
     private String email;
+
+    @Column(name = "profile_image_url", length = 512)
+    private String profileImageUrl;
+
+    // 자기 소개
+    @Column(name = "bio", length = 150)
+    private String bio;
 
     private int age;
 
@@ -49,7 +56,19 @@ public class MemberEntity extends BaseTimeEntity {
         return MemberEntity.builder()
                 .username(oauth2Provider.getUsername())
                 .email(oauth2Provider.getEmail())
+                .profileImageUrl(oauth2Provider.getProfileUrl())
                 .role(role)
                 .build();
+    }
+
+    // 프로필 변경
+    public void updateProfile(String username, String profileImageUrl, String bio) {
+
+        if (username != null && !username.isBlank()) {
+            this.username = username;
+        }
+
+        this.profileImageUrl = profileImageUrl;  // null 허용
+        this.bio = bio;  // null 허용
     }
 }

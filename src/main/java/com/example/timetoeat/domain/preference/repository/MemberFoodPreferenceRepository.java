@@ -10,7 +10,7 @@ import java.util.List;
 public interface MemberFoodPreferenceRepository extends JpaRepository<MemberFoodPreference, Long> {
 
     @EntityGraph(attributePaths = "foodCode")
-    List<MemberFoodPreference> findByMember_IdAndType(Long memberId, PreferenceType type);
+    List<MemberFoodPreference> findByMember_IdAndTypeOrderByFoodCode_LabelAsc(Long memberId, PreferenceType type);
 
     void deleteByMember_IdAndType(Long memberId, PreferenceType type);
 
