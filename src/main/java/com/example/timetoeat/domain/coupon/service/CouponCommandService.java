@@ -22,12 +22,20 @@ public class CouponCommandService {
 
     // 보상 쿠폰 발급(데모) → 쿠폰함에 즉시 반영
     public void issueRewardCoupon(Long memberId, String type) {
+        String title;
+        switch (type == null ? "" : type.toUpperCase()) {
+            case "WEEK"  -> title = "주간 챌린지 리워드";
+            case "MONTH" -> title = "월간 챌린지 리워드";
+            case "INVITE"-> title = "친구 초대 리워드";
+            default      -> title = "리워드 쿠폰";
+        }
+
         LocalDate expires = LocalDate.now().plusDays(30);
         long id = System.currentTimeMillis(); // 데모용 임시 ID
 
         CouponResponse reward = CouponResponse.builder()
                 .couponId(id)
-                .title(type.equalsIgnoreCase("WEEK") ? "주간 챌린지 리워드" : "월간 챌린지 리워드")
+                .title(title)
                 .shopName("모든 밥먹댕 제휴점")
                 .type(CouponResponse.CouponType.SERVICE)
                 .condition("매장 방문 시 2,000원 할인 쿠폰 사용 가능")
