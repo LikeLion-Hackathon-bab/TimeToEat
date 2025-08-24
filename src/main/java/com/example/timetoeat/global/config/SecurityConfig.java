@@ -67,7 +67,7 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorizationEndpointConfig ->
                                         authorizationEndpointConfig
                                                 .baseUri("/oauth2/authorization")
-                                                .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository) // ⬅️ 교체
+                                                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository()) // ← 여기만 교체
                         )
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
@@ -136,6 +136,7 @@ public class SecurityConfig {
                 "Access-Control-Request-Headers",
                 "Authorization"
         ));
+        configuration.addExposedHeader("X-Access-Token");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

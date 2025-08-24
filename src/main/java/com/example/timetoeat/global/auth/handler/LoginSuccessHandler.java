@@ -14,7 +14,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,19 +24,27 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-
         CustomOauth2User principal = (CustomOauth2User) authentication.getPrincipal();
         if (principal.isSignupRequired()) {
             response.sendRedirect("https://bab-muk-dang-client.vercel.app/");
             return;
         }
+
+        CookieUtil.deleteCookie(request, response, CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
+
         TokenDto tokenDto = jwtService.doTokenGenerationProcess(principal);
+
         CookieUtil.addCookie(
                 response,
                 CookieUtil.REFRESH_TOKEN_COOKIE_NAME,
                 tokenDto.getRefreshToken(),
-                (int) TimeUnit.MILLISECONDS.toSeconds(tokenDto.getRefreshTokenMaxAge())
+                (int) java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(tokenDto.getRefreshTokenMaxAge())
         );
+
+        response.setHeader("Cache-Control", "no-store");
+        response.setHeader("Pragma", "no-cache");
+        response.addHeader("X-Access-Token", tokenDto.getAccessToken());
+
         response.sendRedirect("https://bab-muk-dang-client.vercel.app/");
     }
 }
