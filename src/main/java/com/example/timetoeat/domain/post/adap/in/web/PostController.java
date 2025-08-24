@@ -5,8 +5,8 @@ import com.example.timetoeat.domain.post.application.port.in.usecase.GetPostUseC
 import com.example.timetoeat.domain.post.application.port.in.usecase.PostUseCase;
 import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.post.domain.vo.post.PostId;
-import com.example.timetoeat.domain.post.domain.dto.request.PostReq;
-import com.example.timetoeat.domain.post.domain.dto.response.PostRes;
+import com.example.timetoeat.domain.post.application.port.dto.request.PostReq;
+import com.example.timetoeat.domain.post.application.port.dto.response.PostRes;
 import com.example.timetoeat.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -59,9 +59,9 @@ public class PostController {
         if (memberId == null) {
             throw new IllegalStateException("로그인이 필요한 서비스입니다.");
         }
-        postUseCase.close(new MemberId(memberId), new PostId(postId));
+        String result = postUseCase.close(new MemberId(memberId), new PostId(postId));
 
-        return ApiResponse.success("공고가 성공적으로 마감되었습니다.");
+        return ApiResponse.success(result);
     }
 
     @GetMapping

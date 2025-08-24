@@ -5,7 +5,7 @@ import com.example.timetoeat.domain.post.adap.out.persistence.PostEntity;
 import com.example.timetoeat.domain.post.domain.Post;
 import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.post.domain.vo.post.PostId;
-import com.example.timetoeat.domain.post.domain.dto.response.PostRes;
+import com.example.timetoeat.domain.post.application.port.dto.response.PostRes;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

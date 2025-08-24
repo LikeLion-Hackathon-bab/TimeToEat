@@ -1,3 +1,4 @@
+/*
 package com.example.timetoeat.domain.post.application.service;
 
 import com.example.timetoeat.domain.article.repository.ArticlePhotoQueryRepository;
@@ -28,3 +29,4 @@ public class PreferenceService {
                 .collect(Collectors.toList());
     }
 }
+*/
