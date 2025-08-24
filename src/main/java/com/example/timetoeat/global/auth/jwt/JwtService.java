@@ -33,16 +33,16 @@ public class JwtService {
 
         Date now = new Date();
         TokenDto tokenDto = jwtProvider.issueToken(memberEntity, now);
+        Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
-        refreshTokenRepository.deleteAllByMemberId(memberId);
+        refreshTokenRepository.findByMemberId(memberId)
+                .ifPresentOrElse(
+                        rt -> rt.refresh(tokenDto.getRefreshToken(), refreshExp),
+                        () -> refreshTokenRepository.save(
+                                RefreshToken.create(memberId, tokenDto.getRefreshToken(), refreshExp)
+                        )
+                );
 
-        refreshTokenRepository.save(
-                RefreshToken.create(
-                        memberId,
-                        tokenDto.getRefreshToken(),
-                        jwtProvider.getRefreshTokenExpiration(now)
-                )
-        );
         return tokenDto;
     }
 
@@ -85,11 +85,7 @@ public class JwtService {
     @Transactional
     public void logout(String refreshToken) {
         if (!StringUtils.hasText(refreshToken)) return;
-
-        // 검증
         jwtProvider.validate(refreshToken);
-
-        // (안전장치) refresh 토큰 타입 확인
         String typ = jwtProvider.getPayload(refreshToken).get("typ", String.class);
         if (!"refresh".equals(typ)) {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);

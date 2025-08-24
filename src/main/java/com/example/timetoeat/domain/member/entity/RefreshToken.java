@@ -38,20 +38,17 @@ public class RefreshToken extends BaseTimeEntity {
                 .memberId(memberId)
                 .token(token)
                 .expiredAt(expiredAt)
+                .revoked(false)
                 .build();
     }
 
-    public boolean isExpired() {
-        return Instant.now().isAfter(expiredAt.toInstant());
-    }
+    public boolean isExpired() { return Instant.now().isAfter(expiredAt.toInstant()); }
 
-    // 토큰이 강제 무효화 되었는지 여부
-    public void revoke() {
-        this.revoked = true;
-    }
+    public void revoke() { this.revoked = true; }
 
-    public void update(String token, Date expiredAt) {
+    public void refresh(String token, Date expiredAt) {
         this.token = token;
         this.expiredAt = expiredAt;
+        this.revoked = false;
     }
 }
