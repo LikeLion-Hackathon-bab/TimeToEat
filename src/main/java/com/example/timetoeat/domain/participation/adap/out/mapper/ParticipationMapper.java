@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface ParticipationMapper {
+    @Mapping(target = "add", ignore = true)
     @Mapping(source = "entities", target = "memberIds")
     Participation toDomain(PostId postId, List<ParticipationEntity> entities);
 

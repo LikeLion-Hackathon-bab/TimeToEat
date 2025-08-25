@@ -8,6 +8,7 @@ import java.util.List;
 
 public record PostRes(
         Long postId,
+        LocalDateTime createdAt,
         AuthorInfo author,
         String message,
         LocalDateTime meetingAt,
