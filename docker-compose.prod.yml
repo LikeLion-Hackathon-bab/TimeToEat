@@ -14,7 +14,7 @@ services:
       food-ai:
         condition: service_started
       socket:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "8080:8080"
     networks: [ my-network ]
@@ -95,12 +95,15 @@ services:
       - "3000:3000"
     networks: [ my-network ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/health || curl -fsS http://localhost:3000/ || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://127.0.0.1:3000/health', r => process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1));\" || node -e \"require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1));\""
+        ]
       interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 60s
-
+      retries: 12
+      start_period: 120s
 
 networks:
   my-network:
