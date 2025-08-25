@@ -5,6 +5,7 @@ import java.util.List;
 
 public record PostData(
         Long postId,
+        LocalDateTime createdAt,
         String authorName,
         String authorProfileImageUrl,
         String message,
