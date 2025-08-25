@@ -12,7 +12,7 @@ services:
       rabbitmq:
         condition: service_healthy
       food-ai:
-        condition: service_started
+        condition: service_healthy
       socket:
         condition: service_started
     ports:
@@ -81,7 +81,7 @@ services:
     container_name: food-ai
     networks: [ my-network ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/healthz || exit 1"]
+      test: ["CMD", "python", "-c", "import urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5); sys.exit(0 if r.getcode()==200 else 1)"]
       interval: 15s
       timeout: 5s
       retries: 12

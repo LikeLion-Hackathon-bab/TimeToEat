@@ -26,7 +26,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         CustomOauth2User principal = (CustomOauth2User) authentication.getPrincipal();
         if (principal.isSignupRequired()) {
-            response.sendRedirect("https://bab-muk-dang-client.vercel.app/");
+            response.sendRedirect("https://bab-muk-dang-client.vercel.app/onboarding");
             return;
         }
 
