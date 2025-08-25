@@ -87,6 +87,7 @@ services:
       retries: 12
       start_period: 120s
 
+
   socket:
     image: dae9utang/babmukdang-socket:v1.0.0
     container_name: babmukdang-socket
