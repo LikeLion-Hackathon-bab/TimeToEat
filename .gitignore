@@ -50,7 +50,7 @@ src/main/resources/application-local.yml
 src/main/resources/application-dev.yml
 src/main/resources/application-prod.yml
 application-dev.yml
-
+timetoeat_fcm.json
 ### Docker ###
 docker-compose.yml
 docker-compose.dev.yml
