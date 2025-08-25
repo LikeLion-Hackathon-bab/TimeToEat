@@ -34,6 +34,7 @@ public interface PostMapper {
     @Named("mapAuthor")
     default AuthorInfo mapAuthor(PostData postData) {
         return new AuthorInfo(
+                postData.authorId(),
                 postData.authorName(),
                 postData.authorProfileImageUrl()
         );
