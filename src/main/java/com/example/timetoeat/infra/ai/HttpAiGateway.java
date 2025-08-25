@@ -32,11 +32,7 @@ public class HttpAiGateway implements AiGateway {
                 mealAtKst.atZone(ZoneId.of("Asia/Seoul")).toOffsetDateTime();
 
         MultipartBodyBuilder mb = new MultipartBodyBuilder();
-        mb.part("image", new FileSystemResource(imagePath)); // 사진 1장
-        mb.part("user_id", authorId);
-        mb.part("article_id", articleId);
-        // 멀티파트에는 문자열로(+09:00 포함)
-        mb.part("meal_at", mealAtOffset.toString());
+        mb.part("image", new FileSystemResource(imagePath));
 
         JsonNode root = aiWebClient.post()
                 .uri(props.getFoodBaseUrl() + "/v1/infer")
