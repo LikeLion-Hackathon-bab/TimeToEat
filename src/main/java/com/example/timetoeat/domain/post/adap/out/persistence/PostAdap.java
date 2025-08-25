@@ -48,6 +48,7 @@ public class PostAdap implements LoadPost, SavePost {
                         p -> p.getPost().getId(),
                         Collectors.mapping(
                                 p -> new ParticipationData(
+                                        p.getMember().getId(),
                                         p.getMember().getUsername(),
                                         p.getMember().getProfileImageUrl()
                                 ),
@@ -58,6 +59,7 @@ public class PostAdap implements LoadPost, SavePost {
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
                         postEntity.getCreatedAt(),
+                        postEntity.getMember().getId(),
                         postEntity.getMember().getUsername(),
                         postEntity.getMember().getProfileImageUrl(),
                         postEntity.getMessage(),
