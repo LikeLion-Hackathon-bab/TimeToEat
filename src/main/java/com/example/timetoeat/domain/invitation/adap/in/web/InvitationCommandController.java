@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/invitations")
 @RequiredArgsConstructor
-@Tag(name = "invitation API")
+@Tag(name = "invitation-controller")
 public class InvitationCommandController {
     private final InvitationUseCase invitationUseCase;
 
