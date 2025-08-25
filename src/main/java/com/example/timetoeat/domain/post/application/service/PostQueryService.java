@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 public class PostQueryService implements GetPostUseCase {
 
     private final LoadPost loadPost;
-    private final PostMapper postMapper;
 
     @Override
     public List<PostRes> getPosts() {
@@ -44,6 +43,7 @@ public class PostQueryService implements GetPostUseCase {
 
         return new PostRes(
                 data.postId(),
+                data.createdAt(),
                 authorInfo,
                 data.message(),
                 data.meetingAt(),

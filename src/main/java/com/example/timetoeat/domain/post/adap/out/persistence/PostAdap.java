@@ -57,6 +57,7 @@ public class PostAdap implements LoadPost, SavePost {
         return postEntities.stream()
                 .map(postEntity -> new PostData(
                         postEntity.getId(),
+                        postEntity.getCreatedAt(),
                         postEntity.getMember().getUsername(),
                         postEntity.getMember().getProfileImageUrl(),
                         postEntity.getMessage(),
