@@ -3,7 +3,6 @@ package com.example.timetoeat.domain.post.application.service;
 import com.example.timetoeat.domain.post.application.port.dto.AuthorInfo;
 import com.example.timetoeat.domain.post.application.port.dto.ParticipationInfo;
 import com.example.timetoeat.domain.post.application.port.in.usecase.GetPostUseCase;
-import com.example.timetoeat.domain.post.adap.out.mapper.PostMapper;
 import com.example.timetoeat.domain.post.application.port.out.LoadPost;
 import com.example.timetoeat.domain.post.application.port.data.PostData;
 import com.example.timetoeat.domain.post.application.port.dto.response.PostRes;
@@ -29,17 +28,17 @@ public class PostQueryService implements GetPostUseCase {
         return postDataList.stream()
                 .map(this::toPostRes)
                 .collect(Collectors.toList());
-
     }
 
     private PostRes toPostRes(PostData data) {
         AuthorInfo authorInfo = new AuthorInfo(
+                data.authorId(),
                 data.authorName(),
                 data.authorProfileImageUrl()
         );
 
         List<ParticipationInfo> participantInfoList = data.participants().stream()
-                .map(p -> new ParticipationInfo(p.name(), p.profileImageUrl()))
+                .map(p -> new ParticipationInfo(p.authorId(),p.name(), p.profileImageUrl()))
                 .collect(Collectors.toList());
 
         return new PostRes(
