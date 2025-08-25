@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -30,5 +31,12 @@ public interface ArticleRepository extends JpaRepository<Article, Long> {
     // 글 ID와 작성자 ID가 모두 일치할 때만 삭제 (삭제 성공 시 1, 없으면 0 반환)
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from Article a where a.id = :articleId and a.author.id = :authorId")
-    int deleteByIdAndAuthorId(Long articleId, Long authorId);
+    int deleteByIdAndAuthorId(@Param("articleId")Long articleId, @Param("authorId") Long authorId);
+
+    // [start, end): 시작 포함, 끝 미포함
+    long countByAuthor_IdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(
+            Long authorId,
+            LocalDateTime startInclusive,
+            LocalDateTime endExclusive
+    );
 }
