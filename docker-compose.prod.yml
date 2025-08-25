@@ -94,8 +94,6 @@ services:
     ports:
       - "3000:3000"
     networks: [ my-network ]
-    depends_on:
-      - application
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/"]
       interval: 10s
