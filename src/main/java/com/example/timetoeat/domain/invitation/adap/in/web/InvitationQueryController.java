@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/invitations")
 @RequiredArgsConstructor
-@Tag(name = "invitation API")
+@Tag(name = "invitation-controller")
 public class InvitationQueryController {
 
     private final GetInvitationUseCase getInvitationUseCase;
