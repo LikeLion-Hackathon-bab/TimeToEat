@@ -21,6 +21,7 @@ public class PostQueryService implements GetPostUseCase {
 
     private final LoadPost loadPost;
 
+
     @Override
     public List<PostRes> getPosts() {
         List<PostData> postDataList = loadPost.findAllPosts();
