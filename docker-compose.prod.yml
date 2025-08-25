@@ -81,11 +81,12 @@ services:
     container_name: food-ai
     networks: [ my-network ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/healthz || curl -fsS http://127.0.0.1:8000/health || wget -qO- http://127.0.0.1:8000/healthz || wget -qO- http://127.0.0.1:8000/health || exit 1"]
-      interval: 10s
+      test: ["CMD", "python", "-c", "import urllib.request, sys; \
+        sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:8000/health').status==200 else sys.exit(1)"]
+      interval: 15s
       timeout: 5s
       retries: 12
-      start_period: 90s
+      start_period: 120s
 
   socket:
     image: dae9utang/babmukdang-socket:v1.0.0
