@@ -35,3 +35,56 @@
 - **DTO 규칙**: 요청 DTO = Bean Validation + `toEntity()` / 응답 DTO = `from(Entity)`  
 - **응답 래퍼**: `ApiResponse<T>` / 도메인별 `ErrorCode`  
 - **JPA Auditing**: `BaseTimeEntity` 상속으로 `createdAt/updatedAt` 자동 관리
+
+-------
+## 🧑 역할
+### 최강                                                                                                                                                     
+                                                                                                                                                                                   
+서버 아키텍처 설계 및 구축                                                                                                                                                       
+- 프로젝트 구조 설계                                                                                                                                      
+- Docker Compose 기반 배포 환경 구축                                                                                                                                             
+- GitHub Actions CI/CD 파이프라인 구성                                                                                                                                           
+                                                                                                                                                                                 
+카카오 OAuth2 로그인 및 JWT 회원관리 구현                                                                                                                                        
+- 카카오 OAuth2 로그인 연동 (global/auth/oauth2/)                                                                                                                                
+- JWT Access/Refresh Token 발급 및 검증                                                                                                                                          
+- Security Filter Chain 구성                                                                                                                                                     
+                                                                                                                                                                                 
+공고(Post) 도메인 - 밥약속 모집 기능 구현                                                                                                                                        
+- Post CRUD API 및 상태 관리                                                                                                                                       
+- 공고 이벤트 처리                                                                                                                                  
+- 매칭 서비스 구현                                                                                                                                                               
+                                                                                                                                                                                 
+초대(Invitation) 도메인 구현                                                                                                                                                     
+- 초대 보내기/수락/거절 기능                                                                                                                                                     
+- WebSocket 알림 연동
+                                                                                                                                                            
+참여(Participation) / 계획(Plans) 도메인 구현
+
+<br>
+
+### 김성휘
+
+피드(Article) 및 좋아요 기능 구현                                                                                                                                                
+  - 게시글 CRUD API                                                                                                                                                                
+  - 홈 피드 조회 (24시간 이내)                                                                                                                                                     
+  - 좋아요 토글 기능                                                                                                                                                               
+                                                                                                                                                                                   
+  댓글 기능 구현                                                                                                                                                                   
+  - 댓글/대댓글 작성                                                                                                                                                               
+  - 권한 검증 및 Cascade 삭제                                                                                                                                                      
+                                                                                                                                                                                   
+  AI 연동 기능 구현                                                                                                                                                                
+  - AI 사진 추론 게이트웨이 (infra/ai/)                                                                                                                                            
+  - 재시도 메커니즘                                                                                                                                                                
+                                                                                                                                                                                   
+  프로필 관리 및 온보딩 기능 구현                                                                                                                                                  
+  - 프로필 조회/수정 API                                                                                                                                                           
+  - 온보딩 통합 (프로필 + 선호도)                                                                                                                                                  
+                                                                                                                                                                                   
+  음식 선호도(Preference) 기능 구현                                                                                                                                                
+  - 선호/비선호/알레르기 저장                                                                                                                                                      
+  - 음식 코드 관리
+
+                      
+  챌린지(Challenge) / 쿠폰(Coupon) / 추천 코드(Referral) 기능 구현
