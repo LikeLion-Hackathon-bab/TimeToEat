@@ -43,7 +43,8 @@ public class ExpiredEventHandler implements EventHandler<PostExpiredEvent> {
         PostDetailsDto postDetails = postParsingService.getPostDetails(event.post());
 
         Participation participation = loadParticipation.getParticipationByPostId(postId);
-        Set<MemberId> memberIds = participation.getMemberIds();
+        Set<MemberId> memberIds = new java.util.LinkedHashSet<>(participation.getMemberIds());
+        memberIds.add(event.post().getMemberId());
         List<ParticipationSocketDto> participations = participationInfoService.getParticipations(memberIds);
         List<RecentMenuDto> recentMenus = recentMenuService.getRecentMenus(memberIds);
 

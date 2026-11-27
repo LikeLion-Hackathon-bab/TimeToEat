@@ -8,5 +8,6 @@ import java.util.List;
 
 public interface LoadPost {
     Post findById(PostId postId);
+    Post findForUpdate(PostId postId);
     List<PostData> findAllPosts();
 }

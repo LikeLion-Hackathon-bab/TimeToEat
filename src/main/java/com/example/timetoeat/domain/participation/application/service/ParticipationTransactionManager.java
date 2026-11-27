@@ -26,7 +26,8 @@ public class ParticipationTransactionManager {
 
     @Transactional
     public void apply(MemberId memberId, PostId postId) {
-        Post post = loadPost.findById(postId);
+        Post post = loadPost.findForUpdate(postId);
+        if (post.isOwnedBy(memberId)) throw new IllegalStateException("자신의 공고에는 신청할 수 없습니다.");
         Participation participation = loadParticipation.getParticipationByPostId(post.getPostId());
 
 

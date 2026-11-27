@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public class CookieUtil {
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    private static final String COOKIE_DOMAIN = ".babmuckdang.site";
+    private static final String COOKIE_DOMAIN = System.getenv().getOrDefault("AUTH_COOKIE_DOMAIN", ".babmuckdang.site");
     private static final String SAME_SITE_DEFAULT = "None";
 
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
@@ -40,7 +40,7 @@ public class CookieUtil {
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
-                .domain(domain)
+                .domain(domain == null || domain.isBlank() ? null : domain)
                 .maxAge(maxAgeSeconds)
                 .sameSite(sameSite)
                 .build();
@@ -50,7 +50,7 @@ public class CookieUtil {
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
         ResponseCookie c1 = ResponseCookie.from(name, "")
                 .httpOnly(true).secure(true).path("/")
-                .domain(COOKIE_DOMAIN).maxAge(0).sameSite(SAME_SITE_DEFAULT).build();
+                .domain(COOKIE_DOMAIN.isBlank() ? null : COOKIE_DOMAIN).maxAge(0).sameSite(SAME_SITE_DEFAULT).build();
         response.addHeader(HttpHeaders.SET_COOKIE, c1.toString());
 
         ResponseCookie c2 = ResponseCookie.from(name, "")

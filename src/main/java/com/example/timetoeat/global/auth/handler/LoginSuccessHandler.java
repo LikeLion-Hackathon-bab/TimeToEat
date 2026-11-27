@@ -21,14 +21,13 @@ import java.io.IOException;
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtService jwtService;
+    @org.springframework.beans.factory.annotation.Value("${CLIENT_LOGIN_REDIRECT:https://bab-muk-dang-client.vercel.app/}")
+    private String loginRedirect;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         CustomOauth2User principal = (CustomOauth2User) authentication.getPrincipal();
-        if (principal.isSignupRequired()) {
-            response.sendRedirect("https://bab-muk-dang-client.vercel.app/onboarding");
-            return;
-        }
+
 
         CookieUtil.deleteCookie(request, response, CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
 
@@ -45,6 +44,8 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         response.setHeader("Pragma", "no-cache");
         response.addHeader("X-Access-Token", tokenDto.getAccessToken());
 
-        response.sendRedirect("https://bab-muk-dang-client.vercel.app/");
+        response.sendRedirect(principal.isSignupRequired()
+                ? java.net.URI.create(loginRedirect).resolve("/onboarding").toString()
+                : loginRedirect);
     }
 }

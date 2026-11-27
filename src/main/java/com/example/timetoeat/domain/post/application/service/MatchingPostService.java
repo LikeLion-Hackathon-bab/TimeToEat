@@ -7,7 +7,7 @@ import com.example.timetoeat.domain.post.adap.in.dto.PostDetailsDto;
 import com.example.timetoeat.domain.post.adap.in.dto.RecentMenuDto;
 import com.example.timetoeat.domain.post.adap.in.dto.WebSocketRequestDto;
 import com.example.timetoeat.domain.post.domain.vo.post.PostId;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -15,13 +15,18 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class MatchingPostService {
 
     private final WebClient webClient;
-    private static final String ANNOUNCEMENT_URL = "http://13.125.49.103:3000/api/announcement/{announcementId}";
-    private static final String INVITATION_URL = "http://13.125.49.103:3000/api/invitation/{invitationId}";
+    private final String socketBaseUrl;
+    private final String roomKey;
+
+    public MatchingPostService(WebClient webClient, @Value("${matching.socket-base-url}") String socketBaseUrl, @Value("${ROOM_RESULT_KEY:}") String roomKey) {
+        this.roomKey = roomKey;
+        this.webClient = webClient;
+        this.socketBaseUrl = socketBaseUrl.replaceFirst("/+$", "");
+    }
 
     public void sendAnnouncement(PostId postId,
                                  PostDetailsDto postDetails,
@@ -37,7 +42,8 @@ public class MatchingPostService {
         );
 
         webClient.post()
-                .uri(ANNOUNCEMENT_URL, requestDto.announcementId())
+                .uri(socketBaseUrl + "/api/announcement/{announcementId}", requestDto.announcementId())
+                .header("X-Room-Key", roomKey)
                 .bodyValue(requestDto)
                 .retrieve()
                 .toBodilessEntity()
@@ -58,7 +64,8 @@ public class MatchingPostService {
         );
 
         webClient.post()
-                .uri(INVITATION_URL, requestDto.invitationId())
+                .uri(socketBaseUrl + "/api/invitation/{invitationId}", requestDto.invitationId())
+                .header("X-Room-Key", roomKey)
                 .bodyValue(requestDto)
                 .retrieve()
                 .toBodilessEntity()

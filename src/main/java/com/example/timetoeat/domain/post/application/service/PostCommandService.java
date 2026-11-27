@@ -43,7 +43,7 @@ public class PostCommandService implements PostUseCase {
 
     @Override
     public String close(MemberId memberId,PostId postId) {
-        Post post = loadPost.findById(postId);
+        Post post = loadPost.findForUpdate(postId);
         if (!post.isOwnedBy(memberId)) {
             throw new SecurityException("공고를 마감할 권한이 없습니다.");
         }
@@ -55,7 +55,7 @@ public class PostCommandService implements PostUseCase {
 
     @Override
     public void expire(PostId postId) {
-        Post post = loadPost.findById(postId);
+        Post post = loadPost.findForUpdate(postId);
         Post expiredPost = post.expire();
         Post savedPost = savePost.save(expiredPost);
         publishPostEvent.publish(new PostExpiredEvent(savedPost));

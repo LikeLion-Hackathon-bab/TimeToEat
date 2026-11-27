@@ -27,6 +27,12 @@ public class PostAdap implements LoadPost, SavePost {
     private final PostMapper postMapper;
 
     @Override
+    public Post findForUpdate(PostId postId) {
+        return postMapper.toDomain(postRepository.findForUpdate(postId.getId())
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND, "공고를 찾을 수 없습니다")));
+    }
+
+    @Override
     public Post findById(PostId postId) {
         PostEntity postEntity = postRepository.findById(postId.getId())
                 .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND, "공고를 찾을 수 없습니다"));
