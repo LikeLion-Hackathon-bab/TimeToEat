@@ -18,7 +18,7 @@ public class ParticipationService implements ParticipationUseCase {
     public boolean apply(MemberId memberId, PostId postId) {
         postLock.lock(postId);
         try {
-            transactionManager.apply(memberId, postId);
+            if (!transactionManager.apply(memberId, postId)) throw new IllegalStateException("만료된 공고입니다.");
             return true;
         }finally {
             postLock.unlock(postId);

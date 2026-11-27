@@ -33,6 +33,19 @@ public class MatchingPostService {
                                  List<ParticipationSocketDto> paricipations,
                                  List<RecentMenuDto> recentMenus) {
 
+        announcementRequest(postId, postDetails, paricipations, recentMenus)
+                .subscribe(
+                        response -> log.info("공지 웹소켓 서버로 요청 성공: {}", response.getStatusCode()),
+                        error -> log.error("공지 웹소켓 서버로 요청 실패: {}", error.getMessage())
+                );
+    }
+
+    public void ensureAnnouncement(PostId id, PostDetailsDto details, List<ParticipationSocketDto> people, List<RecentMenuDto> menus) {
+        announcementRequest(id, details, people, menus).block(java.time.Duration.ofSeconds(4));
+    }
+
+    private reactor.core.publisher.Mono<org.springframework.http.ResponseEntity<Void>> announcementRequest(
+            PostId postId, PostDetailsDto postDetails, List<ParticipationSocketDto> paricipations, List<RecentMenuDto> recentMenus) {
         WebSocketRequestDto requestDto = new WebSocketRequestDto(
                 String.valueOf(postId.getId()),
                 postDetails.location(),
@@ -41,16 +54,12 @@ public class MatchingPostService {
                 recentMenus
         );
 
-        webClient.post()
+        return webClient.post()
                 .uri(socketBaseUrl + "/api/announcement/{announcementId}", requestDto.announcementId())
                 .header("X-Room-Key", roomKey)
                 .bodyValue(requestDto)
                 .retrieve()
-                .toBodilessEntity()
-                .subscribe(
-                        response -> log.info("공지 웹소켓 서버로 요청 성공: {}", response.getStatusCode()),
-                        error -> log.error("공지 웹소켓 서버로 요청 실패: {}", error.getMessage())
-                );
+                .toBodilessEntity();
     }
 
     public void sendInvitation(InvitationId invitationId,

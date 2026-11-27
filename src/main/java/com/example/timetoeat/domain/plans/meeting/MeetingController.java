@@ -18,8 +18,10 @@ import com.example.timetoeat.global.common.ApiResponse;
 class MeetingController {
     private final MeetingService service;
     private final String key;
-    MeetingController(MeetingService service, @Value("${ROOM_RESULT_KEY:}") String key) {
+    private final RoomEntryService roomEntry;
+    MeetingController(MeetingService service, RoomEntryService roomEntry, @Value("${ROOM_RESULT_KEY:}") String key) {
         this.service = service;
+        this.roomEntry = roomEntry;
         this.key = key;
     }
     record Selection(@NotBlank @Size(max=255) String restaurant) {}
@@ -33,6 +35,11 @@ class MeetingController {
     @GetMapping
     ApiResponse<List<MeetingService.View>> list(@AuthenticationPrincipal CustomOauth2User viewer) {
         return ApiResponse.success(service.list(viewer == null ? null : viewer.getMemberId(), null), "밥약 목록");
+    }
+    @PostMapping("/rooms/{id}/enter")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void enter(@AuthenticationPrincipal CustomOauth2User viewer, @PathVariable long id) {
+        roomEntry.enter(id, viewer == null ? null : viewer.getMemberId());
     }
     @GetMapping("/rooms")
     ApiResponse<List<MeetingService.Room>> rooms(@AuthenticationPrincipal CustomOauth2User viewer) {

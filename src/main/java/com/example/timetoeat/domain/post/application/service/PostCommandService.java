@@ -56,6 +56,7 @@ public class PostCommandService implements PostUseCase {
     @Override
     public void expire(PostId postId) {
         Post post = loadPost.findForUpdate(postId);
+        if (post.getStatus() != com.example.timetoeat.domain.post.domain.Status.OPEN) return;
         Post expiredPost = post.expire();
         Post savedPost = savePost.save(expiredPost);
         publishPostEvent.publish(new PostExpiredEvent(savedPost));

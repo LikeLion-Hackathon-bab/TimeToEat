@@ -25,8 +25,14 @@ public class ParticipationTransactionManager {
     private final PublishPostEvent publishPostEvent;
 
     @Transactional
-    public void apply(MemberId memberId, PostId postId) {
+    public boolean apply(MemberId memberId, PostId postId) {
         Post post = loadPost.findForUpdate(postId);
+        if (post.getStatus() == com.example.timetoeat.domain.post.domain.Status.OPEN &&
+                !post.getExpiredAt().isAfter(java.time.LocalDateTime.now())) {
+            var expired = savePost.save(post.expire());
+            publishPostEvent.publish(new com.example.timetoeat.domain.post.domain.event.PostExpiredEvent(expired));
+            return false;
+        }
         if (post.isOwnedBy(memberId)) throw new IllegalStateException("자신의 공고에는 신청할 수 없습니다.");
         Participation participation = loadParticipation.getParticipationByPostId(post.getPostId());
 
@@ -46,5 +52,6 @@ public class ParticipationTransactionManager {
             Post savedPost = savePost.save(closedPost);
             publishPostEvent.publish(new PostCompletedEvent(savedPost));
         }
+        return true;
     }
 }
