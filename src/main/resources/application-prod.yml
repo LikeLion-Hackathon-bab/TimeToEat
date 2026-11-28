@@ -19,16 +19,18 @@ spring:
       port: ${REDIS_PORT:6379}
 
   rabbitmq:
-    # 리스너 예외는 1초·2초 간격으로 2번 더 시도한 뒤 버린다(재큐 안 함). 기본값(default-requeue-rejected=true)은
-    # 처리할 수 없는 메시지(예: 지워진 회원·공고를 가리키는 완료 이벤트)를 즉시 무한 재전달해 CPU와 로그를 태웠다.
+    # 리스너 예외는 1초·3초·9초·10초 간격으로 다시 시도한다(5번, 약 23초). Socket 재시작 정도는 견딘다.
+    # 그래도 실패하면 재큐하지 않고 dead-letter 큐(domain-events-dead-letter)에 보관한다(RabbitDeadLetterConfig).
+    # 기본값(default-requeue-rejected=true)은 처리할 수 없는 메시지를 즉시 무한 재전달해 CPU와 로그를 태웠다.
     listener:
       simple:
         default-requeue-rejected: false
         retry:
           enabled: true
-          max-attempts: 3
+          max-attempts: 5
           initial-interval: 1s
-          multiplier: 2
+          multiplier: 3
+          max-interval: 10s
     host: ${RABBITMQ_HOST:rabbitmq}
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_DEFAULT_USER}
