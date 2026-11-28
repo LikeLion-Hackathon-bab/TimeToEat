@@ -64,7 +64,11 @@ class InvitationResultIT extends QaIntegrationSupport {
         // 같은 순간을 UTC로 보낸 재전송도 같은 값
         result(id, body("2026-12-01T04:00:00Z", "강남역", "초밥집"), "qa-room-key").andExpect(status().isNoContent());
         result(id, body("2026-12-01T13:00:00+09:00", "강남역", "국밥집"), "qa-room-key").andExpect(status().isConflict());
-        result(id, body("2026-12-01T14:00:00+09:00", "강남역", "초밥집"), "qa-room-key").andExpect(status().isConflict());
+        result(id, body("2026-12-01T14:00:00+09:00", "강남역", "초밥집"), "qa-room-key").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("HTTP_409"))
+                .andExpect(jsonPath("$.data.meetingAt").value("2026-12-01T13:00:00+09:00"))
+                .andExpect(jsonPath("$.data.location").value("강남역"))
+                .andExpect(jsonPath("$.data.restaurant").value("초밥집"));
         assertEquals(1, jdbc.queryForObject("select count(*) from confirmed_invitation_meeting where invitation_id=?", Integer.class, id));
         assertEquals("2026-12-01 13:00:00", jdbc.queryForObject(
                 "select date_format(meeting_at,'%Y-%m-%d %H:%i:%s') from confirmed_invitation_meeting where invitation_id=?", String.class, id));

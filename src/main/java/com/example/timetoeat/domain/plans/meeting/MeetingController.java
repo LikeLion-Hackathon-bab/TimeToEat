@@ -25,6 +25,12 @@ class MeetingController {
         this.key = key;
     }
     record Selection(@NotBlank @Size(max=255) String restaurant) {}
+    /** 409 바디: 기존 형식 {code, message}에 data(저장된 결과)를 더한다. 기존 클라이언트는 data를 무시해도 된다. */
+    @ExceptionHandler(MeetingService.AlreadyConfirmed.class)
+    org.springframework.http.ResponseEntity<ApiResponse<Object>> alreadyConfirmed(MeetingService.AlreadyConfirmed e) {
+        return org.springframework.http.ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.builder().code("HTTP_409").message(e.message).data(e.stored).build());
+    }
     private void requireRoomKey(String provided) {
         if (key.isBlank() || !MessageDigest.isEqual(key.getBytes(StandardCharsets.UTF_8), provided.getBytes(StandardCharsets.UTF_8)))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);

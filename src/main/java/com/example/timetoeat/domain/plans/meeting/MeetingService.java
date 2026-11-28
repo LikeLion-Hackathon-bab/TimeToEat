@@ -34,12 +34,22 @@ class MeetingService {
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     record InvitationResult(LocalDateTime meetingAt, String location, String restaurant) {}
 
+    /** 이미 다른 값으로 확정된 경우. 저장된 값을 담아 Socket이 그 값으로 진행할 수 있게 한다. */
+    static class AlreadyConfirmed extends RuntimeException {
+        final String message;
+        final Object stored;
+        AlreadyConfirmed(String message, Object stored) { super(message); this.message = message; this.stored = stored; }
+    }
+    record StoredRestaurant(String restaurant) {}
+    record StoredInvitationResult(String meetingAt, String location, String restaurant) {}
+
     @Transactional
     public void record(long id, String restaurant) {
         if (!posts.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "공고를 찾을 수 없습니다.");
         meetings.record(id, restaurant);
-        if (!meetings.findById(id).orElseThrow().getRestaurant().equals(restaurant))
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        var stored = meetings.findById(id).orElseThrow().getRestaurant();
+        if (!stored.equals(restaurant))
+            throw new AlreadyConfirmed("이미 다른 식당으로 확정된 공고입니다.", new StoredRestaurant(stored));
     }
     /** 개별 초대 결과 저장. 같은 값 재전송은 성공, 다른 값은 409, 수락 안 된 초대는 409, 없는 초대는 404. */
     @Transactional
@@ -54,7 +64,8 @@ class MeetingService {
         var stored = invitationResults.findById(id).orElseThrow();
         if (!stored.getMeetingAt().equals(local) || !stored.getLocation().equals(location)
                 || !stored.getRestaurant().equals(restaurant))
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 다른 결과로 확정된 초대입니다.");
+            throw new AlreadyConfirmed("이미 다른 결과로 확정된 초대입니다.", new StoredInvitationResult(
+                    stored.getMeetingAt().atZone(SEOUL).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")), stored.getLocation(), stored.getRestaurant()));
     }
 
     /** 내 밥약 목록: 공고 밥약 + 초대 밥약, 만남 시각 내림차순. */

@@ -18,8 +18,8 @@ class MeetingServiceTest {
         when(repository.findById(12L)).thenReturn(Optional.of(stored));
         when(posts.existsById(12L)).thenReturn(true);
         assertDoesNotThrow(() -> service.record(12, "초밥집"));
-        assertEquals(409, assertThrows(ResponseStatusException.class,
-                () -> service.record(12, "다른 식당")).getStatusCode().value());
+        var conflict = assertThrows(MeetingService.AlreadyConfirmed.class, () -> service.record(12, "다른 식당"));
+        assertEquals(new MeetingService.StoredRestaurant("초밥집"), conflict.stored);
     }
 
     @Test void resultForAMissingPostIsNotFound() {

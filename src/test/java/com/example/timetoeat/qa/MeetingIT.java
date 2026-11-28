@@ -54,6 +54,13 @@ class MeetingIT extends QaIntegrationSupport {
         record(id, "초밥집", 204);
         record(id, "초밥집", 204);
         record(id, "국밥집", 409);
+        // 409 본문에 저장된 식당(Socket이 이 값으로 finish 진행)
+        mvc.perform(post("/api/v1/meetings/" + id + "/result").header("X-Room-Key", "qa-room-key")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"restaurant\":\"국밥집\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("HTTP_409"))
+                .andExpect(jsonPath("$.message").value("이미 다른 식당으로 확정된 공고입니다."))
+                .andExpect(jsonPath("$.data.restaurant").value("초밥집"));
         assertEquals(1, jdbc.queryForObject("select count(*) from confirmed_meeting where post_id=?", Integer.class, id));
         assertEquals("초밥집", jdbc.queryForObject("select restaurant from confirmed_meeting where post_id=?", String.class, id));
     }
