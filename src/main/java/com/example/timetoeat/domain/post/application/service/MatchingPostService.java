@@ -33,7 +33,7 @@ public class MatchingPostService {
                                  List<ParticipationSocketDto> paricipations,
                                  List<RecentMenuDto> recentMenus) {
 
-        announcementRequest(postId, postDetails, paricipations, recentMenus)
+        announcementRequest(postId, postDetails, paricipations, recentMenus, false)
                 .subscribe(
                         response -> log.info("공지 웹소켓 서버로 요청 성공: {}", response.getStatusCode()),
                         error -> log.error("공지 웹소켓 서버로 요청 실패: {}", error.getMessage())
@@ -41,11 +41,12 @@ public class MatchingPostService {
     }
 
     public void ensureAnnouncement(PostId id, PostDetailsDto details, List<ParticipationSocketDto> people, List<RecentMenuDto> menus) {
-        announcementRequest(id, details, people, menus).block(java.time.Duration.ofSeconds(4));
+        announcementRequest(id, details, people, menus, true).block(java.time.Duration.ofSeconds(4));
     }
 
     private reactor.core.publisher.Mono<org.springframework.http.ResponseEntity<Void>> announcementRequest(
-            PostId postId, PostDetailsDto postDetails, List<ParticipationSocketDto> paricipations, List<RecentMenuDto> recentMenus) {
+            PostId postId, PostDetailsDto postDetails, List<ParticipationSocketDto> paricipations, List<RecentMenuDto> recentMenus,
+            boolean authoritative) {
         WebSocketRequestDto requestDto = new WebSocketRequestDto(
                 String.valueOf(postId.getId()),
                 postDetails.location(),
@@ -55,7 +56,8 @@ public class MatchingPostService {
         );
 
         return webClient.post()
-                .uri(socketBaseUrl + "/api/announcement/{announcementId}", requestDto.announcementId())
+                // authoritative=true: 입장 API 가 DB 참여자 목록을 보낸다. Socket 은 없는 참가자를 뺀다(리뷰 S2)
+                .uri(socketBaseUrl + "/api/announcement/{announcementId}?authoritative={a}", requestDto.announcementId(), authoritative)
                 .header("X-Room-Key", roomKey)
                 .bodyValue(requestDto)
                 .retrieve()
@@ -73,7 +75,7 @@ public class MatchingPostService {
         );
 
         webClient.post()
-                .uri(socketBaseUrl + "/api/invitation/{invitationId}", requestDto.invitationId())
+                .uri(socketBaseUrl + "/api/invitation/{invitationId}?authoritative=true", requestDto.invitationId())
                 .header("X-Room-Key", roomKey)
                 .bodyValue(requestDto)
                 .retrieve()
