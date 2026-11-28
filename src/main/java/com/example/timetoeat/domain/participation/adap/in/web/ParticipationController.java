@@ -30,9 +30,6 @@ public class ParticipationController {
             @PathVariable Long postId
     )
     {
-        if (memberId == null || postId == null) {
-            throw new IllegalStateException("공지 참여 입력값이 유효하지 않습니다");
-        }
         participationUseCase.apply(new MemberId(memberId), new PostId(postId));
         return ApiResponse.success("참가 신청이 완료되었습니다.");
     }

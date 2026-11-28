@@ -27,15 +27,30 @@ class FriendMealQueryServiceTest {
                 MemberEntity.builder().id(1002L).username("실제A").build(),
                 MemberEntity.builder().id(1003L).username("실제B").build()));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
-        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), repo, meals);
+        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), repo, meals, true);
 
         List<FriendMealItemResponse> list = service.getDemoList(1L, "ALL");
 
-        assertEquals(30, list.size(), "시연 채움 정책(30명)은 유지");
+        assertEquals(30, list.size(), "DEMO_FRIENDS_ENABLED=true 면 시연 채움 정책(30명)은 유지");
         var ids = new HashSet<Long>();
         for (var item : list) assertTrue(ids.add(item.getMemberId()), "id " + item.getMemberId() + " 중복");
         list.stream().filter(i -> !i.getUserName().startsWith("실제"))
                 .forEach(i -> assertTrue(i.getMemberId() < 0, "시연 항목 " + i.getUserName() + " id=" + i.getMemberId()
                         + " 는 실제 회원 id 범위(양수)를 쓰면 안 된다"));
+    }
+
+    @Test
+    void byDefaultTheListHasOnlyRealMembers() {
+        var repo = mock(MemberJpaRepository.class);
+        var meals = mock(MemberMealStatusRepository.class);
+        when(repo.findTop30ByIdNotOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(
+                MemberEntity.builder().id(7L).username("실제A").build()));
+        when(meals.findByMember_IdIn(any())).thenReturn(List.of());
+        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), repo, meals, false);
+
+        List<FriendMealItemResponse> list = service.getDemoList(1L, "ALL");
+
+        assertEquals(1, list.size(), "가짜 시연 친구로 채우지 않는다");
+        assertEquals(7L, list.get(0).getMemberId());
     }
 }
