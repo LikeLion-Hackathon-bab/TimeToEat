@@ -22,7 +22,9 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ApiResponse<AccessTokenResponse> refresh(
-          @CookieValue(name = "refreshToken", required = true) String refreshToken,
+          // 쿠키가 없을 때 required=true 면 MissingRequestCookieException → 400 + ERROR 로그였다.
+          // 로그인 전·로그아웃 뒤의 정상 상황이므로 reissue 가 401(INVALID_REFRESH_TOKEN)로 답한다.
+          @CookieValue(name = CookieUtil.REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken,
           HttpServletResponse response
     ) {
         TokenDto tokenDto = jwtService.reissue(refreshToken);
