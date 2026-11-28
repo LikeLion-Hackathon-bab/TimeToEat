@@ -68,6 +68,21 @@ public class CustomExceptionHandler {
                 .code("HTTP_" + status.value()).message(message).build());
     }
 
+    /** 없는 경로(정적 리소스 탐색 실패 포함)는 404. 이전에는 아래 Exception 처리로 500이었다. */
+    @ExceptionHandler({org.springframework.web.servlet.resource.NoResourceFoundException.class,
+            org.springframework.web.servlet.NoHandlerFoundException.class})
+    public ResponseEntity<ApiResponse<Object>> handleNoRoute(Exception e) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+                .body(ApiResponse.builder().code("HTTP_404").message("요청한 경로를 찾을 수 없습니다.").build());
+    }
+
+    /** 지원하지 않는 메서드는 405(이전 500). */
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMethod(org.springframework.web.HttpRequestMethodNotSupportedException e) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ApiResponse.builder().code("HTTP_405").message("지원하지 않는 요청 방식입니다.").build());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleException(Exception e) {
         log.error("Exception : {}", e.getMessage(), e);
