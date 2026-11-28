@@ -43,8 +43,17 @@ public class PostAdap implements LoadPost, SavePost, DeletePost {
 
     @Override
     public List<PostData> findAllPosts() {
-        List<PostEntity> postEntities = postRepository.findOpenWithMember(java.time.LocalDateTime.now());
+        return toData(postRepository.findOpenWithMember(java.time.LocalDateTime.now()));
+    }
 
+    @Override
+    public PostData findPostData(PostId postId) {
+        PostEntity entity = postRepository.findById(postId.getId())
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND, "공고를 찾을 수 없습니다"));
+        return toData(List.of(entity)).get(0);
+    }
+
+    private List<PostData> toData(List<PostEntity> postEntities) {
         List<Long> postIds = postEntities.stream()
                 .map(postEntity -> postEntity.getId())
                 .collect(Collectors.toList());
@@ -75,7 +84,9 @@ public class PostAdap implements LoadPost, SavePost, DeletePost {
                         postEntity.getLocation(),
                         participantsMap.getOrDefault(postEntity.getId(), List.of()),
                         postEntity.getTargetCount(),
-                        postEntity.getExpiredAt()
+                        postEntity.getExpiredAt(),
+                        postEntity.getStatus(),
+                        postEntity.getCloseReason()
                 ))
                 .collect(Collectors.toList());
     }

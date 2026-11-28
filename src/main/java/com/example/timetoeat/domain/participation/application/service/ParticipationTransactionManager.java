@@ -50,7 +50,7 @@ public class ParticipationTransactionManager {
         saveParticipation.save(newParticipation);
 
         if (newParticipation.isFull(post.getTargetCount())) {
-            Post closedPost = post.close();
+            Post closedPost = post.close(com.example.timetoeat.domain.post.domain.CloseReason.FULL);
             Post savedPost = savePost.save(closedPost);
             publishPostEvent.publish(new PostCompletedEvent(savedPost));
         }

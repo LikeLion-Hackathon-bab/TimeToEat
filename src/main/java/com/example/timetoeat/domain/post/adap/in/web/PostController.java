@@ -77,6 +77,12 @@ public class PostController {
         postUseCase.delete(new MemberId(memberId), new PostId(postId));
     }
 
+    @GetMapping("/{postId}")
+    @Operation(summary = "공지 단건 조회 API (마감·만료 포함, status·closeReason 로 사유 구분)")
+    public ApiResponse<PostRes> getPost(@PathVariable Long postId) {
+        return ApiResponse.success(getPostUseCase.getPost(new PostId(postId)));
+    }
+
     @GetMapping
     @Operation(summary = "공지 전체 조회 API")
     public ApiResponse<List<PostRes>> getPosts()

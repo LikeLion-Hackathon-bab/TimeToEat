@@ -64,6 +64,7 @@ public class RoomLeaveService {
             if (post.getMeetingAt() != null && post.getMeetingAt().isAfter(now)) {
                 var until = now.plus(REOPEN_WINDOW);
                 post.setStatus(Status.OPEN);
+                post.setCloseReason(null); // 다시 모집 중: 마감 사유를 지운다
                 post.setExpiredAt(until.isBefore(post.getMeetingAt()) ? until : post.getMeetingAt());
                 outcome = Outcome.LEFT_AND_REOPENED;
             } else {
