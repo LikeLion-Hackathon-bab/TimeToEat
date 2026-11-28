@@ -50,11 +50,12 @@ class EventAfterCommitIT extends QaIntegrationSupport {
         }).when(rabbit).convertAndSend(anyString(), eq("post.event.completed"), any(Object.class));
 
         participation.apply(new MemberId(last.getId()), new PostId(post.getId()));
-        assertNull(failure.get());
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<ParticipationSocketDto>> people = ArgumentCaptor.forClass(List.class);
-        verify(socket).sendAnnouncement(eq(new PostId(post.getId())), any(), people.capture(), any());
+        // 발행은 커밋 뒤 전용 스레드에서 일어난다(R18-1)
+        verify(socket, timeout(15_000)).sendAnnouncement(eq(new PostId(post.getId())), any(), people.capture(), any());
+        assertNull(failure.get());
         var ids = people.getValue().stream().map(ParticipationSocketDto::userId).toList();
         assertEquals(2, participationRows(post.getId()));
         assertTrue(ids.contains(String.valueOf(last.getId())),
@@ -71,6 +72,7 @@ class EventAfterCommitIT extends QaIntegrationSupport {
         doThrow(new org.springframework.amqp.AmqpConnectException(new java.net.ConnectException("broker down")))
                 .when(rabbit).convertAndSend(anyString(), anyString(), any(Object.class));
         assertDoesNotThrow(() -> participation.apply(new MemberId(last.getId()), new PostId(post.getId())));
+        verify(rabbit, timeout(10_000)).convertAndSend(anyString(), eq("post.event.completed"), any(Object.class));
         assertEquals(1, participationRows(post.getId()));
         assertEquals("CLOSED", jdbc.queryForObject("select status from post where id=?", String.class, post.getId()));
     }
