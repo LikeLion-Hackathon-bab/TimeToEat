@@ -111,6 +111,7 @@ public class SecurityConfig {
                                 "/error",
                                 "/api/v1/auth/refresh",                   // 리프레시 쿠키로 인증
                                 "/api/v1/auth/logout",                    // 만료된 access 토큰으로도 로그아웃
+                                "/api/v1/auth/demo-login",                // 시연 로그인(DEMO_LOGIN_ENABLED=true 일 때만 존재, 아니면 404)
                                 "/api/v1/ai/support/**"                   // X-AI-KEY (AI 서버)
                         ).permitAll()
                         // Socket → Spring 결과 저장(X-Room-Key). POST만 연다. 같은 경로의 GET 상세는 인증 필요.

@@ -15,4 +15,6 @@ public interface MemberFoodPreferenceRepository extends JpaRepository<MemberFood
     void deleteByMember_IdAndType(Long memberId, PreferenceType type);
 
     boolean existsByMember_IdAndFoodCode_CodeAndType(Long memberId, String code, PreferenceType type);
+
+    boolean existsByMember_Id(Long memberId);
 }
