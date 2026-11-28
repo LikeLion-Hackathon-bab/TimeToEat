@@ -29,6 +29,8 @@ import java.util.UUID;
         "spring.jpa.show-sql=false",
         // 컨텍스트 캐시 때문에 여러 컨텍스트가 같은 큐를 나눠 소비하지 않도록 기본은 리스너를 끈다
         "spring.rabbitmq.listener.simple.auto-startup=false",
+        // 만료 스케줄러가 다른 시험의 공고를 몰래 마감하지 않게 끈다. 시험은 PostExpirySweeper.sweep()을 직접 부른다
+        "post.expiry.scheduler.enabled=false",
         "logging.level.org.hibernate.SQL=warn"
 })
 public abstract class QaIntegrationSupport {

@@ -43,6 +43,9 @@ public class ExpiredEventHandler implements EventHandler<PostExpiredEvent> {
         PostDetailsDto postDetails = postParsingService.getPostDetails(event.post());
 
         Participation participation = loadParticipation.getParticipationByPostId(postId);
+        // 참여자 없이 만료된 공고는 CLOSED만 하고 대기실을 만들지 않는다. 작성자 혼자인 방은 대기실 목록
+        // (PostRepository.findWaitingRooms: 참여 행 필요)에도 안 보이고 알림(NotificationEventRecorder)도 보내지 않는다.
+        if (participation.getMemberIds().isEmpty()) return;
         Set<MemberId> memberIds = new java.util.LinkedHashSet<>(participation.getMemberIds());
         memberIds.add(event.post().getMemberId());
         List<ParticipationSocketDto> participations = participationInfoService.getParticipations(memberIds);

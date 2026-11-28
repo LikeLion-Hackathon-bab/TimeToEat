@@ -58,12 +58,15 @@ public class PostCommandService implements PostUseCase {
     }
 
     @Override
-    public void expire(PostId postId) {
+    public boolean expire(PostId postId) {
+        // 행 잠금(findForUpdate) 뒤 상태를 다시 본다. 참여 시 지연 만료(ParticipationTransactionManager, 410)나
+        // 다른 스윕이 먼저 마감했으면 이벤트를 다시 내지 않는다(대기실 생성 중복 방지).
         Post post = loadPost.findForUpdate(postId);
-        if (post.getStatus() != com.example.timetoeat.domain.post.domain.Status.OPEN) return;
-        Post expiredPost = post.expire();
-        Post savedPost = savePost.save(expiredPost);
+        if (post.getStatus() != Status.OPEN) return false;
+        if (post.getExpiredAt().isAfter(LocalDateTime.now())) return false;
+        Post savedPost = savePost.save(post.expire());
         publishPostEvent.publish(new PostExpiredEvent(savedPost));
+        return true;
     }
 
     // 공고 삭제: 작성자만, 모집 중(OPEN)이고 아직 참여자가 없을 때만 허용한다.

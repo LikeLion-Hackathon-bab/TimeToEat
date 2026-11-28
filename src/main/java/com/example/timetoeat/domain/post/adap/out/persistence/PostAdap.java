@@ -81,6 +81,12 @@ public class PostAdap implements LoadPost, SavePost, DeletePost {
     }
 
     @Override
+    public List<PostId> findIdsDueForExpiry(java.time.LocalDateTime now, int limit) {
+        return postRepository.findIdsDueForExpiry(now, org.springframework.data.domain.PageRequest.of(0, limit))
+                .stream().map(PostId::new).toList();
+    }
+
+    @Override
     public Post save(Post post) {
         if (post.getPostId() == null) {
             PostEntity postEntity = postMapper.toPostEntity(post);
