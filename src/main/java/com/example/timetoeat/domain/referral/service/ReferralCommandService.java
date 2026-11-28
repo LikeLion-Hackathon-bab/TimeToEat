@@ -29,8 +29,29 @@ public class ReferralCommandService {
     private final CouponCommandService couponCommandService;
     private final Clock clock;
 
-    @Value("${app.referral.base-url:https://babmuckdang.site/invite}")
-    private String baseUrl;
+    // 추천 링크 주소. 만료된 babmuckdang.site 기본값을 없앴다(재등록되면 공유 링크가 남의 사이트로 간다).
+    // 우선순위: app.referral.base-url → CLIENT_BASE_URL + /invite → CLIENT_LOGIN_REDIRECT 의 origin + /invite → 상대 경로 /invite
+    @Value("${app.referral.base-url:}")
+    private String configuredBaseUrl;
+
+    @Value("${CLIENT_BASE_URL:}")
+    private String clientBaseUrl;
+
+    @Value("${CLIENT_LOGIN_REDIRECT:}")
+    private String clientLoginRedirect;
+
+    static String resolveBaseUrl(String configured, String clientBase, String loginRedirect) {
+        if (configured != null && !configured.isBlank()) return configured.trim().replaceFirst("/+$", "");
+        if (clientBase != null && !clientBase.isBlank()) return clientBase.trim().replaceFirst("/+$", "") + "/invite";
+        if (loginRedirect != null && !loginRedirect.isBlank()) {
+            try {
+                var u = java.net.URI.create(loginRedirect.trim());
+                if (u.getScheme() != null && u.getRawAuthority() != null)
+                    return u.getScheme() + "://" + u.getRawAuthority() + "/invite";
+            } catch (IllegalArgumentException ignore) { /* 아래 상대 경로 */ }
+        }
+        return "/invite";
+    }
 
     @Value("${app.referral.ttl-days:7}")
     private int ttlDays;
@@ -63,7 +84,7 @@ public class ReferralCommandService {
                                 .expiresAt(now.plusDays(ttlDays))
                                 .build()
                 );
-                String link = baseUrl + "?code=" + saved.getCode();
+                String link = resolveBaseUrl(configuredBaseUrl, clientBaseUrl, clientLoginRedirect) + "?code=" + saved.getCode();
                 return ReferralCreateResponse.of(saved.getCode(), link, saved.getExpiresAt());
             } catch (DataIntegrityViolationException dup) {
                 // 같은 시각에 같은 코드가 생성된 케이스 → 재시도
