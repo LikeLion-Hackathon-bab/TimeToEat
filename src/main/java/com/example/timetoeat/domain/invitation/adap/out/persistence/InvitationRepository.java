@@ -33,7 +33,7 @@ public interface InvitationRepository extends JpaRepository<InvitationEntity, Lo
                        @Param("status") com.example.timetoeat.domain.invitation.domain.InvitationStatus status);
 
     @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    @Query("select i from InvitationEntity i join fetch i.inviter join fetch i.invitee where i.id = :id")
+    @Query("select i from InvitationEntity i where i.id = :id") // member 행은 잠그지 않는다(A→B·B→A 동시 결과 데드락)
     java.util.Optional<InvitationEntity> findForUpdate(@Param("id") Long id);
 
     @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
