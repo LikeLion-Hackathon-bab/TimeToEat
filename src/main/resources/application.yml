@@ -62,3 +62,12 @@ demo-login:
   enabled: ${DEMO_LOGIN_ENABLED:false}
   secret: ${DEMO_LOGIN_SECRET:}
   until: ${DEMO_LOGIN_UNTIL:}
+
+# 웹 푸시(FCM HTTP v1). docs/PUSH.md. FCM_SERVICE_ACCOUNT_JSON 이 비면 실제 발송 없이 로그만 남긴다.
+# 값은 서비스 계정 JSON 파일 경로(권장) 또는 base64 JSON. FCM_TOKEN_URI·FCM_API_BASE_URL 은 시험용(운영은 비워 둔다).
+push:
+  fcm:
+    service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
+    token-uri: ${FCM_TOKEN_URI:}
+    api-base-url: ${FCM_API_BASE_URL:https://fcm.googleapis.com}
+    link-base-url: ${FCM_LINK_BASE_URL:}
