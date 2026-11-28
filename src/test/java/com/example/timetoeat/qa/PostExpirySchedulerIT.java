@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
 /**
  * 검증 14 A5: 아무도 참여를 누르지 않아도 만료 공고가 마감되고 대기실이 열려야 한다.
  * 브로커 대신 발행 시점에 ExpiredEventHandler를 바로 실행해, 만료 → Socket 방 생성 요청까지 한 번에 본다.
+ * 발행은 커밋 뒤 별도 스레드에서 일어나므로(R18-1) Socket 호출은 timeout 으로 기다리고, '한 번만'은 after 로 본다.
  */
 class PostExpirySchedulerIT extends QaIntegrationSupport {
     @Autowired PostExpirySweeper sweeper;
@@ -75,14 +76,14 @@ class PostExpirySchedulerIT extends QaIntegrationSupport {
         assertEquals("CLOSED", status(postId));
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<ParticipationSocketDto>> who = ArgumentCaptor.forClass(List.class);
-        verify(socket, times(1)).sendAnnouncement(eq(new PostId(postId)), any(), who.capture(), any());
+        verify(socket, timeout(10_000).times(1)).sendAnnouncement(eq(new PostId(postId)), any(), who.capture(), any());
         var ids = who.getValue().stream().map(ParticipationSocketDto::userId).toList();
         assertEquals(2, ids.size());
         assertTrue(ids.containsAll(List.of(String.valueOf(people[0]), String.valueOf(people[1]))), ids.toString());
 
         // 두 번째 스윕은 아무것도 하지 않는다
         sweeper.sweep();
-        verify(socket, times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
+        verify(socket, after(1_000).times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
         assertEquals("CLOSED", status(postId));
     }
 
@@ -99,7 +100,8 @@ class PostExpirySchedulerIT extends QaIntegrationSupport {
         pool.shutdown();
 
         assertEquals("CLOSED", status(postId));
-        verify(socket, times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
+        verify(socket, timeout(10_000).times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
+        verify(socket, after(1_000).times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
     }
 
     @Test
@@ -115,7 +117,8 @@ class PostExpirySchedulerIT extends QaIntegrationSupport {
         assertEquals("CLOSED", status(postId));
         // 그 뒤 스윕은 이미 CLOSED라 건너뛴다
         sweeper.sweep();
-        verify(socket, times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
+        verify(socket, timeout(10_000).times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
+        verify(socket, after(1_000).times(1)).sendAnnouncement(eq(new PostId(postId)), any(), any(), any());
 
         // 반대 순서: 스윕이 먼저 마감하면 늦은 참여는 409(이미 마감)이고 방을 다시 만들지 않는다
         long[] others = new long[2];
@@ -124,7 +127,8 @@ class PostExpirySchedulerIT extends QaIntegrationSupport {
         var conflict = assertThrows(ResponseStatusException.class,
                 () -> participation.apply(new MemberId(late.getId()), new PostId(second)));
         assertEquals(409, conflict.getStatusCode().value());
-        verify(socket, times(1)).sendAnnouncement(eq(new PostId(second)), any(), any(), any());
+        verify(socket, timeout(10_000).times(1)).sendAnnouncement(eq(new PostId(second)), any(), any(), any());
+        verify(socket, after(1_000).times(1)).sendAnnouncement(eq(new PostId(second)), any(), any(), any());
     }
 
     @Test
