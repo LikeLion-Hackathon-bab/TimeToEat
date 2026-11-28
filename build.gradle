@@ -32,6 +32,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // 게시물 사진이 WebP 이면 food-ai 에 보내기 전에 JPEG 로 바꾼다(AiImageFiles)
+    implementation 'com.twelvemonkeys.imageio:imageio-webp:3.12.0'
     implementation 'org.redisson:redisson-spring-boot-starter:3.52.0'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
