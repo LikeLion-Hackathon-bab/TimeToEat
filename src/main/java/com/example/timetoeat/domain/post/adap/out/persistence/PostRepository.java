@@ -20,4 +20,10 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
     @Query("SELECT p FROM PostEntity p JOIN FETCH p.member WHERE p.status = com.example.timetoeat.domain.post.domain.Status.OPEN " +
            "AND p.expiredAt > :now ORDER BY p.createdAt DESC, p.id DESC")
     List<PostEntity> findOpenWithMember(@org.springframework.data.repository.query.Param("now") java.time.LocalDateTime now);
+
+    /** 만료 시각이 지났는데 아직 OPEN인 공고 id(오래된 순). 만료 스케줄러(PostExpirySweeper)가 쓴다. */
+    @Query("SELECT p.id FROM PostEntity p WHERE p.status = com.example.timetoeat.domain.post.domain.Status.OPEN " +
+           "AND p.expiredAt <= :now ORDER BY p.expiredAt ASC, p.id ASC")
+    List<Long> findIdsDueForExpiry(@org.springframework.data.repository.query.Param("now") java.time.LocalDateTime now,
+                                   org.springframework.data.domain.Pageable page);
 }
