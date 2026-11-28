@@ -22,6 +22,7 @@ public class InvitationRoomService {
     private final ParticipationInfoService profiles;
     private final RecentMenuService menus;
     private final MatchingPostService socket;
+    private final com.example.timetoeat.domain.plans.meeting.ConfirmedInvitationRepository results;
 
     public void enter(Long viewer, long id) {
         if (viewer == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
@@ -30,6 +31,8 @@ public class InvitationRoomService {
                 .filter(i -> i.status() == InvitationStatus.APPROVED &&
                         (person.equals(i.inviterId()) || person.equals(i.inviteeId())))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // 결과가 저장된 초대는 끝난 방이다. Socket이 방을 지운 뒤 다시 시드하면 같은 초대로 재진행된다.
+        if (results.existsById(id)) throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 확정된 초대입니다.");
         prepare(invitation);
     }
 

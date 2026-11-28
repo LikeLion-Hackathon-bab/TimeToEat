@@ -25,16 +25,36 @@ class MeetingController {
         this.key = key;
     }
     record Selection(@NotBlank @Size(max=255) String restaurant) {}
+    private void requireRoomKey(String provided) {
+        if (key.isBlank() || !MessageDigest.isEqual(key.getBytes(StandardCharsets.UTF_8), provided.getBytes(StandardCharsets.UTF_8)))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+    }
     @PostMapping("/{id}/result")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void record(@PathVariable long id, @RequestHeader("X-Room-Key") String provided, @Valid @RequestBody Selection result) {
-        if (key.isBlank() || !MessageDigest.isEqual(key.getBytes(StandardCharsets.UTF_8), provided.getBytes(StandardCharsets.UTF_8)))
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        requireRoomKey(provided);
         service.record(id, result.restaurant());
+    }
+    /** 계약: qa-cloud/contracts/invitation-result.md. meetingAt은 오프셋 포함 ISO 8601만 받는다. */
+    record InvitationResult(Long invitationId, @NotNull java.time.OffsetDateTime meetingAt,
+                            @NotBlank @Size(max=255) String location, @NotBlank @Size(max=255) String restaurant) {}
+    @PostMapping("/invitations/{id}/result")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void recordInvitation(@PathVariable long id, @RequestHeader("X-Room-Key") String provided,
+                          @Valid @RequestBody InvitationResult result) {
+        requireRoomKey(provided);
+        if (result.invitationId() != null && result.invitationId() != id)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "경로와 본문의 초대 번호가 다릅니다.");
+        service.recordInvitation(id, result.meetingAt(), result.location(), result.restaurant());
+    }
+    @GetMapping("/invitations/{id}")
+    ApiResponse<MeetingService.View> invitationDetail(@AuthenticationPrincipal CustomOauth2User viewer, @PathVariable long id) {
+        return ApiResponse.success(service.invitationDetail(viewer == null ? null : viewer.getMemberId(), id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)), "밥약 상세");
     }
     @GetMapping
     ApiResponse<List<MeetingService.View>> list(@AuthenticationPrincipal CustomOauth2User viewer) {
-        return ApiResponse.success(service.list(viewer == null ? null : viewer.getMemberId(), null), "밥약 목록");
+        return ApiResponse.success(service.all(viewer == null ? null : viewer.getMemberId()), "밥약 목록");
     }
     @PostMapping("/rooms/{id}/enter")
     @ResponseStatus(HttpStatus.NO_CONTENT)
