@@ -16,16 +16,27 @@ class MeetingServiceTest {
         var stored = mock(ConfirmedMeeting.class);
         when(stored.getRestaurant()).thenReturn("초밥집");
         when(repository.findById(12L)).thenReturn(Optional.of(stored));
-        when(posts.existsById(12L)).thenReturn(true);
+        var post = mock(com.example.timetoeat.domain.post.adap.out.persistence.PostEntity.class);
+        when(post.getStatus()).thenReturn(com.example.timetoeat.domain.post.domain.Status.CLOSED);
+        when(posts.findForUpdate(12L)).thenReturn(Optional.of(post));
         assertDoesNotThrow(() -> service.record(12, "초밥집"));
         var conflict = assertThrows(MeetingService.AlreadyConfirmed.class, () -> service.record(12, "다른 식당"));
         assertEquals(new MeetingService.StoredRestaurant("초밥집"), conflict.stored);
     }
 
     @Test void resultForAMissingPostIsNotFound() {
-        when(posts.existsById(99L)).thenReturn(false);
+        when(posts.findForUpdate(99L)).thenReturn(Optional.empty());
         assertEquals(404, assertThrows(ResponseStatusException.class,
                 () -> service.record(99, "초밥집")).getStatusCode().value());
+        verifyNoInteractions(repository);
+    }
+
+    @Test void resultForAPostThatIsRecruitingAgainIsConflict() {
+        var post = mock(com.example.timetoeat.domain.post.adap.out.persistence.PostEntity.class);
+        when(post.getStatus()).thenReturn(com.example.timetoeat.domain.post.domain.Status.OPEN);
+        when(posts.findForUpdate(7L)).thenReturn(Optional.of(post));
+        assertEquals(409, assertThrows(ResponseStatusException.class,
+                () -> service.record(7, "초밥집")).getStatusCode().value());
         verifyNoInteractions(repository);
     }
 

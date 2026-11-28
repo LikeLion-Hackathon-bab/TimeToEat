@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 public class InvitationCommandController {
     private final InvitationUseCase invitationUseCase;
     private final com.example.timetoeat.domain.invitation.application.service.InvitationRoomService rooms;
+    private final com.example.timetoeat.domain.plans.meeting.RoomLeaveService leaving;
 
     @PostMapping("/{id}/enter")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -63,5 +64,12 @@ public class InvitationCommandController {
         }
         invitationUseCase.rejectInvitation(new MemberId(memberId), new InvitationId(invitationId));
         return ApiResponse.success("success");
+    }
+
+    /** 수락된 초대의 대기실에서 나가기(F46). 보낸 사람·받은 사람 모두 가능. 계약: qa-cloud/contracts/participation-cancel.md */
+    @PostMapping("/{invitationId}/cancel")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancel(@AuthenticationPrincipal(expression = "memberId") Long memberId, @PathVariable long invitationId) {
+        leaving.cancelInvitation(memberId, invitationId);
     }
 }

@@ -45,7 +45,12 @@ class MeetingService {
 
     @Transactional
     public void record(long id, String restaurant) {
-        if (!posts.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "공고를 찾을 수 없습니다.");
+        // 공고 행을 잠근 뒤 상태를 본다. 대기실 나가기(RoomLeaveService)가 마지막 참여자를 빼고 공고를 다시 OPEN으로
+        // 돌린 직후에 늦은 결과가 오면, 모집 중인 공고에 확정 결과가 붙는다. 그래서 OPEN이면 409(본문 data 없음)를 준다.
+        var post = posts.findForUpdate(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "공고를 찾을 수 없습니다."));
+        if (post.getStatus() == com.example.timetoeat.domain.post.domain.Status.OPEN)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "대기실이 없는 공고입니다.");
         meetings.record(id, restaurant);
         var stored = meetings.findById(id).orElseThrow().getRestaurant();
         if (!stored.equals(restaurant))

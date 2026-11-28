@@ -80,4 +80,29 @@ public class MatchingPostService {
                 .toBodilessEntity()
                 .block(java.time.Duration.ofSeconds(4));
     }
+
+    /**
+     * 대기실 나가기 알림(F46). 계약: qa-cloud/contracts/participation-cancel.md
+     * 커밋 뒤에 부르고 결과를 기다리지 않는다. 실패는 로그만 남긴다(Spring 상태가 기준이다).
+     */
+    public void leaveAnnouncement(long postId, long userId, boolean dissolve) {
+        leave("/api/announcement/{id}/leave", postId, userId, dissolve);
+    }
+
+    public void leaveInvitation(long invitationId, long userId) {
+        leave("/api/invitation/{id}/leave", invitationId, userId, true);
+    }
+
+    private void leave(String path, long id, long userId, boolean dissolve) {
+        webClient.post()
+                .uri(socketBaseUrl + path, id)
+                .header("X-Room-Key", roomKey)
+                .bodyValue(java.util.Map.of("userId", String.valueOf(userId), "dissolve", dissolve))
+                .retrieve()
+                .toBodilessEntity()
+                .timeout(java.time.Duration.ofSeconds(4))
+                .subscribe(
+                        r -> log.info("대기실 나가기 알림 성공 {} id={} user={} dissolve={}", path, id, userId, dissolve),
+                        e -> log.warn("대기실 나가기 알림 실패 {} id={} user={} msg={}", path, id, userId, e.getMessage()));
+    }
 }

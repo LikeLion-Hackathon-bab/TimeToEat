@@ -31,4 +31,15 @@ public interface InvitationRepository extends JpaRepository<InvitationEntity, Lo
             """)
     int resolvePending(@Param("id") Long id,
                        @Param("status") com.example.timetoeat.domain.invitation.domain.InvitationStatus status);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from InvitationEntity i join fetch i.inviter join fetch i.invitee where i.id = :id")
+    java.util.Optional<InvitationEntity> findForUpdate(@Param("id") Long id);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @Query("""
+            update InvitationEntity i set i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.CANCELLED
+            where i.id = :id and i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.APPROVED
+            """)
+    int cancelApproved(@Param("id") Long id);
 }
