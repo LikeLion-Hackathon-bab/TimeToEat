@@ -89,8 +89,113 @@
                       
   챌린지(Challenge) / 쿠폰(Coupon) / 추천 코드(Referral) 기능 구현
 
-### 공고 대기실 연결
+-------
+## 🛠 개발과 운영
 
-`SOCKET_BASE_URL`은 Spring에서 접근할 수 있는 Socket 서버 주소다. `ROOM_RESULT_KEY`는 두 서버에 같은 값으로 설정한다. 웹 클라이언트에는 배포하지 않는다. 기존 DB는 서버 배포 전에 `db/confirmed_meeting.sql`, `db/notification.sql`, `db/invitation_cancel.sql`을 차례로 한 번씩 적용한다. 운영 프로필은 시작 시 스키마를 검증한다. 빈 검증용 DB에서만 `SPRING_JPA_HIBERNATE_DDL_AUTO=create`로 초기화한다.
+밥먹댕은 저장소 세 개로 나뉜다.
 
-프론트 주소가 다른 환경은 `CLIENT_LOGIN_REDIRECT`에 로그인 후 돌아갈 홈 URL을 설정한다. `AUTH_COOKIE_DOMAIN`은 기본이 빈 값(호스트 전용 쿠키)이다. Client와 API가 같은 상위 도메인을 쓸 때만 그 도메인을 넣는다. 운영 Client 주소는 `CORS_ALLOWED_ORIGINS`에 넣는다.
+| 저장소 | 역할 | 기술 |
+|---|---|---|
+| **TimeToEat** (이 저장소) | REST API, 카카오 로그인, 공고·초대·밥약·피드·쿠폰 | Spring Boot 3.5, Java 17, MySQL 8, Redis 7, RabbitMQ 3 |
+| BabMukDang-Socket | 대기실 실시간 진행(Socket.IO), 사진 업로드 presign, 식당·메뉴 검색 | NestJS 11, Node 22 |
+| BabMukDang-Client | 웹 앱(PWA) | React, Vite, Vercel |
+
+```
+브라우저 ─(같은 출처: /api, /oauth2, /login/oauth2)→ Vercel rewrite ─→ Spring(application:8080)
+브라우저 ─(wss, Bearer)──────────────────────────────────────────────→ Socket(socket:3000)
+Spring ─(X-Room-Key, 내부망 http://socket:3000)→ Socket   /   Socket ─(X-Room-Key, http://application:8080/api/v1)→ Spring
+```
+
+### 로컬 실행
+
+필요한 것: JDK 17, Docker.
+
+```bash
+# 1) MySQL, Redis, RabbitMQ (로컬 전용 가짜 비밀번호)
+docker run -d --name tte-mysql -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD=change-me-root -e MYSQL_DATABASE=timetoeat \
+  -e MYSQL_USER=timetoeat -e MYSQL_PASSWORD=change-me mysql:8.0
+docker run -d --name tte-redis -p 6379:6379 redis:7-alpine
+docker run -d --name tte-rabbit -p 5672:5672 \
+  -e RABBITMQ_DEFAULT_USER=timetoeat -e RABBITMQ_DEFAULT_PASS=change-me rabbitmq:3-alpine
+
+# 2) 환경변수
+cp .env.example .env        # 값 채우기: docs/ENV.md
+
+# 3) 빈 DB에 스키마를 처음 만들 때만 create로 한 번 띄운다(아래 "DB 스크립트 적용 순서")
+set -a; . ./.env; set +a
+SPRING_JPA_HIBERNATE_DDL_AUTO=create ./gradlew bootRun   # 기동 로그 "Started" 확인 후 Ctrl+C
+
+# 4) 평소 실행
+set -a; . ./.env; set +a
+./gradlew bootRun           # http://localhost:8080, Swagger: /swagger-ui/index.html
+```
+
+- `.env`를 `set -a`로 환경변수로 넘기는 이유: `CORS_ALLOWED_ORIGINS`, `AUTH_COOKIE_DOMAIN` 등 일부 값은 OS 환경변수로만 읽힌다([docs/ENV.md](docs/ENV.md)).
+- 카카오 로그인은 본인 카카오 앱(무료)으로 시험한다. 카카오 콘솔 Redirect URI에 `http://localhost:8080/login/oauth2/code/kakao`를 등록하고 `CLIENT_REDIRECT_PATH`에 같은 값을 넣는다. 로그인 뒤에는 `CLIENT_LOGIN_REDIRECT`(로컬 Client `http://localhost:3001/`)로 돌아간다.
+- 대기실까지 띄우려면 BabMukDang-Socket을 `PORT=3000`으로 같이 띄우고 `JWT_SECRET`, `ROOM_RESULT_KEY`를 두 서버에 같은 값으로 넣는다.
+
+### 환경변수
+
+전체 표, 기본값, 운영 값은 [docs/ENV.md](docs/ENV.md)에 있다. 견본은 [.env.example](.env.example)이다. 자주 틀리는 값만 여기 적는다.
+
+| 이름 | 핵심 |
+|---|---|
+| `JWT_SECRET` | 32바이트 이상. **Socket과 같은 값** |
+| `ROOM_RESULT_KEY` | Spring↔Socket 서버 간 키. **Socket과 같은 값**. Client에는 넣지 않는다 |
+| `SOCKET_BASE_URL` | Spring이 Socket을 부르는 내부 주소. 기본 `http://socket:3000` |
+| `CLIENT_REDIRECT_PATH` | 카카오 콘솔 Redirect URI와 같은 값. 운영은 `https://babmuckdang.vercel.app/login/oauth2/code/kakao` |
+| `CLIENT_LOGIN_REDIRECT` | 로그인 후 돌아갈 Client 홈 URL |
+| `CORS_ALLOWED_ORIGINS` | 운영 Client 주소(쉼표 구분). 와일드카드 불가 |
+| `AUTH_COOKIE_DOMAIN` | 기본 빈 값(호스트 전용 쿠키). Client와 API가 같은 상위 도메인을 쓸 때만 넣는다 |
+| `SPRING_JPA_HIBERNATE_DDL_AUTO` | 기본 `validate`. 빈 검증용 DB에서만 `create` |
+
+### DB 스크립트 적용 순서
+
+운영 프로필은 `ddl-auto=validate`로 시작 시 스키마를 검사한다. 엔티티와 DB가 다르면 기동하지 않는다. `db/*.sql`은 Hibernate가 만들지 않거나 고치지 않는 부분이다.
+
+| 파일 | 내용 |
+|---|---|
+| `db/confirmed_meeting.sql` | `confirmed_meeting`, `confirmed_invitation_meeting` 테이블과 외래 키(확정 식당) |
+| `db/notification.sql` | `notification`, `push_token` 테이블(알림함, 웹 푸시) |
+| `db/invitation_cancel.sql` | `invitation.status` ENUM에 `CANCELLED` 추가. 옛 DB 전용 |
+
+**기존 DB**(이 브랜치 이전 서버가 쓰던 DB): 서버를 새 버전으로 바꾸기 전에 아래 순서로 한 번씩 적용한다.
+
+```bash
+mysql -u<user> -p <db> < db/confirmed_meeting.sql
+mysql -u<user> -p <db> < db/notification.sql
+mysql -u<user> -p <db> < db/invitation_cancel.sql
+```
+
+**새 빈 DB**:
+1. `SPRING_JPA_HIBERNATE_DDL_AUTO=create`로 한 번 띄워 테이블을 만들고 내린다.
+2. `db/confirmed_meeting.sql`, `db/notification.sql`을 적용한다. Hibernate가 이미 만든 테이블은 `ERROR 1050/1061`(이미 있음)이 나는데 무시해도 된다(`mysql --force`).
+3. `invitation_cancel.sql`은 적용하지 않는다. 새 DB에는 `CANCELLED`가 이미 들어 있다.
+4. Hibernate `create`는 `confirmed_meeting.post_id → post.id`, `confirmed_invitation_meeting.invitation_id → invitation.id` 외래 키를 만들지 않는다. 옛 DB와 맞추려면 두 키를 `ALTER TABLE ... ADD CONSTRAINT`로 더한다(이미 있으면 `ERROR 1826`).
+5. `validate`로 다시 띄운다.
+
+운영 서버는 `/opt/babmuckdang/bootstrap.sh`가 1–5를 자동으로 하고, 적용한 파일을 `db/.applied-sql`에 기록한다. 새 `db/*.sql`을 추가하면 배포 스크립트는 **자동 적용하지 않고 경고만** 낸다. 운영 DB에 직접 적용한 뒤 `.applied-sql`에 이름을 더한다.
+
+### 시험
+
+```bash
+./gradlew build -x test     # CI(ci.yml)와 같은 확인
+./gradlew test              # 단위 시험. TimeToEatApplicationTests는 DB·Redis·RabbitMQ가 떠 있어야 한다
+QA_IT=1 ./gradlew test      # 실제 MySQL·Redis·RabbitMQ에 붙는 통합 시험(qa 패키지)도 실행
+```
+
+### 배포 흐름
+
+| 단계 | 내용 |
+|---|---|
+| PR | `ci.yml`이 PR마다 `./gradlew clean build -x test`를 돌린다 |
+| 병합 | `main`에 push되면 `cd.yml`이 실행된다 |
+| 인증 | GitHub OIDC로 AWS 역할을 받는다(장기 키 없음). 저장소 Variables: `AWS_ROLE_ARN`, `AWS_REGION`, `EC2_INSTANCE_ID` |
+| 배포 | SSM Run Command로 EC2에서 `/opt/babmuckdang/deploy.sh application <전체 SHA>`를 실행한다. 서버가 그 커밋을 받아 이미지를 빌드하고, 직전 이미지를 `:prev`로 남긴다. 헬스 체크가 실패하면 되돌린다 |
+| 구성 | EC2 한 대에서 Docker Compose로 application, socket, mysql, redis, rabbitmq, food-ai, recommend-ai, caddy(자동 TLS)를 띄운다. 호스트에 여는 포트는 caddy 80/443뿐이다 |
+| DB | 새 `db/*.sql`은 자동 적용하지 않는다(위 절) |
+
+- 저장소의 `docker-compose.prod.yml`, `nginx/`는 해커톤 때(`babmuckdang.site`, Docker Hub 이미지) 구성이다. 지금 운영 서버는 이 파일을 쓰지 않는다. 도메인은 만료됐다.
+- 브라우저는 API 주소를 직접 부르지 않는다. Client의 Vercel rewrite가 `/api`, `/oauth2`, `/login/oauth2`를 Spring으로 넘긴다. 이 세 접두사 밖에 새 경로를 만들면 Client `vercel.json`도 고쳐야 한다.
+- 운영 비밀(DB, JWT, `ROOM_RESULT_KEY`, 카카오 키 등)은 서버 `.env`와 SSM Parameter Store에만 둔다. 저장소, 이슈, 채팅에 쓰지 않는다.
