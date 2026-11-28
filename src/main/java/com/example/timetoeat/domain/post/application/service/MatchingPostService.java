@@ -62,7 +62,7 @@ public class MatchingPostService {
                 .toBodilessEntity();
     }
 
-    public void sendInvitation(InvitationId invitationId,
+    public void ensureInvitation(InvitationId invitationId,
                                List<ParticipationSocketDto> participations,
                                List<RecentMenuDto> recentMenus) {
 
@@ -78,9 +78,6 @@ public class MatchingPostService {
                 .bodyValue(requestDto)
                 .retrieve()
                 .toBodilessEntity()
-                .subscribe(
-                        response -> log.info("초대 웹소켓 서버로 요청 성공: {}", response.getStatusCode()),
-                        error -> log.error("초대 웹소켓 서버로 요청 실패: {}", error.getMessage())
-                );
+                .block(java.time.Duration.ofSeconds(4));
     }
 }

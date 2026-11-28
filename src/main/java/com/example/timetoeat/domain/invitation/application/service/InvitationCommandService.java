@@ -11,7 +11,8 @@ import com.example.timetoeat.domain.invitation.domain.event.InvitationRejectedEv
 import com.example.timetoeat.domain.invitation.domain.event.InvitationSentEvent;
 import com.example.timetoeat.domain.invitation.domain.vo.InvitationId;
 import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
-import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,12 +39,7 @@ public class InvitationCommandService implements InvitationUseCase {
 
     @Override
     public String acceptInvitation(MemberId memberId, InvitationId invitationId) {
-        Invitation invitation = loadInvitation.findById(invitationId)
-                .orElseThrow(() -> new EntityNotFoundException("not found invitation information"));
-
-        if (!invitation.inviteeId().equals(memberId)) {
-            throw new SecurityException("no permission to accept invitation");
-        }
+        Invitation invitation = pendingForRecipient(memberId, invitationId);
 
         Invitation acceptedInvitation = invitation.accept();
         Invitation savedInvitation = saveInvitation.save(acceptedInvitation);
@@ -54,15 +50,18 @@ public class InvitationCommandService implements InvitationUseCase {
 
     @Override
     public void rejectInvitation(MemberId memberId, InvitationId invitationId) {
-        Invitation invitation = loadInvitation.findById(invitationId)
-                .orElseThrow(() -> new EntityNotFoundException("not found invitation information"));
-
-        if (!invitation.inviteeId().equals(memberId)) {
-            throw new SecurityException("no permission to accept invitation");
-        }
+        Invitation invitation = pendingForRecipient(memberId, invitationId);
 
         Invitation rejectedInvitation = invitation.reject();
         Invitation savedInvitation = saveInvitation.save(rejectedInvitation);
         publishEventPort.publishEvent(new InvitationRejectedEvent(savedInvitation));
+    }
+    private Invitation pendingForRecipient(MemberId viewer, InvitationId id) {
+        var invitation = loadInvitation.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!invitation.inviteeId().equals(viewer)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (invitation.status() != InvitationStatus.PENDING)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 초대입니다.");
+        return invitation;
     }
 }

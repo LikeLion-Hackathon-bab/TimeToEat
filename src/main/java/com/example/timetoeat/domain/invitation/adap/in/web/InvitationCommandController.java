@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/v1/invitations")
@@ -18,6 +19,13 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "invitation-controller")
 public class InvitationCommandController {
     private final InvitationUseCase invitationUseCase;
+    private final com.example.timetoeat.domain.invitation.application.service.InvitationRoomService rooms;
+
+    @PostMapping("/{id}/enter")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void enter(@AuthenticationPrincipal(expression = "memberId") Long viewer, @PathVariable long id) {
+        rooms.enter(viewer, id);
+    }
 
     @PostMapping("/send")
     public ApiResponse<Object> sendInvitation(
