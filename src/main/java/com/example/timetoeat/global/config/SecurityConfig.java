@@ -139,10 +139,8 @@ public class SecurityConfig {
 
     static final List<String> DEFAULT_ORIGINS = List.of(
             "http://localhost:3001",
-            "https://13.125.49.103:3000",
-            "https://babmuckdang.site",
-            "https://www.babmuckdang.site",
             "https://bab-muk-dang-client.vercel.app");
+    // 만료 도메인(babmuckdang.site)과 반납된 해커톤 IP는 자격증명 CORS에 두지 않는다. 운영 주소는 CORS_ALLOWED_ORIGINS로.
 
     /** 기본 목록 + CORS_ALLOWED_ORIGINS(쉼표 구분, 끝 슬래시 제거). 와일드카드는 받지 않는다(allowCredentials=true). */
     static List<String> allowedOrigins(String extra) {

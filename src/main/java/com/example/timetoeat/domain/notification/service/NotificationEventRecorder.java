@@ -86,7 +86,7 @@ public class NotificationEventRecorder {
                     "밥약 매칭이 완료됐어요",
                     place + "밥약 대기실에 입장해 약속을 조율해 보세요.",
                     "/announcement/waiting/" + postId,
-                    "MATCHING_COMPLETED:" + postId + ":" + receiver.getId());
+                    "MATCHING_COMPLETED:" + postId + ":" + post.getExpiredAt() + ":" + receiver.getId()); // 재모집하면 expiredAt이 바뀌어 새 회차로 본다
         }
     }
 

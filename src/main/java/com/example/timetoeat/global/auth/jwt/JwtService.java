@@ -38,6 +38,7 @@ public class JwtService {
         Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
         upsertRefreshToken(memberId, tokenDto.getRefreshToken(), refreshExp);
+        rotationGrace.forget(memberId); // 새 로그인 뒤에는 이전 회전 유예를 남기지 않는다
 
         return tokenDto;
     }

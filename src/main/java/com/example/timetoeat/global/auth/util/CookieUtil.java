@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public class CookieUtil {
     public static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
-    private static final String COOKIE_DOMAIN = System.getenv().getOrDefault("AUTH_COOKIE_DOMAIN", ".babmuckdang.site");
+    private static final String COOKIE_DOMAIN = System.getenv().getOrDefault("AUTH_COOKIE_DOMAIN", "");
     private static final String SAME_SITE_DEFAULT = "None";
 
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {

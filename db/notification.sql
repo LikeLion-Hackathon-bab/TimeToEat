@@ -1,6 +1,6 @@
 -- 알림함(SCR-25·26)과 웹 푸시 토큰. 서버를 새 버전으로 띄우기 전에 한 번 적용한다(ddl-auto=validate).
 -- 출처: ai-notify 작업자 패치. 형식은 Hibernate 6(MySQL 8)이 엔티티에서 만드는 DDL과 같다.
-CREATE TABLE notification (
+CREATE TABLE IF NOT EXISTS notification (
     id BIGINT NOT NULL AUTO_INCREMENT,
     receiver_id BIGINT NULL,                       -- LOCAL_NEWS 전체 공개 소식은 NULL
     category ENUM('ALARM','LOCAL_NEWS') NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE notification (
     KEY idx_notification_receiver_category (receiver_id, category, id)
 );
 
-CREATE TABLE push_token (
+CREATE TABLE IF NOT EXISTS push_token (
     id BIGINT NOT NULL AUTO_INCREMENT,
     member_id BIGINT NOT NULL,
     token VARCHAR(512) NOT NULL,

@@ -59,7 +59,7 @@ class MeetingService {
     /** 개별 초대 결과 저장. 같은 값 재전송은 성공, 다른 값은 409, 수락 안 된 초대는 409, 없는 초대는 404. */
     @Transactional
     public void recordInvitation(long id, java.time.OffsetDateTime meetingAt, String location, String restaurant) {
-        var invitation = invitations.findById(id)
+        var invitation = invitations.findForUpdate(id) // 취소(RoomLeaveService)와 직렬화하고 커밋된 상태를 읽는다
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "초대를 찾을 수 없습니다."));
         if (invitation.getStatus() != com.example.timetoeat.domain.invitation.domain.InvitationStatus.APPROVED)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "수락된 초대가 아닙니다.");

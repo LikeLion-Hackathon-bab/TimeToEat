@@ -11,7 +11,7 @@ class SecurityConfigCorsTest {
     }
 
     @Test void extraOriginsAreAppendedTrimmedAndDeduplicated() {
-        var list = SecurityConfig.allowedOrigins(" https://bmd-qa.vercel.app/ ,https://1-2-3-4.sslip.io,https://babmuckdang.site, ,https://*.vercel.app");
+        var list = SecurityConfig.allowedOrigins(" https://bmd-qa.vercel.app/ ,https://1-2-3-4.sslip.io,https://bab-muk-dang-client.vercel.app, ,https://*.vercel.app");
         assertTrue(list.containsAll(SecurityConfig.DEFAULT_ORIGINS));
         assertTrue(list.contains("https://bmd-qa.vercel.app"));
         assertTrue(list.contains("https://1-2-3-4.sslip.io"));
