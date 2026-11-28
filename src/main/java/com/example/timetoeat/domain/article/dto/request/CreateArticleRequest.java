@@ -1,8 +1,8 @@
 package com.example.timetoeat.domain.article.dto.request;
 
 import com.example.timetoeat.domain.article.entity.Article;
+import com.example.timetoeat.domain.article.entity.UploadMethod;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
@@ -19,23 +19,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CreateArticleRequest {
-
-    // <카메라로 직접 찍어서 업로드 or 앨범에서 업로드>
-    public enum Method {
-        CAMERA, ALBUM;
-
-        @JsonCreator
-        public static Method from(Object v) {
-            if (v == null) return null;
-            String s = v.toString().trim().toUpperCase(Locale.ROOT);
-            return Method.valueOf(s);
-        }
-    }
 
     @NotBlank
     @Size(max = 1024)
@@ -54,12 +41,13 @@ public class CreateArticleRequest {
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@NotNull Long> taggedMemberIds = new ArrayList<>();
 
+    // <카메라로 직접 찍어서 업로드 or 앨범에서 업로드> 그대로 저장하고 응답에도 싣는다
     @NotNull
-    private Method method;
+    private UploadMethod method;
 
     @Builder
     private CreateArticleRequest(String imageUrl, LocalDate mealDate, LocalTime mealTime,
-                                 RestaurantRequest restaurant, List<Long> taggedMemberIds, Method method) {
+                                 RestaurantRequest restaurant, List<Long> taggedMemberIds, UploadMethod method) {
 
         this.imageUrl = imageUrl;
         this.mealDate = mealDate;  // 요청값이 와도 서비스에서 무시됨
@@ -76,9 +64,10 @@ public class CreateArticleRequest {
                 .mealDate(resolvedDate)  // 서비스에서 now KST로 결정
                 .mealTime(resolvedTime)  // 프론트 전달 시간
                 .restaurant(restaurant != null ? restaurant.toSnapshot() : null)
+                .method(method)
                 .build();
     }
 
-    public boolean isCamera() { return method == Method.CAMERA; }
-    public boolean isAlbum() { return method == Method.ALBUM; }
+    public boolean isCamera() { return method == UploadMethod.CAMERA; }
+    public boolean isAlbum() { return method == UploadMethod.ALBUM; }
 }

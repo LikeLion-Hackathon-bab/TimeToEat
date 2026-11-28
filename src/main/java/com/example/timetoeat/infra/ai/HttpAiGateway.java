@@ -31,7 +31,11 @@ public class HttpAiGateway implements AiGateway {
         OffsetDateTime mealAtOffset =
                 mealAtKst.atZone(ZoneId.of("Asia/Seoul")).toOffsetDateTime();
 
+        props.requireEnabled();
         MultipartBodyBuilder mb = new MultipartBodyBuilder();
+        // food-ai(gosua/food-ai:1.3.4) /v1/infer 는 multipart 에 user_id 와 image 를 둘 다 필수로 받는다(FastAPI Form/File).
+        // 이전에는 image 만 보내 422(Field required: user_id)로 실패해 meal_log 가 한 건도 저장되지 않았다.
+        mb.part("user_id", String.valueOf(authorId));
         mb.part("image", new FileSystemResource(imagePath));
 
         JsonNode root = aiWebClient.post()

@@ -13,6 +13,11 @@ public record PostData(
         LocalDateTime meetingAt,
         String location,
         List<ParticipationData> participants,
-        int targetCount
+        int targetCount,
+        /** 모집 마감 시각(KST). 다시 모집(F46)하면 createdAt+2시간과 달라진다. */
+        LocalDateTime expiredAt,
+        com.example.timetoeat.domain.post.domain.Status status,
+        /** 마감 사유. OPEN이면 null. */
+        com.example.timetoeat.domain.post.domain.CloseReason closeReason
 ){
 }

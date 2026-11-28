@@ -5,6 +5,7 @@ import com.example.timetoeat.domain.invitation.domain.vo.InvitationId;
 public record InvitationListData(
     InvitationId invitationId,
     String inviterName,
-    String inviterProfileImageUrl
+    String inviterProfileImageUrl,
+    String message
 ) {
 }

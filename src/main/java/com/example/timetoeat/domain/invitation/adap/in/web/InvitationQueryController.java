@@ -32,4 +32,12 @@ public class InvitationQueryController {
         List<InvitationListResponse> invitationList = getInvitationUseCase.getInvitationList(new MemberId(memberId));
         return ApiResponse.success(invitationList);
     }
+
+    @GetMapping("/accepted")
+    public ApiResponse<List<Long>> getAcceptedRooms(
+            @AuthenticationPrincipal(expression = "memberId") Long viewer) {
+        if (viewer == null) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.UNAUTHORIZED);
+        return ApiResponse.success(getInvitationUseCase.getAcceptedRoomIds(new MemberId(viewer)));
+    }
 }

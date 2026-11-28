@@ -10,7 +10,47 @@ public interface InvitationRepository extends JpaRepository<InvitationEntity, Lo
     @Query(""" 
             SELECT i From InvitationEntity i
             JOIN FETCH i.inviter
-            WHERE i.invitee.id = :inviteeId
+            WHERE i.invitee.id = :inviteeId AND i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.PENDING
+            ORDER BY i.id DESC
             """)
     List<InvitationEntity> findInviterByInvitee(@Param("inviteeId") Long inviteeId);
+
+    @Query("""
+            select i.id from InvitationEntity i
+            where i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.APPROVED
+              and (i.inviter.id = :viewer or i.invitee.id = :viewer)
+              and not exists (select c.invitationId from com.example.timetoeat.domain.plans.meeting.ConfirmedInvitationMeeting c
+                              where c.invitationId = i.id)
+            order by i.id desc
+            """)
+    List<Long> findAcceptedRoomIds(@Param("viewer") Long viewer);
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("""
+            update InvitationEntity i set i.status = :status
+            where i.id = :id and i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.PENDING
+            """)
+    int resolvePending(@Param("id") Long id,
+                       @Param("status") com.example.timetoeat.domain.invitation.domain.InvitationStatus status);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from InvitationEntity i where i.id = :id") // member 행은 잠그지 않는다(A→B·B→A 동시 결과 데드락)
+    java.util.Optional<InvitationEntity> findForUpdate(@Param("id") Long id);
+
+    @org.springframework.data.jpa.repository.Modifying(clearAutomatically = true)
+    @Query("""
+            update InvitationEntity i set i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.CANCELLED
+            where i.id = :id and i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.APPROVED
+            """)
+    int cancelApproved(@Param("id") Long id);
+
+    /** 초대 전송 직렬화용. 작은 id부터 잠가(ORDER BY id) 반대 방향 동시 전송에서도 교착이 없다. */
+    @Query(value = "select id from member where id in (:low, :high) order by id for update", nativeQuery = true)
+    List<Long> lockMembersInIdOrder(@Param("low") Long low, @Param("high") Long high);
+
+    @Query("""
+            select count(i) > 0 from InvitationEntity i
+            where i.inviter.id = :inviterId and i.invitee.id = :inviteeId
+              and i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.PENDING
+            """)
+    boolean existsPending(@Param("inviterId") Long inviterId, @Param("inviteeId") Long inviteeId);
 }

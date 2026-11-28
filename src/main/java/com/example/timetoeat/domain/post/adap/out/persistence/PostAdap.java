@@ -2,6 +2,7 @@ package com.example.timetoeat.domain.post.adap.out.persistence;
 
 import com.example.timetoeat.domain.post.application.port.data.ParticipationData;
 import com.example.timetoeat.domain.post.application.port.data.PostData;
+import com.example.timetoeat.domain.post.application.port.out.DeletePost;
 import com.example.timetoeat.domain.post.application.port.out.LoadPost;
 import com.example.timetoeat.domain.post.application.port.out.SavePost;
 import com.example.timetoeat.domain.post.adap.out.mapper.PostMapper;
@@ -20,11 +21,18 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class PostAdap implements LoadPost, SavePost {
+public class PostAdap implements LoadPost, SavePost, DeletePost {
 
     private final PostRepository postRepository;
     private final ParticipationRepository participationRepository;
+    private final com.example.timetoeat.domain.subscription.adap.out.persistence.SubscriptionRepository subscriptionRepository;
     private final PostMapper postMapper;
+
+    @Override
+    public Post findForUpdate(PostId postId) {
+        return postMapper.toDomain(postRepository.findForUpdate(postId.getId())
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND, "공고를 찾을 수 없습니다")));
+    }
 
     @Override
     public Post findById(PostId postId) {
@@ -35,8 +43,17 @@ public class PostAdap implements LoadPost, SavePost {
 
     @Override
     public List<PostData> findAllPosts() {
-        List<PostEntity> postEntities = postRepository.findAllWithMember();
+        return toData(postRepository.findOpenWithMember(java.time.LocalDateTime.now()));
+    }
 
+    @Override
+    public PostData findPostData(PostId postId) {
+        PostEntity entity = postRepository.findById(postId.getId())
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.NOT_FOUND, "공고를 찾을 수 없습니다"));
+        return toData(List.of(entity)).get(0);
+    }
+
+    private List<PostData> toData(List<PostEntity> postEntities) {
         List<Long> postIds = postEntities.stream()
                 .map(postEntity -> postEntity.getId())
                 .collect(Collectors.toList());
@@ -66,9 +83,18 @@ public class PostAdap implements LoadPost, SavePost {
                         postEntity.getMeetingAt(),
                         postEntity.getLocation(),
                         participantsMap.getOrDefault(postEntity.getId(), List.of()),
-                        postEntity.getTargetCount()
+                        postEntity.getTargetCount(),
+                        postEntity.getExpiredAt(),
+                        postEntity.getStatus(),
+                        postEntity.getCloseReason()
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PostId> findIdsDueForExpiry(java.time.LocalDateTime now, int limit) {
+        return postRepository.findIdsDueForExpiry(now, org.springframework.data.domain.PageRequest.of(0, limit))
+                .stream().map(PostId::new).toList();
     }
 
     @Override
@@ -83,5 +109,16 @@ public class PostAdap implements LoadPost, SavePost {
             postMapper.updateEntityFromDomain(post, postEntity);
             return postMapper.toDomain(postEntity);
         }
+    }
+
+    @Override
+    public boolean hasParticipants(PostId postId) {
+        return !participationRepository.findAllByPostId(postId.getId()).isEmpty();
+    }
+
+    @Override
+    public void delete(PostId postId) {
+        subscriptionRepository.deleteAllByPostId(postId.getId());
+        postRepository.deleteById(postId.getId());
     }
 }

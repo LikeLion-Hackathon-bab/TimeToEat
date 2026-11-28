@@ -10,6 +10,8 @@ import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.participation.domain.Participation;
 import com.example.timetoeat.domain.post.domain.Post;
 import com.example.timetoeat.domain.post.domain.vo.post.PostId;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,27 +25,39 @@ public class ParticipationTransactionManager {
     private final SaveParticipation saveParticipation;
     private final SavePost savePost;
     private final PublishPostEvent publishPostEvent;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     @Transactional
-    public void apply(MemberId memberId, PostId postId) {
-        Post post = loadPost.findById(postId);
+    public boolean apply(MemberId memberId, PostId postId) {
+        Post post = loadPost.findForUpdate(postId);
+        if (post.getStatus() == com.example.timetoeat.domain.post.domain.Status.OPEN &&
+                !post.getExpiredAt().isAfter(java.time.LocalDateTime.now())) {
+            var expired = savePost.save(post.expire());
+            publishPostEvent.publish(new com.example.timetoeat.domain.post.domain.event.PostExpiredEvent(expired));
+            return false;
+        }
+        if (post.isOwnedBy(memberId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "자신의 공고에는 신청할 수 없습니다.");
         Participation participation = loadParticipation.getParticipationByPostId(post.getPostId());
 
 
         if (!post.canApply(participation)) {
-            throw new IllegalStateException("이미 마감되었거나 인원이 가득 찬 공고입니다");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 마감되었거나 인원이 가득 찬 공고입니다");
         }
         if (participation.contains(memberId)) {
-            throw new IllegalStateException("이미 신청한 공고입니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 공고입니다.");
         }
 
         Participation newParticipation = participation.add(memberId);
         saveParticipation.save(newParticipation);
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.AnnouncementJoined( // F25: 커밋 뒤 공고 작성자 알림
+                post.getPostId().getId(), post.getMemberId().getId(), memberId.getId(), post.getLocation(),
+                newParticipation.getMemberIds().size(), post.getTargetCount(), post.getExpiredAt()));
 
         if (newParticipation.isFull(post.getTargetCount())) {
-            Post closedPost = post.close();
+            Post closedPost = post.close(com.example.timetoeat.domain.post.domain.CloseReason.FULL);
             Post savedPost = savePost.save(closedPost);
             publishPostEvent.publish(new PostCompletedEvent(savedPost));
         }
+        return true;
     }
 }

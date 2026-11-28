@@ -27,7 +27,8 @@ public class ArticleAiSupportController {
     private String aiApiKey;
 
     private void verifyAiKey(String key, Long memberId) {
-        if (!StringUtils.hasText(aiApiKey) || !aiApiKey.equals(key)) {
+        if (!StringUtils.hasText(aiApiKey) || !java.security.MessageDigest.isEqual(aiApiKey.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                (key == null ? "" : key).getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
             log.warn("AI support rejected: invalid X-AI-KEY (memberId={})", memberId);
             throw new AccessDeniedException("INVALID_AI_KEY");
         }

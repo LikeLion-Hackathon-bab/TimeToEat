@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface GetInvitationUseCase {
     List<InvitationListResponse> getInvitationList(MemberId inviteeId);
+
+    List<Long> getAcceptedRoomIds(MemberId viewer);
 }

@@ -30,18 +30,31 @@ public class InvitationAdap implements LoadInvitation, SaveInvitation, LoadInvit
     public Invitation save(Invitation invitation) {
         if (invitation.invitationId() == null) {
             MemberEntity inviter = memberJpaRepository.findById(invitation.inviterId().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid member id: " + invitation.inviterId().getId()));
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                            org.springframework.http.HttpStatus.UNAUTHORIZED, "보내는 회원을 찾을 수 없습니다."));
             MemberEntity invitee = memberJpaRepository.findById(invitation.inviteeId().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid member id: " + invitation.inviterId().getId()));
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                            org.springframework.http.HttpStatus.NOT_FOUND, "초대할 회원을 찾을 수 없습니다."));
             InvitationEntity invitationEntity = mapper.toEntity(invitation, inviter, invitee);
             InvitationEntity saved = invitationRepository.save(invitationEntity);
             return mapper.toDomain(saved);
-        } else {
-            InvitationEntity invitationEntity = invitationRepository.findById(invitation.inviterId().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("not found invitation"));
-            mapper.updateEntityFromDomain(invitation,invitationEntity);
-            return mapper.toDomain(invitationEntity);
         }
+        if (invitationRepository.resolvePending(invitation.invitationId().id(), invitation.status()) != 1) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT, "이미 처리된 초대입니다.");
+        }
+        return invitation;
+    }
+
+    @Override
+    public void lockPair(MemberId first, MemberId second) {
+        long a = first.getId(), b = second.getId();
+        invitationRepository.lockMembersInIdOrder(Math.min(a, b), Math.max(a, b));
+    }
+
+    @Override
+    public boolean existsPending(MemberId inviterId, MemberId inviteeId) {
+        return invitationRepository.existsPending(inviterId.getId(), inviteeId.getId());
     }
 
     @Override
@@ -57,5 +70,10 @@ public class InvitationAdap implements LoadInvitation, SaveInvitation, LoadInvit
         return inviters.stream()
                 .map(mapper::toInvitationListData)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Long> getAcceptedRoomIds(MemberId viewer) {
+        return invitationRepository.findAcceptedRoomIds(viewer.getId());
     }
 }

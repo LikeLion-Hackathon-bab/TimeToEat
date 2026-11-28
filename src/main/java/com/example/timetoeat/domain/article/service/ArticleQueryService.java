@@ -10,6 +10,7 @@ import com.example.timetoeat.domain.article.repository.ArticleCommentRepository;
 import com.example.timetoeat.domain.article.repository.ArticleLikeRepository;
 import com.example.timetoeat.domain.article.repository.ArticleRepository;
 import com.example.timetoeat.domain.article.repository.ArticleTagRepository;
+import com.example.timetoeat.domain.friend.service.FriendDirectory;
 import com.example.timetoeat.global.error.exception.CustomException;
 
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ public class ArticleQueryService {
     private final ArticleLikeRepository likeRepository;
     private final ArticleTagRepository tagRepository;
     private final ArticleCommentRepository articleCommentRepository;
+    private final FriendDirectory friendDirectory;
 
     // 로그인 필수
     private static Long requireLogin(Long meId) {
@@ -45,7 +47,11 @@ public class ArticleQueryService {
         var sorted = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
                 Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
 
-        Page<Article> page = articleRepository.findByCreatedAtGreaterThanEqual(threshold, sorted);
+        // F09: 내 글 + 친구 글만. 친구는 친구 목록 화면과 같은 출처(FriendDirectory)라 목록에 보이는 사람의 글만 보인다.
+        Set<Long> authors = new HashSet<>(friendDirectory.friendIdsOf(loginId));
+        authors.add(loginId);
+
+        Page<Article> page = articleRepository.findByAuthor_IdInAndCreatedAtGreaterThanEqual(authors, threshold, sorted);
 
         return mapToSummaryPage(loginId, page);
     }
@@ -100,7 +106,7 @@ public class ArticleQueryService {
 
         boolean likedByMe = likeRepository.existsByArticle_IdAndMember_Id(articleId, loginId);
 
-        return ArticleDetailResponse.from(a, likedByMe);
+        return ArticleDetailResponse.from(a, likedByMe, tagRepository.findTaggedMemberIdsByArticleId(articleId));
     }
 
     public List<CommentResponse> getCommentsFlat(Long articleId) {

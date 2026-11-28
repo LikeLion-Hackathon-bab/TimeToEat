@@ -88,3 +88,9 @@
 
                       
   챌린지(Challenge) / 쿠폰(Coupon) / 추천 코드(Referral) 기능 구현
+
+### 공고 대기실 연결
+
+`SOCKET_BASE_URL`은 Spring에서 접근할 수 있는 Socket 서버 주소다. `ROOM_RESULT_KEY`는 두 서버에 같은 값으로 설정한다. 웹 클라이언트에는 배포하지 않는다. 기존 DB는 서버 배포 전에 `db/confirmed_meeting.sql`, `db/notification.sql`, `db/invitation_cancel.sql`, `db/post_close_reason.sql`을 차례로 한 번씩 적용한다. 운영 프로필은 시작 시 스키마를 검증한다. 빈 검증용 DB에서만 `SPRING_JPA_HIBERNATE_DDL_AUTO=create`로 초기화한다.
+
+프론트 주소가 다른 환경은 `CLIENT_LOGIN_REDIRECT`에 로그인 후 돌아갈 홈 URL을 설정한다. `AUTH_COOKIE_DOMAIN`은 기본이 빈 값(호스트 전용 쿠키)이다. Client와 API가 같은 상위 도메인을 쓸 때만 그 도메인을 넣는다. 운영 Client 주소는 `CORS_ALLOWED_ORIGINS`에 넣는다.

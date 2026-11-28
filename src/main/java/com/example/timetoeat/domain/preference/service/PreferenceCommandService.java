@@ -3,11 +3,13 @@ package com.example.timetoeat.domain.preference.service;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.preference.dto.request.OnboardingPreferenceRequest;
 import com.example.timetoeat.domain.preference.entity.FoodCode;
+import com.example.timetoeat.domain.preference.entity.MemberCustomAllergy;
 import com.example.timetoeat.domain.preference.entity.MemberFoodPreference;
 import com.example.timetoeat.domain.preference.entity.MemberPreferenceProfile;
 import com.example.timetoeat.domain.preference.entity.PreferenceType;
 import com.example.timetoeat.domain.preference.exception.PreferenceErrorCode;
 import com.example.timetoeat.domain.preference.repository.FoodCodeRepository;
+import com.example.timetoeat.domain.preference.repository.MemberCustomAllergyRepository;
 import com.example.timetoeat.domain.preference.repository.MemberFoodPreferenceRepository;
 import com.example.timetoeat.domain.preference.repository.MemberPreferenceProfileRepository;
 import com.example.timetoeat.global.error.exception.CustomException;
@@ -28,6 +30,7 @@ public class PreferenceCommandService {
     private final MemberFoodPreferenceRepository prefRepo;
     private final FoodCodeRepository foodRepo;
     private final MemberPreferenceProfileRepository profileRepo;
+    private final MemberCustomAllergyRepository customAllergyRepo;
     private final EntityManager em;
 
     @Transactional
@@ -37,6 +40,13 @@ public class PreferenceCommandService {
         List<String> likes = dedup(req.getLikedCodes());
         List<String> dislikes = dedup(req.getDislikedCodes());
         List<String> allergies = dedup(req.getAllergyCodes());
+        List<String> customAllergies = dedup(req.getCustomAllergyLabels());
+        if (customAllergies.size() > MemberCustomAllergy.MAX_COUNT) {
+            throw new CustomException(PreferenceErrorCode.TOO_MANY_CUSTOM_ALLERGIES);
+        }
+        if (customAllergies.stream().anyMatch(l -> l.length() > MemberCustomAllergy.MAX_LENGTH)) {
+            throw new CustomException(PreferenceErrorCode.CUSTOM_ALLERGY_TOO_LONG);
+        }
 
 
         // 같은 코드(음식)를 선호/비선호로 동시 선택 금지
@@ -59,6 +69,11 @@ public class PreferenceCommandService {
         replace(memberRef, PreferenceType.LIKE, likes, codeMap);
         replace(memberRef, PreferenceType.DISLIKE, dislikes, codeMap);
         replace(memberRef, PreferenceType.ALLERGY, allergies, codeMap);
+        // 직접 입력 알레르기도 다른 목록과 같이 통째로 교체한다(없으면 비움).
+        customAllergyRepo.deleteAllOfMember(memberId);
+        for (int i = 0; i < customAllergies.size(); i++) {
+            customAllergyRepo.save(new MemberCustomAllergy(memberRef, customAllergies.get(i), i));
+        }
 
         MemberPreferenceProfile profile = profileRepo.findById(memberId)
                 .orElseGet(() -> profileRepo.save(MemberPreferenceProfile.create(memberRef)));
@@ -68,6 +83,9 @@ public class PreferenceCommandService {
 
     private void replace(MemberEntity member, PreferenceType type, List<String> codes, Map<String, FoodCode> map) {
         prefRepo.deleteByMember_IdAndType(member.getId(), type);
+        // 파생 delete는 엔티티를 지우기만 하고 flush 때 insert가 먼저 실행된다.
+        // 같은 코드를 다시 저장하면 uk_member_food_type 중복(500)이 나므로 여기서 먼저 반영한다.
+        em.flush();
         if (codes.isEmpty()) return;
 
         List<MemberFoodPreference> batch = new ArrayList<>(codes.size());

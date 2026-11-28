@@ -7,6 +7,8 @@ import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.exception.MemberErrorCode;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
 import com.example.timetoeat.domain.preference.entity.PreferenceType;
+import com.example.timetoeat.domain.preference.entity.MemberCustomAllergy;
+import com.example.timetoeat.domain.preference.repository.MemberCustomAllergyRepository;
 import com.example.timetoeat.domain.preference.repository.MemberFoodPreferenceRepository;
 import com.example.timetoeat.global.error.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class MemberProfileQueryService {
 
     private final MemberJpaRepository memberJpaRepository;
     private final MemberFoodPreferenceRepository foodPreferenceRepository;
+    private final MemberCustomAllergyRepository customAllergyRepository;
 
     public ProfileResponse getMyProfile(Long meId) {
         return getProfile(meId);
@@ -48,6 +51,10 @@ public class MemberProfileQueryService {
                 .map(p -> new ProfileDetailResponse.PreferenceItem(p.getFoodCode().getCode(), p.getFoodCode().getLabel()))
                 .toList();
 
-        return ProfileDetailResponse.of(target, likes, dislikes, allergies);
+        var customAllergies = customAllergyRepository.findByMember_IdOrderBySortOrderAscIdAsc(memberId).stream()
+                .map(MemberCustomAllergy::getLabel)
+                .toList();
+
+        return ProfileDetailResponse.of(target, likes, dislikes, allergies, customAllergies);
     }
 }

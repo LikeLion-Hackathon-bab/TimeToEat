@@ -22,11 +22,17 @@ public class OnboardingPreferenceRequest {
     @Size(max = 200)
     private List<@Pattern(regexp = "\\d{8}", message = "코드는 8자리 숫자여야 합니다.") String> allergyCodes;
 
+    /** 선택지에 없는 직접 입력 알레르기(F07). 공백 제거·중복 제거 뒤 최대 10개, 각 20자(서비스에서 검증). */
+    @Size(max = 50)
+    private List<String> customAllergyLabels;
+
     @Builder
-    private OnboardingPreferenceRequest(List<String> likedCodes, List<String> dislikedCodes, List<String> allergyCodes) {
+    private OnboardingPreferenceRequest(List<String> likedCodes, List<String> dislikedCodes, List<String> allergyCodes,
+                                        List<String> customAllergyLabels) {
         this.likedCodes = likedCodes;
         this.dislikedCodes = dislikedCodes;
         this.allergyCodes = allergyCodes;
+        this.customAllergyLabels = customAllergyLabels;
     }
 
     public static OnboardingPreferenceRequest of(List<String> likedCodes, List<String> dislikedCodes, List<String> allergyCodes) {
@@ -34,6 +40,16 @@ public class OnboardingPreferenceRequest {
                 .likedCodes(likedCodes)
                 .dislikedCodes(dislikedCodes)
                 .allergyCodes(allergyCodes)
+                .build();
+    }
+
+    public static OnboardingPreferenceRequest of(List<String> likedCodes, List<String> dislikedCodes, List<String> allergyCodes,
+                                                 List<String> customAllergyLabels) {
+        return OnboardingPreferenceRequest.builder()
+                .likedCodes(likedCodes)
+                .dislikedCodes(dislikedCodes)
+                .allergyCodes(allergyCodes)
+                .customAllergyLabels(customAllergyLabels)
                 .build();
     }
 }

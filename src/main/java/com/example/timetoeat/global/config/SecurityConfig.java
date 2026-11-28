@@ -7,7 +7,6 @@ import com.example.timetoeat.global.auth.handler.LoginSuccessHandler;
 import com.example.timetoeat.global.auth.handler.OAuth2LoginFailureHandler;
 import com.example.timetoeat.global.auth.handler.Oauth2EntryPoint;
 import com.example.timetoeat.global.auth.service.CustomOauthUserService;
-import com.example.timetoeat.global.auth.util.CookieOAuth2AuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +41,6 @@ public class SecurityConfig {
     private final JwtVerificationFilter jwtVerificationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
-    private final CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository;
 
 
     @Bean
@@ -67,7 +65,10 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorizationEndpointConfig ->
                                         authorizationEndpointConfig
                                                 .baseUri("/oauth2/authorization")
-                                                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository()) // ← 여기만 교체
+                                                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository())
+                                                // 인가 요청(state)은 Spring 기본값인 HTTP 세션에 둔다. 서버 한 대(EC2 1대) 구성이라
+                                                // 쿠키 저장소의 이점(다중 인스턴스)이 없고, 쿠키 저장소는 Java 역직렬화 표면만 늘린다.
+                                                // 근거: qa-cloud/spring-followups/DECISIONS.md
                         )
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
@@ -97,6 +98,8 @@ public class SecurityConfig {
                 );
         http
                 .authorizeHttpRequests(auth -> auth
+                        // 로그인 전에 부르는 경로와 서버 간 호출(각자 헤더 키로 보호)만 연다. 나머지는 모두 인증 필요.
+                        // 이전에는 "/api/v1/**" 전체가 열려 있어 /plans, /members/{id}/profile/detail 등이 토큰 없이 읽혔다.
                         .requestMatchers(
                                 "/login/**",
                                 "/oauth2/authorization/**",
@@ -105,9 +108,16 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/",
-                                "/api/v1/ai/support/**",
-                                "/api/v1/**",
-                                "/api/v1/auth/refresh"
+                                "/error",
+                                "/api/v1/auth/refresh",                   // 리프레시 쿠키로 인증
+                                "/api/v1/auth/logout",                    // 만료된 access 토큰으로도 로그아웃
+                                "/api/v1/auth/demo-login",                // 시연 로그인(DEMO_LOGIN_ENABLED=true 일 때만 존재, 아니면 404)
+                                "/api/v1/ai/support/**"                   // X-AI-KEY (AI 서버)
+                        ).permitAll()
+                        // Socket → Spring 결과 저장(X-Room-Key). POST만 연다. 같은 경로의 GET 상세는 인증 필요.
+                        .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                "/api/v1/meetings/*/result",
+                                "/api/v1/meetings/invitations/*/result"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );
@@ -120,13 +130,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3001",
-                "https://13.125.49.103:3000",
-                "https://babmuckdang.site",
-                "https://www.babmuckdang.site",
-                "https://bab-muk-dang-client.vercel.app"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"));
+        configuration.setAllowedOrigins(allowedOrigins(System.getenv("CORS_ALLOWED_ORIGINS")));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
                 "Content-Type",
                 "X-Requested-With",
@@ -140,5 +145,22 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    static final List<String> DEFAULT_ORIGINS = List.of(
+            "https://bab-muk-dang-client.vercel.app");
+    // 만료 도메인(babmuckdang.site)·반납된 해커톤 IP·localhost는 자격증명 CORS 기본값에 두지 않는다(보안 점검 M2).
+    // 운영 주소와 로컬 개발 출처(예 http://localhost:3001)는 CORS_ALLOWED_ORIGINS로 넣는다.
+
+    /** 기본 목록 + CORS_ALLOWED_ORIGINS(쉼표 구분, 끝 슬래시 제거). 와일드카드는 받지 않는다(allowCredentials=true). */
+    static List<String> allowedOrigins(String extra) {
+        var origins = new java.util.LinkedHashSet<>(DEFAULT_ORIGINS);
+        if (extra != null) {
+            for (String o : extra.split(",")) {
+                String v = o.trim().replaceFirst("/+$", "");
+                if (!v.isEmpty() && !v.contains("*")) origins.add(v);
+            }
+        }
+        return List.copyOf(origins);
     }
 }

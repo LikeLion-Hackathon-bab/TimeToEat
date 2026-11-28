@@ -51,6 +51,13 @@ public class Article extends BaseTimeEntity {
     })
     private RestaurantSnapshot restaurant;
 
+    // 사진을 올린 방법(CAMERA/ALBUM). 이 열이 생기기 전 글은 NULL.
+    // ENUM 열은 값 추가 때마다 ALTER가 필요해(invitation_cancel.sql 참고) VARCHAR로 둔다.
+    @Enumerated(EnumType.STRING)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(name = "upload_method", length = 16)
+    private UploadMethod method;
+
     @Column(nullable = false)
     private int likeCount = 0;
 
@@ -61,12 +68,14 @@ public class Article extends BaseTimeEntity {
     private Long version;
 
     @Builder
-    private Article(MemberEntity author, String imageUrl, LocalDate mealDate, LocalTime mealTime, RestaurantSnapshot restaurant) {
+    private Article(MemberEntity author, String imageUrl, LocalDate mealDate, LocalTime mealTime, RestaurantSnapshot restaurant,
+                    UploadMethod method) {
         this.author = Objects.requireNonNull(author, "author must not be null");
         this.imageUrl = Objects.requireNonNull(imageUrl, "imageUrl must not be null");
         this.mealDate = Objects.requireNonNull(mealDate, "mealDate must not be null");
         this.mealTime = Objects.requireNonNull(mealTime, "mealTime must not be null");
         this.restaurant = restaurant; // 선택값
+        this.method = method;         // 선택값(요청에서는 필수)
     }
 
     public void increaseLike()    { this.likeCount++; }

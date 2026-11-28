@@ -1,0 +1,77 @@
+name: 📋 이슈 템플릿
+description: 새로운 이슈를 등록합니다.
+title: "[TYPE] "
+labels: []
+assignees: []
+
+body:
+  - type: checkboxes
+    id: issue-type
+    attributes:
+      label: 📌 이슈 종류
+      description: 해당하는 항목에 체크해주세요.
+      options:
+        - label: ✨ 기능 추가 (Feature)
+        - label: 🐛 버그 수정 (Bug)
+        - label: ♻️ 리팩토링 (Refactor)
+        - label: 📝 문서 작업 (Docs)
+        - label: 🔧 기타 (Chore)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 📝 작업 내용
+      description: 작업할 내용을 작성해주세요.
+      placeholder: 작업 내용을 입력하세요...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 🔁 재현 조건 (버그만)
+      description: 기준 커밋, 환경, 따라 하면 같은 문제가 나는 순서를 적어주세요.
+      placeholder: |
+        기준 커밋:
+        1.
+        2.
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 🎯 기대값 (버그만)
+      description: 원래 어떻게 돼야 하는지 적어주세요.
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 💥 실제값 (버그만)
+      description: 실제로 어떻게 되는지 적어주세요. 응답 코드, 화면 문구, 로그 등.
+    validations:
+      required: false
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: ✅ 체크리스트
+      description: 진행할 세부 작업을 작성해주세요.
+      value: |
+        - [ ] Task 1
+        - [ ] Task 2
+        - [ ] Task 3
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: 💬 참고 사항
+      description: 관련 기능 번호, 문제가 있는 파일, 다른 저장소 이슈 등
+    validations:
+      required: false

@@ -27,10 +27,32 @@ public class ReferralCommandService {
     private final ReferralCodeRepository referralRepo;
     private final MemberJpaRepository memberRepo;
     private final CouponCommandService couponCommandService;
+    private final org.springframework.context.ApplicationEventPublisher events;
     private final Clock clock;
 
-    @Value("${app.referral.base-url:https://babmuckdang.site/invite}")
-    private String baseUrl;
+    // 추천 링크 주소. 만료된 babmuckdang.site 기본값을 없앴다(재등록되면 공유 링크가 남의 사이트로 간다).
+    // 우선순위: app.referral.base-url → CLIENT_BASE_URL + /invite → CLIENT_LOGIN_REDIRECT 의 origin + /invite → 상대 경로 /invite
+    @Value("${app.referral.base-url:}")
+    private String configuredBaseUrl;
+
+    @Value("${CLIENT_BASE_URL:}")
+    private String clientBaseUrl;
+
+    @Value("${CLIENT_LOGIN_REDIRECT:}")
+    private String clientLoginRedirect;
+
+    static String resolveBaseUrl(String configured, String clientBase, String loginRedirect) {
+        if (configured != null && !configured.isBlank()) return configured.trim().replaceFirst("/+$", "");
+        if (clientBase != null && !clientBase.isBlank()) return clientBase.trim().replaceFirst("/+$", "") + "/invite";
+        if (loginRedirect != null && !loginRedirect.isBlank()) {
+            try {
+                var u = java.net.URI.create(loginRedirect.trim());
+                if (u.getScheme() != null && u.getRawAuthority() != null)
+                    return u.getScheme() + "://" + u.getRawAuthority() + "/invite";
+            } catch (IllegalArgumentException ignore) { /* 아래 상대 경로 */ }
+        }
+        return "/invite";
+    }
 
     @Value("${app.referral.ttl-days:7}")
     private int ttlDays;
@@ -63,7 +85,7 @@ public class ReferralCommandService {
                                 .expiresAt(now.plusDays(ttlDays))
                                 .build()
                 );
-                String link = baseUrl + "?code=" + saved.getCode();
+                String link = resolveBaseUrl(configuredBaseUrl, clientBaseUrl, clientLoginRedirect) + "?code=" + saved.getCode();
                 return ReferralCreateResponse.of(saved.getCode(), link, saved.getExpiresAt());
             } catch (DataIntegrityViolationException dup) {
                 // 같은 시각에 같은 코드가 생성된 케이스 → 재시도
@@ -87,7 +109,20 @@ public class ReferralCommandService {
         if (entity.getInviter().getId().equals(me.getId()))
             throw new CustomException(ReferralErrorCode.SELF_REFERRAL_NOT_ALLOWED);
 
+        // 회원당 1회: 다른 추천인의 코드를 또 등록해 INVITE 쿠폰을 반복 수령하지 못하게
+        if (referralRepo.existsByUsedBy_Id(me.getId()))
+            throw new CustomException(ReferralErrorCode.ALREADY_REDEEMED);
+
         entity.markUsed(me, now);
+        try {
+            // 서로 다른 코드로 동시에 들어온 두 요청은 위 검사를 함께 통과할 수 있다 → uk_referral_code_used_by 가 막는다.
+            // 쿠폰 발급 전에 flush 해 충돌을 여기서 받는다.
+            referralRepo.saveAndFlush(entity);
+        } catch (DataIntegrityViolationException dup) {
+            throw new CustomException(ReferralErrorCode.ALREADY_REDEEMED);
+        }
         couponCommandService.issueRewardCoupon(me.getId(), "INVITE");
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.ReferralRedeemed( // F25: 커밋 뒤 추천인 알림
+                entity.getId(), entity.getInviter().getId(), me.getId()));
     }
 }

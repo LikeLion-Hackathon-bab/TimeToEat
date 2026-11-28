@@ -90,6 +90,10 @@ public class JwtProvider {
             throw new CustomException(GlobalErrorCode.EXPIRED_TOKEN);
         } catch (UnsupportedJwtException e) {
             throw new CustomException(GlobalErrorCode.INVALID_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            // 서명 불일치(io.jsonwebtoken.security.SignatureException 등)·빈 값. 위 SecurityException 은
+            // java.lang 쪽이라 jjwt 서명 예외를 잡지 못해 500 이 났다.
+            throw new CustomException(GlobalErrorCode.INVALID_TOKEN);
         }
     }
 

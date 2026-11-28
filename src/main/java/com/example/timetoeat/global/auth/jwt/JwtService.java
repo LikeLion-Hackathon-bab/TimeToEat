@@ -26,10 +26,19 @@ public class JwtService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberService memberService;
+    private final RefreshRotationGrace rotationGrace;
+    /** 시연 기간. 시연 회원의 refresh 는 시연이 닫히면 거절한다(리뷰 D1). 없으면 닫힘으로 본다. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.example.timetoeat.global.auth.demo.DemoLoginWindow demoWindow;
 
     @Transactional
     public TokenDto doTokenGenerationProcess(CustomOauth2User principal) {
-        Long memberId = principal.getMemberId();
+        return issueForMember(principal.getMemberId());
+    }
+
+    /** 로그인 성공 처리(OAuth·시연 로그인 공통): access/refresh 발급 후 refresh 저장. */
+    @Transactional
+    public TokenDto issueForMember(Long memberId) {
         MemberEntity memberEntity = memberService.getById(memberId);
 
         Date now = new Date();
@@ -37,6 +46,7 @@ public class JwtService {
         Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
         upsertRefreshToken(memberId, tokenDto.getRefreshToken(), refreshExp);
+        rotationGrace.forget(memberId); // 새 로그인 뒤에는 이전 회전 유예를 남기지 않는다
 
         return tokenDto;
     }
@@ -54,18 +64,30 @@ public class JwtService {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        if (!refreshTokenRepository.existsByToken(refreshToken)) {
+        Long memberId = jwtProvider.getId(refreshToken);
+        // 같은 회원의 갱신을 행 잠금으로 직렬화한 뒤 토큰을 비교한다(검사와 회전 사이 경합 제거).
+        RefreshToken stored = refreshTokenRepository.findByMemberIdForUpdate(memberId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN));
+        Date now = new Date();
+        boolean current = refreshToken.equals(stored.getToken());
+        if (!current && !rotationGrace.isRecentlyRotated(memberId, refreshToken, now.getTime())) {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        Long memberId = jwtProvider.getId(refreshToken);
         MemberEntity member = memberService.getById(memberId);
-
-        Date now = new Date();
+        if (com.example.timetoeat.global.auth.demo.DemoAccounts.isDemoEmail(member.getEmail())
+                && (demoWindow == null || !demoWindow.isOpen())) {
+            refreshTokenRepository.deleteAllByMemberId(memberId);
+            throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
+        }
         TokenDto tokenDto = jwtProvider.issueToken(member, now);
         Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
-        upsertRefreshToken(memberId, tokenDto.getRefreshToken(), refreshExp);
+        String previous = stored.getToken();
+        stored.refresh(tokenDto.getRefreshToken(), refreshExp);
+        if (!previous.equals(tokenDto.getRefreshToken())) {
+            rotationGrace.remember(memberId, previous, now.getTime());
+        }
 
         return tokenDto;
     }
@@ -83,6 +105,7 @@ public class JwtService {
 
         Long memberId = jwtProvider.getId(refreshToken);
         refreshTokenRepository.deleteAllByMemberId(memberId);
+        rotationGrace.forget(memberId);
     }
 
     public String getTokenFromBearer(String bearerToken) {

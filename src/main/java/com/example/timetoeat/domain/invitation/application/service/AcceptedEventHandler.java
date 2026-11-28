@@ -1,59 +1,34 @@
 package com.example.timetoeat.domain.invitation.application.service;
 
-import com.example.timetoeat.domain.article.service.ArticleMealQueryService;
-import com.example.timetoeat.domain.invitation.application.port.out.LoadInvitation;
-import com.example.timetoeat.domain.invitation.domain.Invitation;
-import com.example.timetoeat.domain.invitation.domain.event.InvitationSentEvent;
-import com.example.timetoeat.domain.invitation.domain.vo.InvitationId;
-import com.example.timetoeat.domain.member.entity.MemberEntity;
-import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
-import com.example.timetoeat.domain.participation.adap.in.dto.ParticipationSocketDto;
-import com.example.timetoeat.domain.participation.application.port.out.LoadParticipation;
-import com.example.timetoeat.domain.participation.application.service.ParticipationInfoService;
-import com.example.timetoeat.domain.post.adap.in.dto.RecentMenuDto;
-import com.example.timetoeat.domain.post.application.service.MatchingPostService;
-import com.example.timetoeat.domain.post.application.service.PostParsingService;
-import com.example.timetoeat.domain.post.application.service.RecentMenuService;
-import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
+import com.example.timetoeat.domain.invitation.domain.event.InvitationAcceptedEvent;
 import com.example.timetoeat.global.util.DomainEvent;
 import com.example.timetoeat.global.common.EventHandler;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class AcceptedEventHandler implements EventHandler<InvitationSentEvent> {
+public class AcceptedEventHandler implements EventHandler<InvitationAcceptedEvent> {
 
-    private final LoadParticipation loadParticipation;
-    private final ArticleMealQueryService articleMealQueryService;
-    private final ParticipationInfoService participationInfoService;
-    private final RecentMenuService recentMenuService;
-    private final MatchingPostService matchingPostService;
-    private final PostParsingService postParsingService;
-    private final LoadInvitation loadInvitation;
-    private final MemberJpaRepository memberJpaRepository;
+    private final InvitationRoomService rooms;
 
     @Override
     public boolean supports(DomainEvent event) {
-        return event instanceof InvitationSentEvent;
+        return event instanceof InvitationAcceptedEvent;
     }
 
     @Override
-    public void handle(InvitationSentEvent event) {
-        InvitationId invitationId = event.invitation().invitationId();
-        Invitation invitation = loadInvitation.findById(invitationId)
-                .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
-        MemberId inviterId = invitation.inviterId();
-        MemberId inviteeId = invitation.inviteeId();
-        Set<MemberId> memberIds = new HashSet<>();
-        memberIds.add(inviteeId);
-        memberIds.add(inviterId);
-        List<ParticipationSocketDto> participations = participationInfoService.getParticipations(memberIds);
-        List<RecentMenuDto> recentMenus = recentMenuService.getRecentMenus(memberIds);
-        matchingPostService.sendInvitation(invitationId,participations,recentMenus);
+    public void handle(InvitationAcceptedEvent event) {
+        // 리스너에서 예외를 던지면 기본 설정(default-requeue-rejected=true)으로 즉시 무한 재전달된다.
+        // 대기실은 두 사람이 POST /invitations/{id}/enter 할 때 다시 준비되므로 여기서는 기록만 한다.
+        try {
+            rooms.prepare(event.invitationMatchingResult().invitation());
+        } catch (RuntimeException e) {
+            log.warn("초대 {} 대기실 사전 준비 실패(입장 시 재시도): {}",
+                    event.invitationMatchingResult().invitationId(), e.getMessage());
+        }
     }
 }

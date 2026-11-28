@@ -6,10 +6,13 @@ import com.example.timetoeat.domain.post.application.port.in.usecase.GetPostUseC
 import com.example.timetoeat.domain.post.application.port.out.LoadPost;
 import com.example.timetoeat.domain.post.application.port.data.PostData;
 import com.example.timetoeat.domain.post.application.port.dto.response.PostRes;
+import com.example.timetoeat.domain.post.domain.CloseReason;
+import com.example.timetoeat.domain.post.domain.Status;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +31,11 @@ public class PostQueryService implements GetPostUseCase {
         return postDataList.stream()
                 .map(this::toPostRes)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PostRes getPost(com.example.timetoeat.domain.post.domain.vo.post.PostId postId) {
+        return toPostRes(loadPost.findPostData(postId));
     }
 
     private PostRes toPostRes(PostData data) {
@@ -49,7 +57,23 @@ public class PostQueryService implements GetPostUseCase {
                 data.meetingAt(),
                 data.location(),
                 participantInfoList,
-                data.targetCount()
+                data.targetCount(),
+                data.expiredAt(),
+                effectiveStatus(data).name(),
+                effectiveReason(data) == null ? null : effectiveReason(data).name()
         );
+    }
+
+    /** 만료 시각이 지난 OPEN(스케줄러 반영 전 최대 1분)은 이미 신청할 수 없으므로 CLOSED·EXPIRED로 보여 준다. */
+    private static boolean lazilyExpired(PostData data) {
+        return data.status() == Status.OPEN && data.expiredAt() != null && !data.expiredAt().isAfter(LocalDateTime.now());
+    }
+
+    private static Status effectiveStatus(PostData data) {
+        return lazilyExpired(data) ? Status.CLOSED : data.status();
+    }
+
+    private static CloseReason effectiveReason(PostData data) {
+        return lazilyExpired(data) ? CloseReason.EXPIRED : data.closeReason();
     }
 }

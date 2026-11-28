@@ -7,6 +7,8 @@ import com.example.timetoeat.domain.article.entity.*;
 import com.example.timetoeat.domain.article.exception.ArticleErrorCode;
 import com.example.timetoeat.domain.article.repository.*;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
+import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
+import com.example.timetoeat.global.error.GlobalErrorCode;
 
 import com.example.timetoeat.global.error.exception.CustomException;
 import jakarta.persistence.EntityManager;
@@ -33,6 +35,7 @@ public class ArticleCommandService {
     private final ArticleLikeRepository likeRepository;
     private final ArticleCommentRepository commentRepository;
     private final ArticleTagRepository tagRepository;
+    private final MemberJpaRepository memberRepository;
     private final EntityManager entityManager;
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -40,6 +43,14 @@ public class ArticleCommandService {
 
     // 게시글 작성
     public Long createArticle(CreateArticleRequest req, Long authorId) {
+        // 태그 대상은 실제 회원이어야 한다. 가짜 시연 친구(음수 id)나 없는 회원이면 FK 위반 500 대신 400.
+        var ids = new HashSet<>(req.getTaggedMemberIds());
+        ids.remove(authorId);
+        if (ids.stream().anyMatch(id -> id == null || id <= 0)
+                || (!ids.isEmpty() && memberRepository.countByIdIn(ids) != ids.size())) {
+            throw new CustomException(GlobalErrorCode.BAD_REQUEST, "태그할 회원이 올바르지 않습니다.");
+        }
+
         MemberEntity authorRef = entityManager.getReference(MemberEntity.class, authorId);
 
         LocalDateTime nowKst = LocalDateTime.now(clock);
@@ -52,9 +63,7 @@ public class ArticleCommandService {
         Article article = req.toEntity(authorRef, resolvedDate, resolvedTime);
         articleRepository.save(article);
 
-        // 태그 저장 (자기 자신 제거 + 중복 제거)
-        var ids = new HashSet<>(req.getTaggedMemberIds());
-        ids.remove(authorId);
+        // 태그 저장 (자기 자신 제거 + 중복 제거, 위에서 검증)
         for (Long taggedId : ids) {
             MemberEntity taggedRef = entityManager.getReference(MemberEntity.class, taggedId);
             tagRepository.save(ArticleTag.of(taggedRef, article));
@@ -105,6 +114,8 @@ public class ArticleCommandService {
                         .article(article)
                         .build());
                 article.increaseLike();
+                applicationEventPublisher.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.PostLiked(
+                        articleId, article.getAuthor().getId(), memberId)); // F25: 커밋 뒤 알림
                 return ArticleLikeToggleResponse.of(true, article.getLikeCount());
             } catch (DataIntegrityViolationException dup) {
                 entityManager.refresh(article);
@@ -133,6 +144,10 @@ public class ArticleCommandService {
                 req.toEntity(authorRef, article, parent)
         );
         article.increaseComment();
+        applicationEventPublisher.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.CommentCreated( // F25: 커밋 뒤 알림
+                article.getId(), article.getAuthor().getId(), saved.getId(), memberId,
+                parent == null ? null : parent.getId(), parent == null ? null : parent.getAuthor().getId(),
+                req.getContent()));
         return saved.getId();
     }
 

@@ -44,3 +44,35 @@ management:
   metrics:
     enable:
       process.cpu: false
+
+matching:
+  socket-base-url: ${SOCKET_BASE_URL:http://socket:3000}
+
+# API 문서(Swagger UI·/v3/api-docs)는 기본으로 끈다. 운영에 공개하면 전체 API 목록이 노출된다.
+# 로컬·시험 서버에서만 SWAGGER_ENABLED=true 로 켠다.
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
+
+# 시연 로그인(카카오 계정 없이 시연 회원 5명). 기본 꺼짐 → /api/v1/auth/demo-login 404.
+# 켤 때: DEMO_LOGIN_ENABLED=true, DEMO_LOGIN_SECRET(32자 이상), 선택 DEMO_LOGIN_UNTIL(ISO 시각, 지나면 자동 꺼짐).
+demo-login:
+  enabled: ${DEMO_LOGIN_ENABLED:false}
+  secret: ${DEMO_LOGIN_SECRET:}
+  until: ${DEMO_LOGIN_UNTIL:}
+
+# 웹 푸시(FCM HTTP v1). docs/PUSH.md. FCM_SERVICE_ACCOUNT_JSON 이 비면 실제 발송 없이 로그만 남긴다.
+# 값은 서비스 계정 JSON 파일 경로(권장) 또는 base64 JSON. FCM_TOKEN_URI·FCM_API_BASE_URL 은 시험용(운영은 비워 둔다).
+push:
+  fcm:
+    service-account-json: ${FCM_SERVICE_ACCOUNT_JSON:}
+    token-uri: ${FCM_TOKEN_URI:}
+    api-base-url: ${FCM_API_BASE_URL:https://fcm.googleapis.com}
+    link-base-url: ${FCM_LINK_BASE_URL:}
+
+# 친구 목록이 30명이 안 될 때 가짜 시연 친구(음수 id)로 채울지. 기본 꺼짐.
+# 가짜 항목은 실제 회원이 아니어서 태그·초대하면 400이다. 시연은 시연 로그인(실제 회원)으로 한다.
+demo-friends:
+  enabled: ${DEMO_FRIENDS_ENABLED:false}

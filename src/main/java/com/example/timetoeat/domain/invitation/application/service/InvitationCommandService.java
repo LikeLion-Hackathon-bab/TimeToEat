@@ -10,8 +10,12 @@ import com.example.timetoeat.domain.invitation.domain.event.InvitationAcceptedEv
 import com.example.timetoeat.domain.invitation.domain.event.InvitationRejectedEvent;
 import com.example.timetoeat.domain.invitation.domain.event.InvitationSentEvent;
 import com.example.timetoeat.domain.invitation.domain.vo.InvitationId;
+import com.example.timetoeat.domain.invitation.exception.InvitationErrorCode;
 import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.timetoeat.global.error.GlobalErrorCode;
+import com.example.timetoeat.global.error.exception.CustomException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,16 @@ public class InvitationCommandService implements InvitationUseCase {
 
     @Override
     public void sendInvitation(MemberId inviterId, SendInvitationCommand command) {
+        // 가짜 시연 친구(음수 id) 등 회원 id가 될 수 없는 값은 400. 없는 양수 id는 아래 저장에서 404.
+        Long inviteeId = command.inviteeId() == null ? null : command.inviteeId().getId();
+        if (inviteeId == null || inviteeId <= 0) {
+            throw new CustomException(GlobalErrorCode.BAD_REQUEST, "초대할 회원이 올바르지 않습니다.");
+        }
+        // F40: 더블클릭·동시 요청에도 같은 보낸이→받는이 PENDING 초대는 1건만. 쌍 잠금 뒤 확인해야 경합을 막는다.
+        loadInvitation.lockPair(inviterId, command.inviteeId());
+        if (loadInvitation.existsPending(inviterId, command.inviteeId())) {
+            throw new CustomException(InvitationErrorCode.ALREADY_PENDING);
+        }
         Invitation invitation = Invitation.withoutId(
                 inviterId,
                 command.inviteeId(),
@@ -38,12 +52,7 @@ public class InvitationCommandService implements InvitationUseCase {
 
     @Override
     public String acceptInvitation(MemberId memberId, InvitationId invitationId) {
-        Invitation invitation = loadInvitation.findById(invitationId)
-                .orElseThrow(() -> new EntityNotFoundException("not found invitation information"));
-
-        if (!invitation.inviteeId().equals(memberId)) {
-            throw new SecurityException("no permission to accept invitation");
-        }
+        Invitation invitation = pendingForRecipient(memberId, invitationId);
 
         Invitation acceptedInvitation = invitation.accept();
         Invitation savedInvitation = saveInvitation.save(acceptedInvitation);
@@ -54,15 +63,18 @@ public class InvitationCommandService implements InvitationUseCase {
 
     @Override
     public void rejectInvitation(MemberId memberId, InvitationId invitationId) {
-        Invitation invitation = loadInvitation.findById(invitationId)
-                .orElseThrow(() -> new EntityNotFoundException("not found invitation information"));
-
-        if (!invitation.inviteeId().equals(memberId)) {
-            throw new SecurityException("no permission to accept invitation");
-        }
+        Invitation invitation = pendingForRecipient(memberId, invitationId);
 
         Invitation rejectedInvitation = invitation.reject();
         Invitation savedInvitation = saveInvitation.save(rejectedInvitation);
         publishEventPort.publishEvent(new InvitationRejectedEvent(savedInvitation));
+    }
+    private Invitation pendingForRecipient(MemberId viewer, InvitationId id) {
+        var invitation = loadInvitation.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!invitation.inviteeId().equals(viewer)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (invitation.status() != InvitationStatus.PENDING)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 처리된 초대입니다.");
+        return invitation;
     }
 }
