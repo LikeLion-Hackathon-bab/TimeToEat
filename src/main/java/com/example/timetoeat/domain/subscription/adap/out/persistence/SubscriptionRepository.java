@@ -13,4 +13,8 @@ public interface SubscriptionRepository extends JpaRepository<SubscriptionEntity
 
     @Query("SELECT S.member.id FROM SubscriptionEntity S WHERE S.post.id = :postId")
     List<Long> findMemberIdsByPostId(@Param("postId") Long postId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM SubscriptionEntity S WHERE S.post.id = :postId")
+    void deleteAllByPostId(@Param("postId") Long postId);
 }

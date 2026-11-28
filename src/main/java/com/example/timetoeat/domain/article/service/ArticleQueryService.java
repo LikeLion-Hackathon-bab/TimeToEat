@@ -100,7 +100,7 @@ public class ArticleQueryService {
 
         boolean likedByMe = likeRepository.existsByArticle_IdAndMember_Id(articleId, loginId);
 
-        return ArticleDetailResponse.from(a, likedByMe);
+        return ArticleDetailResponse.from(a, likedByMe, tagRepository.findTaggedMemberIdsByArticleId(articleId));
     }
 
     public List<CommentResponse> getCommentsFlat(Long articleId) {

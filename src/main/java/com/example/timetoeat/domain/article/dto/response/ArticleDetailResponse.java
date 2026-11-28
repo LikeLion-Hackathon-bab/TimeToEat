@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -34,11 +35,14 @@ public class ArticleDetailResponse {
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;
 
+    private List<Long> taggedMemberIds;
+
     @Builder
     private ArticleDetailResponse(Long articleId, Long authorId, String authorUsername, String imageUrl,
                                   LocalDate mealDate, LocalTime mealTime, RestaurantInfo restaurant,
                                   int likeCount, int commentCount, boolean likedByMe,
-                                  LocalDateTime createdAt, LocalDateTime expiresAt) {
+                                  LocalDateTime createdAt, LocalDateTime expiresAt,
+                                  List<Long> taggedMemberIds) {
 
         this.articleId = articleId;
         this.authorId = authorId;
@@ -52,9 +56,14 @@ public class ArticleDetailResponse {
         this.likedByMe = likedByMe;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
+        this.taggedMemberIds = (taggedMemberIds != null) ? taggedMemberIds : List.of();
     }
 
     public static ArticleDetailResponse from(Article article, boolean likedByMe) {
+        return from(article, likedByMe, List.of());
+    }
+
+    public static ArticleDetailResponse from(Article article, boolean likedByMe, List<Long> taggedMemberIds) {
         return ArticleDetailResponse.builder()
                 .articleId(article.getId())
                 .authorId(article.getAuthor().getId())
@@ -68,6 +77,7 @@ public class ArticleDetailResponse {
                 .likedByMe(likedByMe)
                 .createdAt(article.getCreatedAt())
                 .expiresAt(article.getExpiresAt())
+                .taggedMemberIds(taggedMemberIds)
                 .build();
     }
 

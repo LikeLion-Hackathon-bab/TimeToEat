@@ -64,6 +64,19 @@ public class PostController {
         return ApiResponse.success(result);
     }
 
+    @DeleteMapping("/{postId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "공지 삭제 API (작성자, 모집 중이고 참여자 없을 때)")
+    public void deletePost(
+            @AuthenticationPrincipal(expression = "memberId") Long memberId,
+            @PathVariable Long postId
+    ) {
+        if (memberId == null) {
+            throw new IllegalStateException("로그인이 필요한 서비스입니다.");
+        }
+        postUseCase.delete(new MemberId(memberId), new PostId(postId));
+    }
+
     @GetMapping
     @Operation(summary = "공지 전체 조회 API")
     public ApiResponse<List<PostRes>> getPosts()

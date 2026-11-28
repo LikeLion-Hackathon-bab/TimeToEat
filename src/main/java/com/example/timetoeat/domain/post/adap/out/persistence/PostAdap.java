@@ -2,6 +2,7 @@ package com.example.timetoeat.domain.post.adap.out.persistence;
 
 import com.example.timetoeat.domain.post.application.port.data.ParticipationData;
 import com.example.timetoeat.domain.post.application.port.data.PostData;
+import com.example.timetoeat.domain.post.application.port.out.DeletePost;
 import com.example.timetoeat.domain.post.application.port.out.LoadPost;
 import com.example.timetoeat.domain.post.application.port.out.SavePost;
 import com.example.timetoeat.domain.post.adap.out.mapper.PostMapper;
@@ -20,10 +21,11 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class PostAdap implements LoadPost, SavePost {
+public class PostAdap implements LoadPost, SavePost, DeletePost {
 
     private final PostRepository postRepository;
     private final ParticipationRepository participationRepository;
+    private final com.example.timetoeat.domain.subscription.adap.out.persistence.SubscriptionRepository subscriptionRepository;
     private final PostMapper postMapper;
 
     @Override
@@ -89,5 +91,16 @@ public class PostAdap implements LoadPost, SavePost {
             postMapper.updateEntityFromDomain(post, postEntity);
             return postMapper.toDomain(postEntity);
         }
+    }
+
+    @Override
+    public boolean hasParticipants(PostId postId) {
+        return !participationRepository.findAllByPostId(postId.getId()).isEmpty();
+    }
+
+    @Override
+    public void delete(PostId postId) {
+        subscriptionRepository.deleteAllByPostId(postId.getId());
+        postRepository.deleteById(postId.getId());
     }
 }

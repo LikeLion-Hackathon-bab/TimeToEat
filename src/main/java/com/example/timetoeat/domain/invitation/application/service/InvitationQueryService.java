@@ -28,7 +28,8 @@ public class InvitationQueryService implements GetInvitationUseCase {
                 .map(invitation -> new InvitationListResponse(
                     invitation.invitationId().id(),
                     invitation.inviterName(),
-                    invitation.inviterProfileImageUrl()
+                    invitation.inviterProfileImageUrl(),
+                    invitation.message()
                 ))
                 .collect(Collectors.toList());
     }

@@ -1,5 +1,6 @@
 package com.example.timetoeat.domain.post.application.service;
 
+import com.example.timetoeat.domain.post.application.port.out.DeletePost;
 import com.example.timetoeat.domain.post.application.port.out.LoadPost;
 import com.example.timetoeat.domain.post.application.port.out.SavePost;
 import com.example.timetoeat.domain.post.application.port.out.PublishPostEvent;
@@ -25,6 +26,7 @@ public class PostCommandService implements PostUseCase {
     private final SavePost savePost;
     private final LoadPost loadPost;
     private final PublishPostEvent publishPostEvent;
+    private final DeletePost deletePost;
 
     @Override
     public void create(MemberId memberId, CreatePostCommand command) {
@@ -62,5 +64,19 @@ public class PostCommandService implements PostUseCase {
         Post expiredPost = post.expire();
         Post savedPost = savePost.save(expiredPost);
         publishPostEvent.publish(new PostExpiredEvent(savedPost));
+    }
+
+    // 공고 삭제: 작성자만, 모집 중(OPEN)이고 아직 참여자가 없을 때만 허용한다.
+    @Override
+    public void delete(MemberId memberId, PostId postId) {
+        Post post = loadPost.findForUpdate(postId);
+        if (!post.isOwnedBy(memberId)) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "공고를 삭제할 권한이 없습니다.");
+        }
+        if (post.getStatus() != Status.OPEN) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.CONFLICT, "마감된 공고는 삭제할 수 없습니다.");
+        if (deletePost.hasParticipants(postId)) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.CONFLICT, "참여자가 있는 공고는 삭제할 수 없습니다.");
+        deletePost.delete(postId);
     }
 }

@@ -8,4 +8,5 @@ public interface PostUseCase {
     void create(MemberId memberId, CreatePostCommand command);
     String close(MemberId memberId, PostId postId);
     void expire(PostId postId);
+    void delete(MemberId memberId, PostId postId);
 }

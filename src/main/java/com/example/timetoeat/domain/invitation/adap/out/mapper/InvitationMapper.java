@@ -29,6 +29,7 @@ public interface InvitationMapper {
     @Mapping(source = "id", target = "invitationId", qualifiedByName = "longToInvitationId")
     @Mapping(source = "inviter.username", target = "inviterName")
     @Mapping(source = "inviter.profileImageUrl", target = "inviterProfileImageUrl")
+    @Mapping(source = "message", target = "message")
     InvitationListData toInvitationListData(InvitationEntity invitationEntity);
 
     @Named("longToInvitationId")
