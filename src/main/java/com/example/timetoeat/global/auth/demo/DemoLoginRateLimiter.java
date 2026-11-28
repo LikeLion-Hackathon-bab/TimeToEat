@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 1분 슬라이딩 창 제한(서버 1대 기준 메모리). 실패·성공 모두 센다.
+ * 1분 슬라이딩 창 제한(서버 1대 기준 메모리). 틀린 시연 코드만 센다(맞는 코드는 컨트롤러에서 건너뜀, 보안 재검토 N1).
  * Vercel·Caddy 뒤에서는 여러 시연자가 같은 출구 IP로 보일 수 있어(리뷰 D2) IP별 한도를 넉넉히 두고,
  * 전체 합계 한도를 따로 둔다.
  */

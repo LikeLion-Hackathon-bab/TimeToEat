@@ -50,8 +50,8 @@ public class DemoLoginService {
         return new Result(Outcome.OK, tokens, signupRequired);
     }
 
-    /** 길이가 달라도 같은 시간: 양쪽을 SHA-256으로 줄인 뒤 MessageDigest.isEqual. */
-    boolean secretMatches(String given) {
+    /** 길이가 달라도 같은 시간: 양쪽을 SHA-256으로 줄인 뒤 MessageDigest.isEqual. 컨트롤러가 제한 판단에도 쓴다. */
+    public boolean secretMatches(String given) {
         if (given == null) return false;
         return MessageDigest.isEqual(sha256(properties.secret()), sha256(given.getBytes(StandardCharsets.UTF_8)));
     }

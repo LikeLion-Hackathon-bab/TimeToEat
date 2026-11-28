@@ -50,6 +50,11 @@ public class ChallengeRewardCommandService {
             default -> throw new CustomException(ChallengeErrorCode.INVALID_REWARD_TYPE);
         }
         if (!ok) {
+            // 상태 조회는 이번 주기 보상을 이미 받았으면 weekRewardAvailable=false 를 준다 → 그 경우는 '불가'가 아니라 '이미 받음'(409)
+            if (type == RewardType.WEEK && rewardRepo.existsByMember_IdAndTypeAndAchievedAtBetween(
+                    meId, type, ChallengeQueryService.weekClaimWindowStart(achievedAt), achievedAt)) {
+                throw new CustomException(ChallengeErrorCode.ALREADY_CLAIMED);
+            }
             throw new CustomException(ChallengeErrorCode.REWARD_NOT_AVAILABLE);
         }
 
@@ -59,6 +64,14 @@ public class ChallengeRewardCommandService {
 
         // 3) 중복 수령 체크 (+ 레이스 대비)
         if (rewardRepo.existsByMember_IdAndTypeAndAchievedAt(meId, type, achievedAt)) {
+            throw new CustomException(ChallengeErrorCode.ALREADY_CLAIMED);
+        }
+        // 주간 보상은 연속 7일 한 주기에 1회. 연속이 이어지는 8일째부터는 weekRewardAvailable 이 계속 true 라
+        // 매일 받을 수 있었다(14일 연속이면 8장). 직전 수령 뒤 7일이 지나야 다시 받으므로 연속 N일에 최대 N/7장이고,
+        // 연속이 끊기면 새 7일을 채우는 동안 이 창은 자연히 지난다.
+        if (type == RewardType.WEEK
+                && rewardRepo.existsByMember_IdAndTypeAndAchievedAtBetween(
+                        meId, type, ChallengeQueryService.weekClaimWindowStart(achievedAt), achievedAt)) {
             throw new CustomException(ChallengeErrorCode.ALREADY_CLAIMED);
         }
 

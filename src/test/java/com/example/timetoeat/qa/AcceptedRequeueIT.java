@@ -29,11 +29,15 @@ import static org.mockito.Mockito.*;
 class AcceptedRequeueIT extends QaIntegrationSupport {
     @Autowired PublishEventPort publisher;
     @Autowired AmqpAdmin admin;
+    @Autowired org.springframework.amqp.rabbit.listener.RabbitListenerEndpointRegistry listeners;
 
     @BeforeEach @AfterEach
     void purge() {
+        // 리스너가 기동 때 미리 가져간(prefetch) 이전 메시지는 purge로 지워지지 않는다. 멈추고 비운 뒤 다시 켠다.
+        listeners.stop();
         admin.purgeQueue("matching-queue", false);
         admin.purgeQueue("notification-queue", false);
+        listeners.start();
     }
 
     @Test

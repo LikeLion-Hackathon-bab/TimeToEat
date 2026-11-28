@@ -4,9 +4,8 @@ import com.example.timetoeat.domain.friend.dto.response.FriendMealItemResponse;
 import com.example.timetoeat.domain.meal.entity.MemberMealStatus;
 import com.example.timetoeat.domain.meal.repository.MemberMealStatusRepository;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
-import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,20 +15,34 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class FriendMealQueryService {
 
-    @Qualifier("kstClock")
     private final Clock clock;
 
-    private final MemberJpaRepository memberRepo;
+    private final FriendDirectory friendDirectory;
     private final MemberMealStatusRepository mealRepo;
+
+    /**
+     * 30명이 안 될 때 가짜 시연 친구(음수 id)로 채울지. 기본 꺼짐.
+     * 가짜 항목은 실제 회원이 아니라 태그·초대에 쓰면 400이다. 시연은 실제 시연 회원(시연 로그인)으로 한다.
+     */
+    private final boolean demoFriendsEnabled;
+
+    public FriendMealQueryService(@Qualifier("kstClock") Clock clock,
+                                  FriendDirectory friendDirectory,
+                                  MemberMealStatusRepository mealRepo,
+                                  @Value("${demo-friends.enabled:false}") boolean demoFriendsEnabled) {
+        this.clock = clock;
+        this.friendDirectory = friendDirectory;
+        this.mealRepo = mealRepo;
+        this.demoFriendsEnabled = demoFriendsEnabled;
+    }
 
     // 공개 API: 기존 컨트롤러가 호출
     public List<FriendMealItemResponse> getDemoList(Long meId, String filter) {
-        // 1) 실제 가입자 30명 (me 제외)
-        List<MemberEntity> members = memberRepo.findTop30ByIdNotOrderByCreatedAtDesc(meId);
+        // 1) 친구 최대 30명(추천 관계 우선 + 최근 가입자, me 제외). 홈 피드와 같은 출처.
+        List<MemberEntity> members = friendDirectory.friendsOf(meId);
 
         // 2) 벌크로 식사상태 조회
         Map<Long, MemberMealStatus> statusMap = mealRepo.findByMember_IdIn(
@@ -42,9 +55,9 @@ public class FriendMealQueryService {
             items.add(toItem(m, statusMap.get(m.getId())));
         }
 
-        // 4) 30명 미만이면 데모로 채우기. 시연 항목 id는 음수로 둬 실제 회원 id(양수)와 절대 겹치지 않게 한다.
-        //    (이전에는 1000+n 이라 회원 id가 1000을 넘으면 시연 카드로 보낸 초대가 다른 실제 회원에게 저장됐다)
-        if (items.size() < 30) {
+        // 4) DEMO_FRIENDS_ENABLED=true 이고 30명 미만이면 데모로 채우기. 시연 항목 id는 음수로 둬 실제 회원 id(양수)와
+        //    절대 겹치지 않게 한다. (이전에는 1000+n 이라 회원 id가 1000을 넘으면 시연 카드로 보낸 초대가 다른 실제 회원에게 저장됐다)
+        if (demoFriendsEnabled && items.size() < 30) {
             items.addAll(fakeItems(30 - items.size()));
         }
 
@@ -74,7 +87,10 @@ public class FriendMealQueryService {
         LocalDateTime base = last;
         if (manual != null && (base == null || manual.isAfter(base))) {
             long hours = Duration.between(manual, now).toHours();
-            return FriendMealItemResponse.of(m.getId(), m.getUsername(), img, true, hours + "시간 공복이에요");
+            // 방금(1시간 미만 전) 배고파요로 바꾼 친구가 "0시간 공복이에요"로 보였다. 공복(hungry=true) 카드라
+            // "방금 먹었어요"(식사 중 문구)는 맞지 않고, 기록 없는 공복과 같은 "공복이에요"로 보인다.
+            String label = hours < 1 ? "공복이에요" : hours + "시간 공복이에요";
+            return FriendMealItemResponse.of(m.getId(), m.getUsername(), img, true, label);
         }
 
         if (last == null) {

@@ -285,11 +285,13 @@ class NotificationTypesIT extends QaIntegrationSupport {
             long id = jdbc.queryForObject("select max(id) from article where author_id=?", Long.class, me.getId());
             jdbc.update("update article set created_at=? where id=?", today.minusDays(d).atTime(12, 0), id);
         }
-        // 위 6개는 만든 날이 오늘이라 오늘 연속 1~6일째로 보였을 뿐 7의 배수가 아니다 → 아직 알림 없음
-        none(me.getId(), "CHALLENGE_ACHIEVED");
+        // 위 6개는 만들 때 연속 1~6일째라 7의 배수가 아니다. 여기서 '없음'은 세지 않는다:
+        // 전체 실행에서 다른 시험 컨텍스트의 늦은 알림 스레드가 스키마를 다시 만든 뒤 같은 회원 id로 쓸 수 있다.
         article(me, List.of()); // 오늘: 7일 연속
         article(me, List.of()); // 같은 날 두 번째 글: 중복 알림 없음
         var n = await(me.getId(), "CHALLENGE_ACHIEVED", 1).get(0);
+        assertEquals(1, jdbc.queryForObject("select count(*) from notification where dedup_key=?", Integer.class,
+                "CHALLENGE_ACHIEVED:WEEK:" + me.getId() + ":" + today));
         assertEquals("주간 챌린지를 달성했어요", n.get("title"));
         assertEquals("7일 연속 식사 인증 완료! 보상 쿠폰을 받아 보세요.", n.get("body"));
         assertEquals("/challenge", n.get("url"));
