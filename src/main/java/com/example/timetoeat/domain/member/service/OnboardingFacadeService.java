@@ -38,7 +38,8 @@ public class OnboardingFacadeService {
                 OnboardingPreferenceRequest.of(
                         List.copyOf(liked),
                         List.copyOf(disliked),
-                        List.copyOf(allergy)
+                        List.copyOf(allergy),
+                        request.getCustomAllergyLabels()
                 )
         );
     }
