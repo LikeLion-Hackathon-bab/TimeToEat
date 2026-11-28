@@ -56,4 +56,6 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // 운영 main()이 기본 시간대를 Asia/Seoul로 고정한다. 시험 JVM도 같게 맞춰 기기 시간대(UTC 등)에 따라 결과가 바뀌지 않게 한다.
+    systemProperty 'user.timezone', (System.getenv('TEST_TZ') ?: 'Asia/Seoul') // 운영 main()과 같게. UTC 서버 시험은 TEST_TZ=UTC
 }
