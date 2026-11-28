@@ -2,75 +2,46 @@ name: CD - Production
 
 on:
   push:
-    branches:
-      - 'main'
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # GitHub OIDC -> AWS IAM role (no long-lived AWS keys)
+  contents: read
+
+concurrency:
+  group: deploy-prod-application
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          token: ${{ secrets.GIT_TOKEN }}
-          submodules: false
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-
-      - name: Grant Execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Build with Gradle
-        run: ./gradlew clean build -x test
-
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_ID }}" --password-stdin
-
-      - name: Build and push Docker image
+      - name: Deploy on EC2 via SSM (build on host, restart application only)
+        env:
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_ID }}/timetoeat-server:latest .
-          docker push ${{ secrets.DOCKERHUB_ID }}/timetoeat-server:latest
-
-      - name: Copy configuration files to EC2
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          source: "docker-compose.prod.yml,nginx/default.conf"
-          target: "/home/ubuntu/TimeToEat"
-
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_PRIVATE_KEY }}
-          command_timeout: 30m
-          script: |
-            set -e
-            cd /home/ubuntu/TimeToEat
-            echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_ID }}" --password-stdin
-            export COMPOSE_HTTP_TIMEOUT=1200
-            
-            # 느린 네트워크 대비: pull 재시도(최대 3회) + 병렬 끔
-            i=0
-            until [ $i -ge 3 ]; do
-            if sudo docker compose -f docker-compose.prod.yml pull --no-parallel application; then
-              break
-            fi
-              i=$((i+1))
-              echo "pull 실패(${i}/3). 10초 후 재시도..."
-              sleep 10
-            done
-          
-            sudo docker compose -f docker-compose.prod.yml up -d --no-deps application
-            sudo docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
-            sudo docker exec timetoeat-nginx nginx -t || (echo "Nginx conf 에러"; sudo docker logs timetoeat-nginx; exit 1)
-            sudo docker image prune -f
+          set -euo pipefail
+          CID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript \
+            --comment "TimeToEat ${GITHUB_SHA::7}" \
+            --timeout-seconds 600 \
+            --parameters "$(jq -nc --arg c "/opt/babmuckdang/deploy.sh application ${GITHUB_SHA}" '{commands:[$c],executionTimeout:["1500"]}')" \
+            --query Command.CommandId --output text)
+          echo "SSM command: $CID"
+          while :; do
+            S=$(aws ssm get-command-invocation --command-id "$CID" --instance-id "$INSTANCE_ID" --query Status --output text 2>/dev/null || echo Pending)
+            case "$S" in Success|Failed|Cancelled|TimedOut) break;; esac
+            sleep 10
+          done
+          aws ssm get-command-invocation --command-id "$CID" --instance-id "$INSTANCE_ID" \
+            --query '[StandardOutputContent,StandardErrorContent]' --output text | tail -n 80
+          [ "$S" = Success ] || { echo "Deploy $S"; exit 1; }
