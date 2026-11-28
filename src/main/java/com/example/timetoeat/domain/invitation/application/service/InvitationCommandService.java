@@ -10,7 +10,9 @@ import com.example.timetoeat.domain.invitation.domain.event.InvitationAcceptedEv
 import com.example.timetoeat.domain.invitation.domain.event.InvitationRejectedEvent;
 import com.example.timetoeat.domain.invitation.domain.event.InvitationSentEvent;
 import com.example.timetoeat.domain.invitation.domain.vo.InvitationId;
+import com.example.timetoeat.domain.invitation.exception.InvitationErrorCode;
 import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
+import com.example.timetoeat.global.error.exception.CustomException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,11 @@ public class InvitationCommandService implements InvitationUseCase {
 
     @Override
     public void sendInvitation(MemberId inviterId, SendInvitationCommand command) {
+        // F40: 더블클릭·동시 요청에도 같은 보낸이→받는이 PENDING 초대는 1건만. 쌍 잠금 뒤 확인해야 경합을 막는다.
+        loadInvitation.lockPair(inviterId, command.inviteeId());
+        if (loadInvitation.existsPending(inviterId, command.inviteeId())) {
+            throw new CustomException(InvitationErrorCode.ALREADY_PENDING);
+        }
         Invitation invitation = Invitation.withoutId(
                 inviterId,
                 command.inviteeId(),
