@@ -35,4 +35,8 @@ public class ProfileOnboardingRequest {
 
     @Size(max = 200)
     private List<@Pattern(regexp = CODE_REGEX, message = CODE_MSG) String> allergyCodes;
+
+    /** 선택지에 없는 직접 입력 알레르기(F07). 공백 제거·중복 제거 뒤 최대 10개, 각 20자(서비스에서 검증). */
+    @Size(max = 50)
+    private List<String> customAllergyLabels;
 }
