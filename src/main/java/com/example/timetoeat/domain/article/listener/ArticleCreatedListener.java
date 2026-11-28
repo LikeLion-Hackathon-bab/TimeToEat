@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
 
@@ -31,7 +33,12 @@ public class ArticleCreatedListener {
     private final com.example.timetoeat.infra.ai.AiProperties aiProperties;
 
     // 트랜잭션 커밋 이후에만 실행 (DB 락 최소화)
+    // AFTER_COMMIT 시점에는 커밋이 끝난 원래 트랜잭션 자원이 아직 스레드에 묶여 있어,
+    // 여기서 부르는 REQUIRED 서비스는 그 트랜잭션에 '참여'만 하고 쓰기가 커밋되지 않는다(F81: meal_log 0행).
+    // NOT_SUPPORTED로 그 자원을 떼어 두면 AI 호출은 트랜잭션·DB 연결 없이 하고,
+    // upsertMealLog(REQUIRED)는 자기 트랜잭션을 새로 열어 커밋한다.
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void afterCommit(ArticleCreatedEvent e) {
         String imagePath = null;
         boolean tempDownloaded = false;
