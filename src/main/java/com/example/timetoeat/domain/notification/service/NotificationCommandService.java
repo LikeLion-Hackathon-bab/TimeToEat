@@ -60,6 +60,11 @@ public class NotificationCommandService {
     }
 
     @Transactional
+    public int markAllRead(Long meId) {
+        return repository.markAllAlarmsRead(meId, LocalDateTime.now(clock));
+    }
+
+    @Transactional
     public void delete(Long meId, Long notificationId) {
         var n = repository.findByIdAndReceiverId(notificationId, meId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "알림을 찾을 수 없습니다."));
