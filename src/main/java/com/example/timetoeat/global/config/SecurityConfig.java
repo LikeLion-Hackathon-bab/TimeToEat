@@ -97,6 +97,8 @@ public class SecurityConfig {
                 );
         http
                 .authorizeHttpRequests(auth -> auth
+                        // 로그인 전에 부르는 경로와 서버 간 호출(각자 헤더 키로 보호)만 연다. 나머지는 모두 인증 필요.
+                        // 이전에는 "/api/v1/**" 전체가 열려 있어 /plans, /members/{id}/profile/detail 등이 토큰 없이 읽혔다.
                         .requestMatchers(
                                 "/login/**",
                                 "/oauth2/authorization/**",
@@ -105,9 +107,15 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/",
-                                "/api/v1/ai/support/**",
-                                "/api/v1/**",
-                                "/api/v1/auth/refresh"
+                                "/error",
+                                "/api/v1/auth/refresh",                   // 리프레시 쿠키로 인증
+                                "/api/v1/auth/logout",                    // 만료된 access 토큰으로도 로그아웃
+                                "/api/v1/ai/support/**"                   // X-AI-KEY (AI 서버)
+                        ).permitAll()
+                        // Socket → Spring 결과 저장(X-Room-Key). POST만 연다. 같은 경로의 GET 상세는 인증 필요.
+                        .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                "/api/v1/meetings/*/result",
+                                "/api/v1/meetings/invitations/*/result"
                         ).permitAll()
                         .anyRequest().authenticated()
                 );

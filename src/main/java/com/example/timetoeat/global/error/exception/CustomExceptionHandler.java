@@ -76,6 +76,13 @@ public class CustomExceptionHandler {
                 .body(ApiResponse.builder().code("HTTP_404").message("요청한 경로를 찾을 수 없습니다.").build());
     }
 
+    /** 컨트롤러가 직접 던진 권한 거부(예: X-AI-KEY 불일치)는 403(이전 500). */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDenied(org.springframework.security.access.AccessDeniedException e) {
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+                .body(ApiResponse.builder().code("HTTP_403").message("접근 권한이 없습니다.").build());
+    }
+
     /** 지원하지 않는 메서드는 405(이전 500). */
     @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ApiResponse<Object>> handleMethod(org.springframework.web.HttpRequestMethodNotSupportedException e) {
