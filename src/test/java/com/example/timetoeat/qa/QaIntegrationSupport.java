@@ -27,6 +27,8 @@ import java.util.UUID;
 @TestPropertySource(properties = {
         "spring.jpa.hibernate.ddl-auto=create",
         "spring.jpa.show-sql=false",
+        // 컨텍스트 캐시 때문에 여러 컨텍스트가 같은 큐를 나눠 소비하지 않도록 기본은 리스너를 끈다
+        "spring.rabbitmq.listener.simple.auto-startup=false",
         "logging.level.org.hibernate.SQL=warn"
 })
 public abstract class QaIntegrationSupport {

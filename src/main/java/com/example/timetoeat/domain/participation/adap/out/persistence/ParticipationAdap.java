@@ -30,23 +30,31 @@ public class ParticipationAdap implements LoadParticipation, SaveParticipation {
         return participationMapper.toDomain(postId, participationEntities);
     }
 
+    /**
+     * 참여 명단에 새로 들어온 회원만 추가한다. 도메인(Participation.add)에는 제거가 없으므로 기존 행은 건드리지 않는다.
+     * 이전 구현은 공고의 행을 모두 지운 뒤 다시 넣어, 행 id가 바뀌고 오래된 스냅샷으로 저장하면
+     * 그 사이 커밋된 다른 신청자 행을 지웠다(현재 호출부는 공고 잠금 안이라 드러나지 않았던 잠재 결함).
+     */
     @Override
     public void save(Participation participation) {
-        participationRepository.deleteAllByPostId(participation.getPostId().getId());
+        if (participation.getMemberIds() == null || participation.getMemberIds().isEmpty()) return;
+        Long postId = participation.getPostId().getId();
+        java.util.Set<Long> existing = participationRepository.findAllByPostId(postId).stream()
+                .map(e -> e.getMember().getId())
+                .collect(Collectors.toSet());
+        List<Long> missing = participation.getMemberIds().stream()
+                .map(m -> m.getId())
+                .filter(id -> !existing.contains(id))
+                .distinct()
+                .toList();
+        if (missing.isEmpty()) return;
 
-        if (participation.getMemberIds() != null && !participation.getMemberIds().isEmpty()) {
-            PostEntity postEntity = postRepository.findById(participation.getPostId().getId())
-                    .orElseThrow(() -> new IllegalStateException("Post not found while saving participation."));
-
-            List<ParticipationEntity> newParticipations = participation.getMemberIds().stream()
-                    .map(memberId -> {
-                        MemberEntity memberEntity = memberRepository.findById(memberId.getId())
-                                .orElseThrow(() -> new IllegalStateException("Member not found while saving participation."));
-                        return new ParticipationEntity(postEntity, memberEntity);
-                    })
-                    .collect(Collectors.toList());
-
-            participationRepository.saveAll(newParticipations);
-        }
+        PostEntity postEntity = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalStateException("Post not found while saving participation."));
+        List<ParticipationEntity> newParticipations = missing.stream()
+                .map(memberId -> new ParticipationEntity(postEntity, memberRepository.findById(memberId)
+                        .orElseThrow(() -> new IllegalStateException("Member not found while saving participation."))))
+                .collect(Collectors.toList());
+        participationRepository.saveAll(newParticipations);
     }
 }

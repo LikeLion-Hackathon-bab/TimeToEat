@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
@@ -26,7 +25,6 @@ import static org.mockito.Mockito.*;
  * Socket seedFromAnnouncement는 첫 요청만 반영(room.service.ts:340)하므로 이후 입장(RoomEntryService)으로도 복구되지 않는다.
  * 이 테스트는 "소비자가 커밋보다 빠른" 순서를 결정적으로 만든다: 발행 호출 시점에 다른 스레드에서 실제 핸들러를 실행한다.
  */
-@TestPropertySource(properties = "spring.rabbitmq.listener.simple.auto-startup=false")
 class EventAfterCommitIT extends QaIntegrationSupport {
     @Autowired ParticipationUseCase participation;
     @Autowired CompletedEventHandler handler;
