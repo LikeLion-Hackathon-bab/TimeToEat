@@ -13,7 +13,9 @@ import static jakarta.persistence.FetchType.LAZY;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "referral_code",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_referral_code_code", columnNames = "code")
+                @UniqueConstraint(name = "uk_referral_code_code", columnNames = "code"),
+                // 한 회원은 추천 코드를 한 번만 등록(동시 요청도 DB에서 막힘). NULL(미사용 코드)은 여러 행 가능.
+                @UniqueConstraint(name = "uk_referral_code_used_by", columnNames = "used_by_id")
         })
 @Entity
 public class ReferralCode extends BaseTimeEntity {

@@ -10,6 +10,7 @@ public enum ReferralErrorCode implements BaseError {
     CODE_NOT_FOUND(HttpStatus.NOT_FOUND, "REFERRAL_CODE_NOT_FOUND", "유효하지 않은 추천 코드입니다."),
     CODE_EXPIRED(HttpStatus.BAD_REQUEST, "REFERRAL_CODE_EXPIRED", "만료된 추천 코드입니다."),
     CODE_ALREADY_USED(HttpStatus.CONFLICT, "REFERRAL_CODE_ALREADY_USED", "이미 사용된 추천 코드입니다."),
+    ALREADY_REDEEMED(HttpStatus.CONFLICT, "REFERRAL_ALREADY_REDEEMED", "추천 코드는 한 번만 등록할 수 있어요."),
     SELF_REFERRAL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SELF_REFERRAL_NOT_ALLOWED", "자기 자신은 추천 등록할 수 없습니다.");
 
     private final HttpStatus httpStatus;
