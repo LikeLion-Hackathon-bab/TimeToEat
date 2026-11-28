@@ -30,7 +30,12 @@ public class JwtService {
 
     @Transactional
     public TokenDto doTokenGenerationProcess(CustomOauth2User principal) {
-        Long memberId = principal.getMemberId();
+        return issueForMember(principal.getMemberId());
+    }
+
+    /** 로그인 성공 처리(OAuth·시연 로그인 공통): access/refresh 발급 후 refresh 저장. */
+    @Transactional
+    public TokenDto issueForMember(Long memberId) {
         MemberEntity memberEntity = memberService.getById(memberId);
 
         Date now = new Date();
