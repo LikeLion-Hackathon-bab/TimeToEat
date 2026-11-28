@@ -120,13 +120,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3001",
-                "https://13.125.49.103:3000",
-                "https://babmuckdang.site",
-                "https://www.babmuckdang.site",
-                "https://bab-muk-dang-client.vercel.app"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"));
+        configuration.setAllowedOrigins(allowedOrigins(System.getenv("CORS_ALLOWED_ORIGINS")));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"));
         configuration.setAllowedHeaders(List.of(
                 "Content-Type",
                 "X-Requested-With",
@@ -140,5 +135,24 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    static final List<String> DEFAULT_ORIGINS = List.of(
+            "http://localhost:3001",
+            "https://13.125.49.103:3000",
+            "https://babmuckdang.site",
+            "https://www.babmuckdang.site",
+            "https://bab-muk-dang-client.vercel.app");
+
+    /** 기본 목록 + CORS_ALLOWED_ORIGINS(쉼표 구분, 끝 슬래시 제거). 와일드카드는 받지 않는다(allowCredentials=true). */
+    static List<String> allowedOrigins(String extra) {
+        var origins = new java.util.LinkedHashSet<>(DEFAULT_ORIGINS);
+        if (extra != null) {
+            for (String o : extra.split(",")) {
+                String v = o.trim().replaceFirst("/+$", "");
+                if (!v.isEmpty() && !v.contains("*")) origins.add(v);
+            }
+        }
+        return List.copyOf(origins);
     }
 }
