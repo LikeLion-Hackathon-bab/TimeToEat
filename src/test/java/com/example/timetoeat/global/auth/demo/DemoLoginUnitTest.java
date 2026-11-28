@@ -177,11 +177,36 @@ class DemoLoginUnitTest {
         clock.now += 60_001;
         assertTrue(limiter.tryAcquire("1.1.1.1"));
 
-        var full = new DemoLoginRateLimiter(clock);
-        for (int i = 0; i < DemoLoginRateLimiter.LIMIT_PER_MINUTE; i++) full.tryAcquire("127.0.0.1");
-        mvc(service(""), full).perform(post("/api/v1/auth/demo-login")
-                        .contentType(MediaType.APPLICATION_JSON).content(body(SECRET, 1)))
+    }
+
+    /** 보안 재검토 N1: 틀린 코드 30회 뒤 31번째 틀린 코드는 429, 같은 IP의 맞는 코드는 여전히 200. 성공은 세지 않는다. */
+    @Test void onlyWrongCodesAreLimitedAndCorrectCodeAlwaysPasses() throws Exception {
+        var limiter = new DemoLoginRateLimiter(new MutableClock());
+        var mvc = mvc(service(""), limiter);
+        for (int i = 0; i < DemoLoginRateLimiter.LIMIT_PER_MINUTE; i++) {
+            mvc.perform(post("/api/v1/auth/demo-login").contentType(MediaType.APPLICATION_JSON).content(body("wrong", 1)))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(post("/api/v1/auth/demo-login").contentType(MediaType.APPLICATION_JSON).content(body("wrong", 1)))
                 .andExpect(status().isTooManyRequests());
+        mvc.perform(post("/api/v1/auth/demo-login").contentType(MediaType.APPLICATION_JSON).content(body(SECRET, 1)))
+                .andExpect(status().isOk());
+
+        // 전체 한도까지 남이 다 써도 맞는 코드는 통과, 성공 시도는 한도를 쓰지 않는다
+        var global = new DemoLoginRateLimiter(new MutableClock());
+        for (int i = 0; i < DemoLoginRateLimiter.GLOBAL_LIMIT_PER_MINUTE; i++) global.tryAcquire("10.0.0." + (i % 50));
+        var mvc2 = mvc(service(""), global);
+        for (int i = 0; i < 50; i++) {
+            mvc2.perform(post("/api/v1/auth/demo-login").contentType(MediaType.APPLICATION_JSON).content(body(SECRET, 2)))
+                    .andExpect(status().isOk());
+        }
+        var fresh = new DemoLoginRateLimiter(new MutableClock());
+        var mvc3 = mvc(service(""), fresh);
+        for (int i = 0; i < 50; i++) {
+            mvc3.perform(post("/api/v1/auth/demo-login").contentType(MediaType.APPLICATION_JSON).content(body(SECRET, 3)))
+                    .andExpect(status().isOk());
+        }
+        assertTrue(fresh.tryAcquire("127.0.0.1"), "성공 50회가 한도를 쓰면 안 된다");
     }
 
     static class MutableClock extends Clock {
