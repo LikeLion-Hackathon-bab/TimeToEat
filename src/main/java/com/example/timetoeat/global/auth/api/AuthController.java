@@ -1,5 +1,6 @@
 package com.example.timetoeat.global.auth.api;
 
+import com.example.timetoeat.global.auth.dto.AccessTokenResponse;
 import com.example.timetoeat.global.auth.dto.TokenDto;
 import com.example.timetoeat.global.auth.jwt.JwtService;
 import com.example.timetoeat.global.auth.util.CookieUtil;
@@ -20,13 +21,13 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/refresh")
-    public ApiResponse<TokenDto> refresh(
+    public ApiResponse<AccessTokenResponse> refresh(
           @CookieValue(name = "refreshToken", required = true) String refreshToken,
           HttpServletResponse response
     ) {
         TokenDto tokenDto = jwtService.reissue(refreshToken);
         CookieUtil.addCookie(response, CookieUtil.REFRESH_TOKEN_COOKIE_NAME, tokenDto.getRefreshToken(),(int) java.util.concurrent.TimeUnit.MILLISECONDS.toSeconds(tokenDto.getRefreshTokenMaxAge()));
-        return ApiResponse.success(tokenDto);
+        return ApiResponse.success(AccessTokenResponse.of(tokenDto)); // refresh 토큰은 쿠키로만
     }
 
     @PostMapping("/logout")
