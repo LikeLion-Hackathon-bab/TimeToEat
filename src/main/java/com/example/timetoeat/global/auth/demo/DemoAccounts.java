@@ -17,6 +17,13 @@ public final class DemoAccounts {
         return NICKNAMES.get(account - 1);
     }
 
+    private static final java.util.regex.Pattern DEMO_EMAIL = java.util.regex.Pattern.compile(
+            "qa_demo[1-" + DemoLoginProperties.ACCOUNT_COUNT + "]@" + java.util.regex.Pattern.quote(KakaoUser.SYNTHETIC_EMAIL_DOMAIN));
+
+    public static boolean isDemoEmail(String email) {
+        return email != null && DEMO_EMAIL.matcher(email).matches();
+    }
+
     public static boolean valid(Integer account) {
         return account != null && account >= 1 && account <= DemoLoginProperties.ACCOUNT_COUNT;
     }

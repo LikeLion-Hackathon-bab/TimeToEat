@@ -34,7 +34,7 @@ class DemoLoginUnitTest {
     JwtService jwt;
 
     DemoLoginService service(String until) {
-        var props = new DemoLoginProperties(SECRET, until, Clock.fixed(NOW, ZoneOffset.UTC));
+        var props = new DemoLoginProperties(SECRET, new DemoLoginWindow(true, until, Clock.fixed(NOW, ZoneOffset.UTC)));
         return new DemoLoginService(props, members, socials, prefs, jwt);
     }
 
@@ -63,15 +63,41 @@ class DemoLoginUnitTest {
     }
 
     @Test void enablingWithShortOrMissingSecretFailsStartup() {
-        assertThrows(IllegalStateException.class, () -> new DemoLoginProperties("short", "", Clock.systemUTC()));
-        assertThrows(IllegalStateException.class, () -> new DemoLoginProperties(null, "", Clock.systemUTC()));
-        assertThrows(IllegalStateException.class, () -> new DemoLoginProperties(SECRET, "tomorrow", Clock.systemUTC()));
+        var w = new DemoLoginWindow(true, "", Clock.systemUTC());
+        assertThrows(IllegalStateException.class, () -> new DemoLoginProperties("short", w));
+        assertThrows(IllegalStateException.class, () -> new DemoLoginProperties(null, w));
     }
 
     @Test void untilIsHonoured() {
         assertFalse(service("2026-12-01T09:00:01+09:00").expired());
         assertTrue(service("2026-12-01T09:00:00+09:00").expired());
-        assertFalse(service("").expired());
+        // D3: 오프셋 없으면 서울 시각
+        assertFalse(service("2026-12-01T09:00:01").expired());
+        assertTrue(service("2026-12-01T09:00:00").expired());
+    }
+
+    @Test void untilDefaultsToSevenDaysAndIsCappedAtFourteen() {
+        Clock c = Clock.fixed(NOW, ZoneOffset.UTC);
+        assertEquals(NOW.plus(java.time.Duration.ofDays(7)), new DemoLoginWindow(true, "", c).until());
+        assertEquals(NOW.plus(java.time.Duration.ofDays(14)), new DemoLoginWindow(true, "2027-12-31T00:00:00+09:00", c).until());
+    }
+
+    @Test void badUntilClosesDemoWithoutCrashingStartup() {
+        var w = new DemoLoginWindow(true, "tomorrow", Clock.fixed(NOW, ZoneOffset.UTC));
+        assertFalse(w.isOpen());
+        assertTrue(new DemoLoginProperties(SECRET, w).expired());
+    }
+
+    @Test void disabledWindowIsClosed() {
+        assertFalse(new DemoLoginWindow(false, "", Clock.systemUTC()).isOpen());
+    }
+
+    @Test void demoEmailPattern() {
+        assertTrue(DemoAccounts.isDemoEmail("qa_demo5@users.noreply.babmuckdang"));
+        assertFalse(DemoAccounts.isDemoEmail("qa_demo6@users.noreply.babmuckdang"));
+        assertFalse(DemoAccounts.isDemoEmail("kakao_1@users.noreply.babmuckdang"));
+        assertFalse(DemoAccounts.isDemoEmail("qa_demo1@usersXnoreplyXbabmuckdang"));
+        assertFalse(DemoAccounts.isDemoEmail(null));
     }
 
     @Test void namesAreRealisticAndEmailsAreHidden() {
@@ -144,6 +170,10 @@ class DemoLoginUnitTest {
         for (int i = 0; i < DemoLoginRateLimiter.LIMIT_PER_MINUTE; i++) assertTrue(limiter.tryAcquire("1.1.1.1"));
         assertFalse(limiter.tryAcquire("1.1.1.1"));
         assertTrue(limiter.tryAcquire("2.2.2.2"));
+        // 전체 합계 한도(여러 IP)
+        var global = new DemoLoginRateLimiter(clock);
+        for (int i = 0; i < DemoLoginRateLimiter.GLOBAL_LIMIT_PER_MINUTE; i++) assertTrue(global.tryAcquire("10.0.0." + (i % 50)));
+        assertFalse(global.tryAcquire("10.9.9.9"));
         clock.now += 60_001;
         assertTrue(limiter.tryAcquire("1.1.1.1"));
 

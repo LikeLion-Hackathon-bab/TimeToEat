@@ -59,6 +59,22 @@ class DemoLoginIT {
     class DisabledByDefault extends QaIntegrationSupport {
         @Autowired MockMvc mvc;
 
+        @Autowired com.example.timetoeat.global.auth.demo.DemoTokenRevoker revoker;
+        @Autowired com.example.timetoeat.domain.member.repository.RefreshTokenRepository refreshTokens;
+
+        @Test void closedDemoRevokesDemoRefreshTokensOnStartup() {
+            var demo = members.findByEmail(DemoAccounts.email(2)).orElseGet(() -> members.save(
+                    com.example.timetoeat.domain.member.entity.MemberEntity.builder().username(DemoAccounts.nickname(2))
+                            .email(DemoAccounts.email(2)).role(com.example.timetoeat.global.auth.model.Role.ROLE_MEMBER).build()));
+            var real = member("real");
+            var exp = new java.util.Date(System.currentTimeMillis() + 3_600_000);
+            refreshTokens.save(com.example.timetoeat.domain.member.entity.RefreshToken.create(demo.getId(), "demo-rt-" + demo.getId(), exp));
+            refreshTokens.save(com.example.timetoeat.domain.member.entity.RefreshToken.create(real.getId(), "real-rt-" + real.getId(), exp));
+            revoker.run(null);
+            assertTrue(refreshTokens.findByMemberId(demo.getId()).isEmpty());
+            assertTrue(refreshTokens.findByMemberId(real.getId()).isPresent());
+        }
+
         @Test void endpointIs404AndNoDemoMembersAreCreated() throws Exception {
             mvc.perform(post("/api/v1/auth/demo-login").contentType(MediaType.APPLICATION_JSON)
                             .content("{\"secret\":\"" + SECRET + "\",\"account\":1}"))
