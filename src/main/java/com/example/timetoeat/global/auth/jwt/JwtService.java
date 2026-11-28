@@ -26,6 +26,7 @@ public class JwtService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberService memberService;
+    private final RefreshRotationGrace rotationGrace;
 
     @Transactional
     public TokenDto doTokenGenerationProcess(CustomOauth2User principal) {
@@ -54,18 +55,25 @@ public class JwtService {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        if (!refreshTokenRepository.existsByToken(refreshToken)) {
+        Long memberId = jwtProvider.getId(refreshToken);
+        // 같은 회원의 갱신을 행 잠금으로 직렬화한 뒤 토큰을 비교한다(검사와 회전 사이 경합 제거).
+        RefreshToken stored = refreshTokenRepository.findByMemberIdForUpdate(memberId)
+                .orElseThrow(() -> new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN));
+        Date now = new Date();
+        boolean current = refreshToken.equals(stored.getToken());
+        if (!current && !rotationGrace.isRecentlyRotated(memberId, refreshToken, now.getTime())) {
             throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
         }
 
-        Long memberId = jwtProvider.getId(refreshToken);
         MemberEntity member = memberService.getById(memberId);
-
-        Date now = new Date();
         TokenDto tokenDto = jwtProvider.issueToken(member, now);
         Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
-        upsertRefreshToken(memberId, tokenDto.getRefreshToken(), refreshExp);
+        String previous = stored.getToken();
+        stored.refresh(tokenDto.getRefreshToken(), refreshExp);
+        if (!previous.equals(tokenDto.getRefreshToken())) {
+            rotationGrace.remember(memberId, previous, now.getTime());
+        }
 
         return tokenDto;
     }
@@ -83,6 +91,7 @@ public class JwtService {
 
         Long memberId = jwtProvider.getId(refreshToken);
         refreshTokenRepository.deleteAllByMemberId(memberId);
+        rotationGrace.forget(memberId);
     }
 
     public String getTokenFromBearer(String bearerToken) {
