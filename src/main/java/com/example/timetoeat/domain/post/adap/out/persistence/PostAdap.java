@@ -41,7 +41,7 @@ public class PostAdap implements LoadPost, SavePost {
 
     @Override
     public List<PostData> findAllPosts() {
-        List<PostEntity> postEntities = postRepository.findAllWithMember();
+        List<PostEntity> postEntities = postRepository.findOpenWithMember(java.time.LocalDateTime.now());
 
         List<Long> postIds = postEntities.stream()
                 .map(postEntity -> postEntity.getId())

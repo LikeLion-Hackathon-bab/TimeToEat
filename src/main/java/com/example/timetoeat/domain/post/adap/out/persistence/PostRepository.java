@@ -16,6 +16,8 @@ public interface PostRepository extends JpaRepository<PostEntity, Long> {
            "and exists (select a.id from ParticipationEntity a where a.post=p) order by p.id desc")
     List<PostEntity> findWaitingRooms(@org.springframework.data.repository.query.Param("viewer") long viewer);
 
-    @Query("SELECT p FROM PostEntity p JOIN FETCH p.member")
-    List<PostEntity> findAllWithMember();
+    /** 신청 가능한 공고만(OPEN이고 만료 전), 최신순. 지연 만료로 OPEN에 남은 공고도 제외한다. */
+    @Query("SELECT p FROM PostEntity p JOIN FETCH p.member WHERE p.status = com.example.timetoeat.domain.post.domain.Status.OPEN " +
+           "AND p.expiredAt > :now ORDER BY p.createdAt DESC, p.id DESC")
+    List<PostEntity> findOpenWithMember(@org.springframework.data.repository.query.Param("now") java.time.LocalDateTime now);
 }

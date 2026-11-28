@@ -42,9 +42,10 @@ public class FriendMealQueryService {
             items.add(toItem(m, statusMap.get(m.getId())));
         }
 
-        // 4) 30명 미만이면 데모로 채우기
+        // 4) 30명 미만이면 데모로 채우기. 시연 항목 id는 음수로 둬 실제 회원 id(양수)와 절대 겹치지 않게 한다.
+        //    (이전에는 1000+n 이라 회원 id가 1000을 넘으면 시연 카드로 보낸 초대가 다른 실제 회원에게 저장됐다)
         if (items.size() < 30) {
-            items.addAll(fakeItems(30 - items.size(), 1000L + items.size()));
+            items.addAll(fakeItems(30 - items.size()));
         }
 
         // 5) 필터 적용
@@ -90,7 +91,7 @@ public class FriendMealQueryService {
     }
 
     // 데모 아이템 생성(부족분 채우기)
-    private List<FriendMealItemResponse> fakeItems(int count, long startId) {
+    private List<FriendMealItemResponse> fakeItems(int count) {
         List<String> names = List.of(
                 "박진아","권현욱","고지완","박진홍","임새연","이정훈","박지현","정민우","윤서현","한지우",
                 "전민경","박민재","김윤아","최서준","이다은","오지호","문지안","노시윤","하다온","백도윤",
@@ -103,7 +104,7 @@ public class FriendMealQueryService {
             int hours = hungry ? (1 + r.nextInt(10)) : 0;
             String label = hungry ? (hours + "시간 공복이에요") : "방금 먹었어요";
             String img = "https://picsum.photos/seed/friend" + (i+1) + "/80/80";
-            list.add(FriendMealItemResponse.of(startId + i, names.get(i % names.size()), img, hungry, label));
+            list.add(FriendMealItemResponse.of(-(i + 1L), names.get(i % names.size()), img, hungry, label));
         }
         return list;
     }

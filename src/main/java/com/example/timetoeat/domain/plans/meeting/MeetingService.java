@@ -31,6 +31,7 @@ class MeetingService {
 
     @Transactional
     public void record(long id, String restaurant) {
+        if (!posts.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "공고를 찾을 수 없습니다.");
         meetings.record(id, restaurant);
         if (!meetings.findById(id).orElseThrow().getRestaurant().equals(restaurant))
             throw new ResponseStatusException(HttpStatus.CONFLICT);

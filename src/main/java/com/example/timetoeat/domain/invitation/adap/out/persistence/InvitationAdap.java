@@ -30,9 +30,11 @@ public class InvitationAdap implements LoadInvitation, SaveInvitation, LoadInvit
     public Invitation save(Invitation invitation) {
         if (invitation.invitationId() == null) {
             MemberEntity inviter = memberJpaRepository.findById(invitation.inviterId().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid member id: " + invitation.inviterId().getId()));
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                            org.springframework.http.HttpStatus.UNAUTHORIZED, "보내는 회원을 찾을 수 없습니다."));
             MemberEntity invitee = memberJpaRepository.findById(invitation.inviteeId().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid member id: " + invitation.inviterId().getId()));
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                            org.springframework.http.HttpStatus.NOT_FOUND, "초대할 회원을 찾을 수 없습니다."));
             InvitationEntity invitationEntity = mapper.toEntity(invitation, inviter, invitee);
             InvitationEntity saved = invitationRepository.save(invitationEntity);
             return mapper.toDomain(saved);
