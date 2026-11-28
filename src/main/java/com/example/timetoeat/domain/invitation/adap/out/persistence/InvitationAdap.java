@@ -47,6 +47,17 @@ public class InvitationAdap implements LoadInvitation, SaveInvitation, LoadInvit
     }
 
     @Override
+    public void lockPair(MemberId first, MemberId second) {
+        long a = first.getId(), b = second.getId();
+        invitationRepository.lockMembersInIdOrder(Math.min(a, b), Math.max(a, b));
+    }
+
+    @Override
+    public boolean existsPending(MemberId inviterId, MemberId inviteeId) {
+        return invitationRepository.existsPending(inviterId.getId(), inviteeId.getId());
+    }
+
+    @Override
     public Optional<Invitation> findById(InvitationId invitationId) {
         return invitationRepository.findById(invitationId.id())
                 .map(mapper::toDomain);

@@ -42,4 +42,15 @@ public interface InvitationRepository extends JpaRepository<InvitationEntity, Lo
             where i.id = :id and i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.APPROVED
             """)
     int cancelApproved(@Param("id") Long id);
+
+    /** 초대 전송 직렬화용. 작은 id부터 잠가(ORDER BY id) 반대 방향 동시 전송에서도 교착이 없다. */
+    @Query(value = "select id from member where id in (:low, :high) order by id for update", nativeQuery = true)
+    List<Long> lockMembersInIdOrder(@Param("low") Long low, @Param("high") Long high);
+
+    @Query("""
+            select count(i) > 0 from InvitationEntity i
+            where i.inviter.id = :inviterId and i.invitee.id = :inviteeId
+              and i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.PENDING
+            """)
+    boolean existsPending(@Param("inviterId") Long inviterId, @Param("inviteeId") Long inviteeId);
 }
