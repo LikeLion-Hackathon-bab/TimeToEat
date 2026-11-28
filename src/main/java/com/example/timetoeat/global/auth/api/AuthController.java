@@ -8,7 +8,10 @@ import com.example.timetoeat.global.common.ApiResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
+    static final String SESSION_COOKIE_NAME = "JSESSIONID";
+
     private final JwtService jwtService;
 
     @PostMapping("/refresh")
@@ -46,6 +51,18 @@ public class AuthController {
         }
 
         CookieUtil.deleteCookie(request, response, CookieUtil.REFRESH_TOKEN_COOKIE_NAME);
+
+        // 카카오 OAuth2 로그인 흐름이 만든 HTTP 세션이 로그아웃 뒤에도 남아 있었다. 세션을 끝내고 쿠키도 만료시킨다.
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            try {
+                session.invalidate();
+            } catch (IllegalStateException alreadyInvalidated) {
+                // 동시 로그아웃 등으로 이미 무효화된 세션
+            }
+        }
+        response.addHeader(HttpHeaders.SET_COOKIE, ResponseCookie.from(SESSION_COOKIE_NAME, "")
+                .path("/").maxAge(0).httpOnly(true).build().toString());
 
         return ApiResponse.successMessage("로그아웃 성공");
     }
