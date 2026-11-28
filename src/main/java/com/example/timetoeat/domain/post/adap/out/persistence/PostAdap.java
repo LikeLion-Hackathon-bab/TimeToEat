@@ -74,7 +74,8 @@ public class PostAdap implements LoadPost, SavePost, DeletePost {
                         postEntity.getMeetingAt(),
                         postEntity.getLocation(),
                         participantsMap.getOrDefault(postEntity.getId(), List.of()),
-                        postEntity.getTargetCount()
+                        postEntity.getTargetCount(),
+                        postEntity.getExpiredAt()
                 ))
                 .collect(Collectors.toList());
     }

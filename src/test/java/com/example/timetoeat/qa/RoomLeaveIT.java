@@ -110,6 +110,11 @@ class RoomLeaveIT extends QaIntegrationSupport {
         assertTrue(minutes >= 119 && minutes <= 121, "모집 기간 2시간: " + minutes);
         verify(socket).leaveAnnouncement(p.getId(), a.getId(), true);
         mvc.perform(get("/api/v1/meetings/rooms").with(as(owner.getId()))).andExpect(jsonPath("$.data.length()").value(0));
+        // 모집 목록에 다시 나오고, Client가 남은 시간을 계산할 expiredAt(createdAt+2h가 아님)이 함께 온다
+        String expected = reopened.getExpiredAt().truncatedTo(ChronoUnit.SECONDS).toString();
+        mvc.perform(get("/api/v1/posts").with(as(next.getId())))
+                .andExpect(jsonPath("$.data[?(@.postId == " + p.getId() + ")].expiredAt",
+                        org.hamcrest.Matchers.contains(org.hamcrest.Matchers.startsWith(expected))));
         assertTrue(apply.apply(new MemberId(next.getId()), new PostId(p.getId())));
         assertEquals(1, participationRows(p.getId()));
     }

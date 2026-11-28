@@ -14,6 +14,7 @@ public record PostRes(
         LocalDateTime meetingAt,
         String location,
         List<ParticipationInfo> participants,
-        int targetCount
+        int targetCount,
+        LocalDateTime expiredAt
 ){
 }

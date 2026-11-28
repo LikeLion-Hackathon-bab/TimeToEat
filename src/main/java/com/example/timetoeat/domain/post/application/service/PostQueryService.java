@@ -49,7 +49,8 @@ public class PostQueryService implements GetPostUseCase {
                 data.meetingAt(),
                 data.location(),
                 participantInfoList,
-                data.targetCount()
+                data.targetCount(),
+                data.expiredAt()
         );
     }
 }
