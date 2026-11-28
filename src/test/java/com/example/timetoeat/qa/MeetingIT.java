@@ -99,8 +99,10 @@ class MeetingIT extends QaIntegrationSupport {
     /** 서버 JVM 시간대가 UTC여도 isCompleted는 한국 시각 기준이어야 한다(meetingAt은 KST 벽시계). */
     @Test
     void completionUsesSeoulTimeEvenWhenServerRunsInUtc() throws Exception {
-        assertEquals("UTC", TimeZone.getDefault().toZoneId().normalized().getId().replace("Etc/", "").replace("Z", "UTC"),
-                "이 테스트는 TZ=UTC로 실행한다");
+        // 시험 JVM은 기본 Asia/Seoul(build.gradle). 이 시험만 TEST_TZ=UTC 로 따로 돌린다.
+        org.junit.jupiter.api.Assumptions.assumeTrue(
+                "UTC".equals(TimeZone.getDefault().toZoneId().normalized().getId().replace("Etc/", "").replace("Z", "UTC")),
+                "TEST_TZ=UTC 로 실행할 때만");
         var seoul = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
         long[] a = new long[2], b = new long[2];
         long soon = closedMeal(seoul.plusMinutes(30), a);
