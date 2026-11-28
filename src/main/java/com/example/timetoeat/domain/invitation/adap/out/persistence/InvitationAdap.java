@@ -36,12 +36,12 @@ public class InvitationAdap implements LoadInvitation, SaveInvitation, LoadInvit
             InvitationEntity invitationEntity = mapper.toEntity(invitation, inviter, invitee);
             InvitationEntity saved = invitationRepository.save(invitationEntity);
             return mapper.toDomain(saved);
-        } else {
-            InvitationEntity invitationEntity = invitationRepository.findById(invitation.inviterId().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("not found invitation"));
-            mapper.updateEntityFromDomain(invitation,invitationEntity);
-            return mapper.toDomain(invitationEntity);
         }
+        if (invitationRepository.resolvePending(invitation.invitationId().id(), invitation.status()) != 1) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT, "이미 처리된 초대입니다.");
+        }
+        return invitation;
     }
 
     @Override

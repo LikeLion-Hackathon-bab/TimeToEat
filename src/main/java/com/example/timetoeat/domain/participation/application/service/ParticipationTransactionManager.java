@@ -10,6 +10,8 @@ import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
 import com.example.timetoeat.domain.participation.domain.Participation;
 import com.example.timetoeat.domain.post.domain.Post;
 import com.example.timetoeat.domain.post.domain.vo.post.PostId;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,15 +35,15 @@ public class ParticipationTransactionManager {
             publishPostEvent.publish(new com.example.timetoeat.domain.post.domain.event.PostExpiredEvent(expired));
             return false;
         }
-        if (post.isOwnedBy(memberId)) throw new IllegalStateException("자신의 공고에는 신청할 수 없습니다.");
+        if (post.isOwnedBy(memberId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "자신의 공고에는 신청할 수 없습니다.");
         Participation participation = loadParticipation.getParticipationByPostId(post.getPostId());
 
 
         if (!post.canApply(participation)) {
-            throw new IllegalStateException("이미 마감되었거나 인원이 가득 찬 공고입니다");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 마감되었거나 인원이 가득 찬 공고입니다");
         }
         if (participation.contains(memberId)) {
-            throw new IllegalStateException("이미 신청한 공고입니다.");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 신청한 공고입니다.");
         }
 
         Participation newParticipation = participation.add(memberId);

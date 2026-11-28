@@ -45,8 +45,10 @@ public class PostCommandService implements PostUseCase {
     public String close(MemberId memberId,PostId postId) {
         Post post = loadPost.findForUpdate(postId);
         if (!post.isOwnedBy(memberId)) {
-            throw new SecurityException("공고를 마감할 권한이 없습니다.");
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "공고를 마감할 권한이 없습니다.");
         }
+        if (post.getStatus() != Status.OPEN) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.CONFLICT, "이미 마감된 공고입니다.");
         Post closedPost = post.close();
         Post savedPost = savePost.save(closedPost);
         publishPostEvent.publish(new PostClosedEvent(savedPost));

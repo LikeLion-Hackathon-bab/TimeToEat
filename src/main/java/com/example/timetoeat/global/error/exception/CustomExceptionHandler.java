@@ -59,6 +59,15 @@ public class CustomExceptionHandler {
                 .body(ApiResponse.fail(GlobalErrorCode.INTERNAL_SERVER_ERROR, "서버가 응답을 생성하는데 실패했습니다."));
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStatus(org.springframework.web.server.ResponseStatusException error) {
+        var status = error.getStatusCode();
+        String message = error.getReason() != null ? error.getReason() :
+                org.springframework.http.HttpStatus.valueOf(status.value()).getReasonPhrase();
+        return ResponseEntity.status(status).body(ApiResponse.builder()
+                .code("HTTP_" + status.value()).message(message).build());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleException(Exception e) {
         log.error("Exception : {}", e.getMessage(), e);

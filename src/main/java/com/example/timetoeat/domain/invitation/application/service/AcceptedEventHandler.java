@@ -3,7 +3,7 @@ package com.example.timetoeat.domain.invitation.application.service;
 import com.example.timetoeat.domain.article.service.ArticleMealQueryService;
 import com.example.timetoeat.domain.invitation.application.port.out.LoadInvitation;
 import com.example.timetoeat.domain.invitation.domain.Invitation;
-import com.example.timetoeat.domain.invitation.domain.event.InvitationSentEvent;
+import com.example.timetoeat.domain.invitation.domain.event.InvitationAcceptedEvent;
 import com.example.timetoeat.domain.invitation.domain.vo.InvitationId;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
@@ -26,7 +26,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class AcceptedEventHandler implements EventHandler<InvitationSentEvent> {
+public class AcceptedEventHandler implements EventHandler<InvitationAcceptedEvent> {
 
     private final LoadParticipation loadParticipation;
     private final ArticleMealQueryService articleMealQueryService;
@@ -39,12 +39,12 @@ public class AcceptedEventHandler implements EventHandler<InvitationSentEvent> {
 
     @Override
     public boolean supports(DomainEvent event) {
-        return event instanceof InvitationSentEvent;
+        return event instanceof InvitationAcceptedEvent;
     }
 
     @Override
-    public void handle(InvitationSentEvent event) {
-        InvitationId invitationId = event.invitation().invitationId();
+    public void handle(InvitationAcceptedEvent event) {
+        InvitationId invitationId = event.invitationMatchingResult().invitationId();
         Invitation invitation = loadInvitation.findById(invitationId)
                 .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
         MemberId inviterId = invitation.inviterId();

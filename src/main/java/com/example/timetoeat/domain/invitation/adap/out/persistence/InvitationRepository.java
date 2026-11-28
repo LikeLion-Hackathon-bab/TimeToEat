@@ -10,7 +10,8 @@ public interface InvitationRepository extends JpaRepository<InvitationEntity, Lo
     @Query(""" 
             SELECT i From InvitationEntity i
             JOIN FETCH i.inviter
-            WHERE i.invitee.id = :inviteeId
+            WHERE i.invitee.id = :inviteeId AND i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.PENDING
+            ORDER BY i.id DESC
             """)
     List<InvitationEntity> findInviterByInvitee(@Param("inviteeId") Long inviteeId);
 
@@ -21,4 +22,11 @@ public interface InvitationRepository extends JpaRepository<InvitationEntity, Lo
             order by i.id desc
             """)
     List<Long> findAcceptedRoomIds(@Param("viewer") Long viewer);
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("""
+            update InvitationEntity i set i.status = :status
+            where i.id = :id and i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.PENDING
+            """)
+    int resolvePending(@Param("id") Long id,
+                       @Param("status") com.example.timetoeat.domain.invitation.domain.InvitationStatus status);
 }

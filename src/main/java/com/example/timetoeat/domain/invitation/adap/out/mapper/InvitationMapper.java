@@ -8,7 +8,6 @@ import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.post.domain.vo.member.MemberId;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
@@ -26,11 +25,6 @@ public interface InvitationMapper {
     @Mapping(source = "invitation.status", target = "status")
     @Mapping(source = "invitation.createdAt", target = "createdAt")
     InvitationEntity toEntity(Invitation invitation, MemberEntity inviter, MemberEntity invitee);
-
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "inviter", ignore = true)
-    @Mapping(target = "invitee", ignore = true)
-    void updateEntityFromDomain(Invitation invitation, @MappingTarget InvitationEntity invitationEntity);
 
     @Mapping(source = "id", target = "invitationId", qualifiedByName = "longToInvitationId")
     @Mapping(source = "inviter.username", target = "inviterName")
