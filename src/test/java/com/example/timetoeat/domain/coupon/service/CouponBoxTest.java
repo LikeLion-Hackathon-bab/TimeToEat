@@ -8,8 +8,6 @@ import com.example.timetoeat.domain.coupon.repository.MemberCouponRepository;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,7 +22,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * F75·F76 쿠폰 보관함: 정렬·필터, 시연 쿠폰 생성, 보상 쿠폰 발급, 만료 문구. 저장소 대역.
+ * F75·F76 쿠폰 보관함: 빈 쿠폰함, 정렬·필터, 보상 쿠폰 발급, 만료 문구. 저장소 대역.
  * (쿠폰이 DB로 옮겨져(T1) 사용 판정은 CouponUseTest, 실제 DB의 동시 사용·재시작 후 유지는 qa/CouponPersistenceIT)
  */
 class CouponBoxTest {
@@ -35,8 +33,7 @@ class CouponBoxTest {
 
     private final MemberCouponRepository repo = mock(MemberCouponRepository.class);
     private final MemberJpaRepository members = mock(MemberJpaRepository.class);
-    private final CouponSeeder seeder = mock(CouponSeeder.class);
-    private final CouponQueryService query = new CouponQueryService(repo, seeder);
+    private final CouponQueryService query = new CouponQueryService(repo);
     private final CouponCommandService command = new CouponCommandService(repo, members, clock);
 
     private static MemberCoupon coupon(long id, LocalDate expires, boolean used) {
@@ -56,7 +53,6 @@ class CouponBoxTest {
                 coupon(4, TODAY.plusDays(2), false), coupon(5, TODAY.plusDays(1), true));
         var ids = query.getMyCoupons(7L, null).stream().map(CouponResponse::getCouponId).toList();
         assertEquals(List.of(4L, 1L, 3L, 5L, 2L), ids);
-        verify(seeder).ensureSeeded(7L);
     }
 
     @Test
@@ -72,35 +68,16 @@ class CouponBoxTest {
         assertEquals(used.stream().sorted(Comparator.comparing(CouponResponse::getExpiresAt).reversed()).toList(), used);
     }
 
+    /** F76/D07: 새 회원의 쿠폰함은 빈 배열(예전의 하드코딩 가짜 쿠폰 3장 없음), 저장소에 아무것도 쓰지 않는다. */
     @Test
-    void seedRaceIsSwallowedAndRowsAreRead() {
-        doThrow(new DataIntegrityViolationException("uk_member_coupon_seed")).when(seeder).ensureSeeded(7L);
-        box(coupon(1, TODAY.plusDays(30), false));
-        assertEquals(1, query.getMyCoupons(7L, null).size());
+    void newMemberHasEmptyCouponBox() {
+        when(repo.findAllByMember_Id(8L)).thenReturn(List.of());
+        assertEquals(List.of(), query.getMyCoupons(8L, null));
+        assertEquals(List.of(), query.getMyCoupons(8L, CouponStatus.UNUSED));
+        assertEquals(List.of(), query.getMyCoupons(8L, CouponStatus.USED));
+        verify(repo, never()).save(any());
+        verify(repo, never()).saveAll(any());
         assertEquals(401, status(() -> query.getMyCoupons(null, null)));
-    }
-
-    @SuppressWarnings("unchecked")
-    private List<MemberCoupon> seededFor(long memberId) {
-        var coupons = mock(MemberCouponRepository.class);
-        new CouponSeeder(coupons, members, clock).ensureSeeded(memberId);
-        ArgumentCaptor<List<MemberCoupon>> saved = ArgumentCaptor.forClass(List.class);
-        verify(coupons).saveAllAndFlush(saved.capture());
-        return saved.getValue();
-    }
-
-    @Test
-    void seedIsDeterministicPerMemberAndCreatedOnlyOnce() {
-        var a = seededFor(5L).stream().map(c -> c.getSeedKey() + ":" + c.isUsed() + ":" + c.getExpiresAt()).toList();
-        var b = seededFor(5L).stream().map(c -> c.getSeedKey() + ":" + c.isUsed() + ":" + c.getExpiresAt()).toList();
-        assertEquals(a, b, "같은 회원이면 시연 쿠폰 사용 여부가 같다");
-        assertEquals(List.of("DEMO_1", "DEMO_2", "DEMO_3"), seededFor(5L).stream().map(MemberCoupon::getSeedKey).toList());
-        assertFalse(seededFor(5L).get(0).isUsed(), "1번 시연 쿠폰은 항상 사용 전");
-
-        var already = mock(MemberCouponRepository.class);
-        when(already.existsByMember_IdAndSeedKeyIsNotNull(5L)).thenReturn(true);
-        new CouponSeeder(already, members, clock).ensureSeeded(5L);
-        verify(already, never()).saveAllAndFlush(any());
     }
 
     @Test
@@ -113,7 +90,7 @@ class CouponBoxTest {
                 r.stream().map(CouponResponse::getTitle).toList());
         assertEquals(List.of(100L, 101L, 102L, 103L), r.stream().map(CouponResponse::getCouponId).toList());
         assertTrue(r.stream().allMatch(c -> c.getExpiresAt().equals(TODAY.plusDays(30)) && !c.isUsed()));
-        assertTrue(saved.stream().allMatch(c -> c.getSeedKey() == null));
+        assertTrue(r.stream().allMatch(c -> c.getThumbnailUrl() == null), "외부 picsum 자리 이미지 없음");
         verify(members, times(4)).getReferenceById(9L);
     }
 
