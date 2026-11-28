@@ -32,4 +32,9 @@ public class InvitationQueryService implements GetInvitationUseCase {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Long> getAcceptedRoomIds(MemberId viewer) {
+        return loadInvitationList.getAcceptedRoomIds(viewer);
+    }
 }

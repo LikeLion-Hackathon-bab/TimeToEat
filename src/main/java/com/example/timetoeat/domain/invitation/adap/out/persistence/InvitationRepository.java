@@ -13,4 +13,12 @@ public interface InvitationRepository extends JpaRepository<InvitationEntity, Lo
             WHERE i.invitee.id = :inviteeId
             """)
     List<InvitationEntity> findInviterByInvitee(@Param("inviteeId") Long inviteeId);
+
+    @Query("""
+            select i.id from InvitationEntity i
+            where i.status = com.example.timetoeat.domain.invitation.domain.InvitationStatus.APPROVED
+              and (i.inviter.id = :viewer or i.invitee.id = :viewer)
+            order by i.id desc
+            """)
+    List<Long> findAcceptedRoomIds(@Param("viewer") Long viewer);
 }

@@ -58,4 +58,9 @@ public class InvitationAdap implements LoadInvitation, SaveInvitation, LoadInvit
                 .map(mapper::toInvitationListData)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Long> getAcceptedRoomIds(MemberId viewer) {
+        return invitationRepository.findAcceptedRoomIds(viewer.getId());
+    }
 }
