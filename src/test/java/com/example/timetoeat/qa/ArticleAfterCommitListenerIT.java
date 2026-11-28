@@ -37,7 +37,7 @@ class ArticleAfterCommitListenerIT extends QaIntegrationSupport {
                 .imageUrl("uploads/qa-sushi.jpg") // http(s)가 아니면 내려받지 않고 경로 그대로 AI에 넘긴다
                 .mealTime(LocalTime.of(12, 30))
                 .taggedMemberIds(tagged)
-                .method(CreateArticleRequest.Method.CAMERA)
+                .method(com.example.timetoeat.domain.article.entity.UploadMethod.CAMERA)
                 .build();
     }
 
