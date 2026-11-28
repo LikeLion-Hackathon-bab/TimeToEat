@@ -54,6 +54,7 @@ app:
     reco-base-url: ${RECO_AI_BASE_URL:http://recommend-ai:8010}
     taste-base-url: ${TASTE_BASE_URL:http://taste-service:8020}
     outbound-key: ${AI_OUTBOUND_KEY:}   # 공개 기본값 없음. 비면 AI 호출을 끈다(AiProperties.isEnabled)
+    image-allowed-hosts: ${AI_IMAGE_ALLOWED_HOSTS:}   # 게시물 사진을 내려받을 호스트(CloudFront 도메인, 쉼표 목록). 비면 https 공인 주소만
     timeout-millis: ${AI_HTTP_TIMEOUT_MILLIS:3000}
 
 logging:

@@ -31,10 +31,17 @@ class ArticleAfterCommitListenerIT extends QaIntegrationSupport {
     @Autowired ArticleCommandService articles;
     @Autowired MemberMealStatusRepository mealStatuses;
     @MockitoBean AiGateway ai;
+    // 사진 내려받기는 https 공인 주소만 받으므로(ArticleImageFetcher) 시험에서는 임시 파일을 돌려주는 대역을 쓴다.
+    @MockitoBean com.example.timetoeat.infra.ai.ArticleImageFetcher imageFetcher;
+
+    @org.junit.jupiter.api.BeforeEach
+    void fakeDownload() throws Exception {
+        when(imageFetcher.fetch(anyString())).thenAnswer(i -> java.nio.file.Files.createTempFile("qa-img-", ".jpg"));
+    }
 
     private CreateArticleRequest request(List<Long> tagged) {
         return CreateArticleRequest.builder()
-                .imageUrl("uploads/qa-sushi.jpg") // http(s)가 아니면 내려받지 않고 경로 그대로 AI에 넘긴다
+                .imageUrl("https://cdn.example.com/articles/qa-sushi.jpg")
                 .mealTime(LocalTime.of(12, 30))
                 .taggedMemberIds(tagged)
                 .method(com.example.timetoeat.domain.article.entity.UploadMethod.CAMERA)
@@ -42,7 +49,7 @@ class ArticleAfterCommitListenerIT extends QaIntegrationSupport {
     }
 
     @Test
-    void articleCreationWritesMealLogAndMealStatusForAuthorAndTagged() {
+    void articleCreationWritesMealLogAndMealStatusForAuthorAndTagged() throws Exception {
         var author = member("작성자");
         var friend = member("태그친구");
         when(ai.inferFoodSync(anyLong(), anyLong(), anyString(), any()))
@@ -50,7 +57,8 @@ class ArticleAfterCommitListenerIT extends QaIntegrationSupport {
 
         Long articleId = articles.createArticle(request(List.of(friend.getId())), author.getId());
 
-        verify(ai).inferFoodSync(eq(articleId), eq(author.getId()), eq("uploads/qa-sushi.jpg"), any());
+        verify(ai).inferFoodSync(eq(articleId), eq(author.getId()), argThat(p -> p.endsWith(".jpg")), any());
+        verify(imageFetcher).fetch("https://cdn.example.com/articles/qa-sushi.jpg");
         var logs = jdbc.queryForList("select member_id, label, code from meal_log where article_id=? order by member_id", articleId);
         assertEquals(2, logs.size(), "meal_log 행: " + logs);
         assertEquals(List.of(author.getId(), friend.getId()),
