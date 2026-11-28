@@ -28,12 +28,17 @@ public class ArticleCreatedListener {
     private final AiGateway aiGateway;
     private final ArticleAiCommandService articleAiCommandService;
     private final Optional<AiRetryProducer> aiRetryProducer;
+    private final com.example.timetoeat.infra.ai.AiProperties aiProperties;
 
     // 트랜잭션 커밋 이후에만 실행 (DB 락 최소화)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void afterCommit(ArticleCreatedEvent e) {
         String imagePath = null;
         boolean tempDownloaded = false;
+        if (!aiProperties.isEnabled()) { // AI_OUTBOUND_KEY 없음: 사진 추론을 건너뛴다(재시도 큐에도 넣지 않음)
+            log.info("AI disabled (no AI_OUTBOUND_KEY), skip inference. articleId={}", e.getArticleId());
+            return;
+        }
 
         try {
             // 1) 이미지 경로 결정 (URL이면 임시 파일로 저장)

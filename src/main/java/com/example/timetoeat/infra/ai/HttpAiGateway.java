@@ -31,6 +31,7 @@ public class HttpAiGateway implements AiGateway {
         OffsetDateTime mealAtOffset =
                 mealAtKst.atZone(ZoneId.of("Asia/Seoul")).toOffsetDateTime();
 
+        props.requireEnabled();
         MultipartBodyBuilder mb = new MultipartBodyBuilder();
         mb.part("image", new FileSystemResource(imagePath));
 

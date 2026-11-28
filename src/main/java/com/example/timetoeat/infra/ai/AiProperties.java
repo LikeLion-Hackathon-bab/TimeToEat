@@ -22,4 +22,21 @@ public class AiProperties {
         this.outboundKey = outboundKey;
         this.timeoutMillis = timeoutMillis == null ? 3000 : timeoutMillis;
     }
+
+    /**
+     * AI 서버로 나가는 호출에 붙일 키가 있을 때만 호출한다(보안 점검 M4).
+     * 공개 기본값을 없앴으므로 AI_OUTBOUND_KEY가 비면 AI 호출을 끈다(기동은 막지 않는다).
+     */
+    public boolean isEnabled() {
+        return outboundKey != null && !outboundKey.isBlank();
+    }
+
+    /** 꺼져 있으면 HTTP 호출 전에 실패시킨다. 호출부는 지금처럼 RuntimeException으로 처리한다(추천 503 등). */
+    public void requireEnabled() {
+        if (!isEnabled()) throw new AiDisabledException();
+    }
+
+    public static class AiDisabledException extends IllegalStateException {
+        public AiDisabledException() { super("AI_OUTBOUND_KEY가 없어 AI 호출이 꺼져 있습니다."); }
+    }
 }

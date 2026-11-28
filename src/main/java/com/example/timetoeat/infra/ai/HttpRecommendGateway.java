@@ -28,6 +28,7 @@ public class HttpRecommendGateway implements RecommendGateway {
 
     @Override
     public MenuRecommendationResponse recommendForMember(Long memberId, int excludeDays, int topK) {
+        props.requireEnabled();
         JsonNode root = aiWebClient.post()
                 .uri(props.getRecoBaseUrl() + "/v1/recommend")
                 .header("X-AI-KEY", props.getOutboundKey())
