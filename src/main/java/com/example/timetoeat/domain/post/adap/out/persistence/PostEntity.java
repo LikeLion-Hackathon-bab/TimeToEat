@@ -42,12 +42,21 @@ public class PostEntity {
     @Column(nullable = false, length = 100)
     private String message;
 
+    /** 마감 사유(CloseReason). OPEN이면 null. 기존 DB는 db/post_close_reason.sql 로 컬럼을 더한다. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "close_reason")
+    private com.example.timetoeat.domain.post.domain.CloseReason closeReason;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private MemberEntity member;
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public void setCloseReason(com.example.timetoeat.domain.post.domain.CloseReason closeReason) {
+        this.closeReason = closeReason;
     }
 
     public void setExpiredAt(LocalDateTime expiredAt) {

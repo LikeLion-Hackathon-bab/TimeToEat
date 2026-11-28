@@ -49,7 +49,7 @@ public abstract class QaIntegrationSupport {
 
     protected PostEntity savePost(MemberEntity owner, int target, Status status, LocalDateTime expiredAt, LocalDateTime meetingAt) {
         return posts.save(new PostEntity(null, target, status, LocalDateTime.now(), meetingAt, expiredAt,
-                "강남역", "점심 같이", owner));
+                "강남역", "점심 같이", null, owner));
     }
 
     protected PostEntity openPost(MemberEntity owner, int target) {

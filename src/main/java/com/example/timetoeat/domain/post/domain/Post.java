@@ -19,6 +19,8 @@ public class Post {
     @Getter private final LocalDateTime meetingAt;
     @Getter private final String location;
     @Getter private final String message;
+    /** 마감 사유. OPEN이면 null. */
+    @Getter private final CloseReason closeReason;
 
     public static Post withoutId(
             MemberId memberId,
@@ -39,7 +41,8 @@ public class Post {
                 expiredAt,
                 meetingAt,
                 location,
-                message
+                message,
+                null
         );
     }
 
@@ -52,7 +55,8 @@ public class Post {
             LocalDateTime expiredAt,
             LocalDateTime meetingAt,
             String location,
-            String message
+            String message,
+            CloseReason closeReason
     ) {
         return new Post(
                 id,
@@ -63,7 +67,8 @@ public class Post {
                 expiredAt,
                 meetingAt,
                 location,
-                message
+                message,
+                closeReason
         );
     }
 
@@ -78,7 +83,13 @@ public class Post {
         return this.status == Status.OPEN && !participation.isFull(targetCount);
     }
 
+    /** 작성자 수동 마감. */
     public Post close() {
+        return close(CloseReason.MANUAL);
+    }
+
+    /** 수동 마감(MANUAL) 또는 인원 충족(FULL). expiredAt 은 기존대로 마감 시각으로 바꾼다(알림 중복 키 등이 의존). */
+    public Post close(CloseReason reason) {
         //상태 선검증 이러면 여러 요청이 들어와도 제대로 처리 가능
         if (this.status != Status.OPEN) {
             throw new IllegalStateException("이미 마감된 공고입니다.");
@@ -92,7 +103,8 @@ public class Post {
                 LocalDateTime.now(),
                 this.meetingAt,
                 this.location,
-                this.message
+                this.message,
+                reason
         );
     }
 
@@ -109,7 +121,8 @@ public class Post {
                 this.expiredAt,
                 this.meetingAt,
                 this.location,
-                this.message
+                this.message,
+                CloseReason.EXPIRED
         );
     }
 }
