@@ -8,6 +8,9 @@ import com.example.timetoeat.domain.challenge.repository.ChallengeRewardHistoryR
 import com.example.timetoeat.domain.challenge.service.ChallengeQueryService;
 import com.example.timetoeat.domain.challenge.service.ChallengeRewardCommandService;
 import com.example.timetoeat.domain.coupon.service.CouponCommandService;
+import com.example.timetoeat.domain.friend.service.FriendMealQueryService;
+import com.example.timetoeat.domain.meal.entity.MemberMealStatus;
+import com.example.timetoeat.domain.meal.repository.MemberMealStatusRepository;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
 import com.example.timetoeat.domain.referral.entity.ReferralCode;
@@ -137,5 +140,27 @@ class SpringServiceDefectReproTest {
         svc.claim(1L, RewardType.MONTH);
         verify(repo, never()).existsByMember_IdAndTypeAndAchievedAtBetween(anyLong(), eq(RewardType.MONTH), any(), any());
         verify(rewardCoupons).issueRewardCoupon(1L, "MONTH");
+    }
+
+    /** T4: 방금(1시간 미만 전) 수동으로 '배고파요'로 바꾼 친구가 "0시간 공복이에요"로 보였다. */
+    private com.example.timetoeat.domain.friend.dto.response.FriendMealItemResponse manualHungry(Duration ago) {
+        var members = mock(MemberJpaRepository.class);
+        var meals = mock(MemberMealStatusRepository.class);
+        var now = LocalDateTime.of(2026, 11, 28, 12, 0);
+        var m = MemberEntity.builder().id(2L).username("가").build();
+        when(members.findTop30ByIdNotOrderByCreatedAtDesc(1L)).thenReturn(List.of(m));
+        when(meals.findByMember_IdIn(any())).thenReturn(List.of(MemberMealStatus.builder().member(m).manualFastingSince(now.minus(ago)).build()));
+        return new FriendMealQueryService(Clock.fixed(now.atZone(KST).toInstant(), KST), members, meals)
+                .getDemoList(1L, "ALL").get(0);
+    }
+
+    @Test
+    void justSwitchedToHungryDoesNotShowZeroHours() {
+        var item = manualHungry(Duration.ofMinutes(5));
+        assertNotEquals("0시간 공복이에요", item.getLabel());
+        assertEquals("공복이에요", item.getLabel());
+        assertTrue(item.isHungry());
+        assertEquals("공복이에요", manualHungry(Duration.ofMinutes(59)).getLabel());
+        assertEquals("1시간 공복이에요", manualHungry(Duration.ofMinutes(60)).getLabel(), "1시간부터는 시간 표시");
     }
 }

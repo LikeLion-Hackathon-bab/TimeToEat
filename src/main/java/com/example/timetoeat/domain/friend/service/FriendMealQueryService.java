@@ -74,7 +74,10 @@ public class FriendMealQueryService {
         LocalDateTime base = last;
         if (manual != null && (base == null || manual.isAfter(base))) {
             long hours = Duration.between(manual, now).toHours();
-            return FriendMealItemResponse.of(m.getId(), m.getUsername(), img, true, hours + "시간 공복이에요");
+            // 방금(1시간 미만 전) 배고파요로 바꾼 친구가 "0시간 공복이에요"로 보였다. 공복(hungry=true) 카드라
+            // "방금 먹었어요"(식사 중 문구)는 맞지 않고, 기록 없는 공복과 같은 "공복이에요"로 보인다.
+            String label = hours < 1 ? "공복이에요" : hours + "시간 공복이에요";
+            return FriendMealItemResponse.of(m.getId(), m.getUsername(), img, true, label);
         }
 
         if (last == null) {
