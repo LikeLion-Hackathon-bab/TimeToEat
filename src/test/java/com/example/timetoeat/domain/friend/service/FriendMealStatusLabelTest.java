@@ -25,16 +25,16 @@ class FriendMealStatusLabelTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 11, 28, 12, 0);
     private final Clock clock = Clock.fixed(NOW.atZone(KST).toInstant(), KST);
 
-    private MemberJpaRepository members;
+    private FriendDirectory friendDir;
     private MemberMealStatusRepository meals;
     private FriendMealQueryService service;
 
     @BeforeEach
     void setUp() {
-        members = mock(MemberJpaRepository.class);
+        friendDir = mock(FriendDirectory.class);
         meals = mock(MemberMealStatusRepository.class);
         // 시연 채움 동작을 시험하므로 demo-friends.enabled=true 로 만든다(운영 기본값은 false)
-        service = new FriendMealQueryService(clock, new FriendDirectory(members, mock(ReferralCodeRepository.class)), meals, true);
+        service = new FriendMealQueryService(clock, friendDir, meals, true);
     }
 
     private MemberEntity member(long id, String name, String img) {
@@ -46,7 +46,7 @@ class FriendMealStatusLabelTest {
     }
 
     private FriendMealItemResponse only(MemberEntity m, MemberMealStatus s) {
-        when(members.findTop30ByIdNotOrderByCreatedAtDesc(1L)).thenReturn(List.of(m));
+        when(friendDir.friendsOf(1L)).thenReturn(List.of(m));
         when(meals.findByMember_IdIn(any())).thenReturn(s == null ? List.of() : List.of(s));
         return service.getDemoList(1L, "ALL").stream().filter(i -> i.getMemberId().equals(m.getId())).findFirst().orElseThrow();
     }
@@ -111,7 +111,7 @@ class FriendMealStatusLabelTest {
     void filtersSplitTheSameListAndAllIsTheirUnion() {
         var full = member(2, "배부름", null);
         var hungry = member(3, "배고픔", null);
-        when(members.findTop30ByIdNotOrderByCreatedAtDesc(1L)).thenReturn(List.of(full, hungry));
+        when(friendDir.friendsOf(1L)).thenReturn(List.of(full, hungry));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of(status(full, NOW.minusHours(1), null)));
 
         var all = service.getDemoList(1L, "ALL");
@@ -130,7 +130,7 @@ class FriendMealStatusLabelTest {
     void thirtyRealMembersMeansNoDemoEntries() {
         List<MemberEntity> list = new ArrayList<>();
         IntStream.rangeClosed(2, 31).forEach(i -> list.add(member(i, "m" + i, null)));
-        when(members.findTop30ByIdNotOrderByCreatedAtDesc(anyLong())).thenReturn(list);
+        when(friendDir.friendsOf(anyLong())).thenReturn(list);
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
         var all = service.getDemoList(1L, "ALL");
         assertEquals(30, all.size());
@@ -139,7 +139,7 @@ class FriendMealStatusLabelTest {
 
     @Test
     void demoEntriesAreStableWithinTheSameDay() {
-        when(members.findTop30ByIdNotOrderByCreatedAtDesc(anyLong())).thenReturn(List.of());
+        when(friendDir.friendsOf(anyLong())).thenReturn(List.of());
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
         var a = service.getDemoList(1L, "ALL");
         var b = service.getDemoList(1L, "ALL");
@@ -152,9 +152,9 @@ class FriendMealStatusLabelTest {
 
     @Test
     void theRequestingMemberIsExcludedAtTheQuery() {
-        when(members.findTop30ByIdNotOrderByCreatedAtDesc(anyLong())).thenReturn(List.of());
+        when(friendDir.friendsOf(anyLong())).thenReturn(List.of());
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
         service.getDemoList(77L, "ALL");
-        verify(members).findTop30ByIdNotOrderByCreatedAtDesc(77L);
+        verify(friendDir).friendsOf(77L);
     }
 }

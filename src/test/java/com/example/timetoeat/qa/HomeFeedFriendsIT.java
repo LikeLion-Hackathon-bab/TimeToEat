@@ -21,7 +21,6 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * F09: 홈 피드는 내 글 + 친구 글 중 24시간 이내만, 최신순·페이징 유지.
- * 친구는 친구 목록 화면과 같은 출처(FriendDirectory: 추천 코드 수령 관계 우선 + 최근 가입자, 최대 30명)라
+ * 친구는 친구 목록 화면과 같은 출처(FriendDirectory: 추천 코드 수령 관계만, 최대 30명. 모르는 사람으로 채우지 않음)라
  * 목록에 보이는 사람 = 피드에 글이 보이는 사람.
  */
 @AutoConfigureMockMvc
@@ -43,7 +42,6 @@ class HomeFeedFriendsIT extends QaIntegrationSupport {
     @Autowired ReferralCodeRepository referrals;
     @Autowired FriendDirectory friendDirectory;
     @Autowired Clock clock; // 피드 기준 시각(KST)과 같은 시계
-    private static final java.util.concurrent.atomic.AtomicInteger BATCH = new java.util.concurrent.atomic.AtomicInteger();
 
     private RequestPostProcessor as(long memberId) {
         var user = new CustomOauth2User(Oauth2UserInfo.fromJwt(memberId, "qa", "qa@qa.test", Role.ROLE_MEMBER));
@@ -69,52 +67,33 @@ class HomeFeedFriendsIT extends QaIntegrationSupport {
         referrals.save(r);
     }
 
-    /** DB의 다른 회원보다 늦게 가입한 회원 n명(가장 늦은 것이 마지막). 최근 가입자 30명 자리를 이들이 채운다. */
-    private List<MemberEntity> newestMembers(int n, String prefix) {
-        // 부를 때마다 더 늦은 시각대를 써서, 먼저 돈 시험의 회원이 끼어들지 않게 한다
-        var base = LocalDateTime.now(clock).plusYears(1).plusDays(BATCH.incrementAndGet());
-        List<MemberEntity> list = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            var m = member(prefix + i);
-            setCreatedAt("member", m.getId(), base.plusMinutes(i));
-            list.add(m);
-        }
-        return list;
-    }
-
     @Test
-    void feedShowsExactlyTheFriendListMembersPostsWithin24Hours() throws Exception {
+    void feedShowsOnlyMeAndReferralFriendsWithin24Hours() throws Exception {
         var me = member("나");
-        var referralFriend = member("추천친구");   // 오래전 가입: 최근 가입 30명 밖이지만 추천 관계라 우선 포함
-        var pendingInviter = member("미수령");     // 수령 안 된 코드는 친구 아님
-        referral(referralFriend, me);             // 친구가 보낸 코드를 내가 수령
+        var friendA = member("김민준");          // 친구가 보낸 코드를 내가 수령
+        var friendB = member("최서연");          // 내가 보낸 코드를 친구가 수령
+        var pendingInviter = member("미수령");   // 수령 안 된 코드는 친구 아님
+        var stranger = member("모르는사람");     // 방금 가입했지만 관계 없음
+        referral(friendA, me);
+        referral(me, friendB);
         referral(pendingInviter, null);
-        var recent = newestMembers(30, "최근");    // recent.get(0) 이 30명 중 가장 오래됨
-        var outsider = recent.get(0);             // 추천 친구 1 + 최근 29 = 30 이라 밀려남
-        var recentFriend = recent.get(29);
 
         var friends = friendDirectory.friendIdsOf(me.getId());
-        assertEquals(FriendDirectory.LIMIT, friends.size());
-        assertEquals(referralFriend.getId(), friends.get(0), "추천 관계가 먼저");
-        assertTrue(friends.contains(recentFriend.getId()));
-        assertFalse(friends.contains(outsider.getId()));
-        assertFalse(friends.contains(pendingInviter.getId()));
+        assertEquals(List.of(friendB.getId(), friendA.getId()).stream().sorted().toList(), friends.stream().sorted().toList());
 
         var now = LocalDateTime.now(clock);
         long mine = post(me, now.minusMinutes(10));
-        long f1 = post(referralFriend, now.minusMinutes(20));
-        long f2 = post(recentFriend, now.minusHours(23));
-        post(recentFriend, now.minusHours(25));    // 24시간 지남
-        post(outsider, now.minusMinutes(5));       // 목록 밖
+        long f1 = post(friendA, now.minusMinutes(20));
+        long f2 = post(friendB, now.minusHours(23));
+        post(friendB, now.minusHours(25));        // 24시간 지남
+        post(stranger, now.minusMinutes(5));      // 친구 아님
         post(pendingInviter, now.minusMinutes(5)); // 수락(수령) 전
 
         // 목록 화면과 피드가 같은 사람들
         mvc.perform(get("/api/v1/friends/me/meals").with(as(me.getId())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(30))
-                .andExpect(jsonPath("$.data[0].memberId").value(referralFriend.getId().intValue()))
-                .andExpect(jsonPath("$.data[*].memberId", hasItem(recentFriend.getId().intValue())))
-                .andExpect(jsonPath("$.data[*].memberId", not(hasItem(outsider.getId().intValue()))));
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[*].memberId", containsInAnyOrder(friendA.getId().intValue(), friendB.getId().intValue())));
 
         mvc.perform(get("/api/v1/articles/home").with(as(me.getId())))
                 .andExpect(status().isOk())
@@ -128,15 +107,22 @@ class HomeFeedFriendsIT extends QaIntegrationSupport {
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].articleId").value((int) f2));
 
-        // 추천 관계는 양방향: 추천 친구 쪽에서도 내 글이 보인다
-        mvc.perform(get("/api/v1/articles/home").with(as(referralFriend.getId())))
+        // 추천 관계는 양방향: 친구 쪽에서도 내 글이 보인다
+        mvc.perform(get("/api/v1/articles/home").with(as(friendA.getId())))
                 .andExpect(jsonPath("$.content[*].articleId", hasItem((int) mine)));
+        // 모르는 사람 쪽에서는 내 글이 안 보인다
+        mvc.perform(get("/api/v1/articles/home").with(as(stranger.getId())))
+                .andExpect(jsonPath("$.content[*].articleId", not(hasItem((int) mine))));
     }
 
     @Test
-    void userWhoseFriendsHaveNoRecentPostsGetsAnEmptyFeedOfTheSameShape() throws Exception {
+    void memberWithNoFriendsGetsEmptyFriendListAndOnlyOwnPosts() throws Exception {
         var newbie = member("새회원");
-        newestMembers(30, "조용한"); // 친구 30명 모두 글이 없음
+        var other = member("다른회원");
+        post(other, LocalDateTime.now(clock).minusMinutes(1)); // 방금 올린 남의 글
+        mvc.perform(get("/api/v1/friends/me/meals").with(as(newbie.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(0));
         mvc.perform(get("/api/v1/articles/home").with(as(newbie.getId())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())

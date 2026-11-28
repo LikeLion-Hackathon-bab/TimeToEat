@@ -159,14 +159,14 @@ class SpringServiceDefectReproTest {
 
     /** T4: 방금(1시간 미만 전) 수동으로 '배고파요'로 바꾼 친구가 "0시간 공복이에요"로 보였다. */
     private com.example.timetoeat.domain.friend.dto.response.FriendMealItemResponse manualHungry(Duration ago) {
-        var members = mock(MemberJpaRepository.class);
+        var friendDir = mock(com.example.timetoeat.domain.friend.service.FriendDirectory.class);
         var meals = mock(MemberMealStatusRepository.class);
         var now = LocalDateTime.of(2026, 11, 28, 12, 0);
         var m = MemberEntity.builder().id(2L).username("가").build();
-        when(members.findTop30ByIdNotOrderByCreatedAtDesc(1L)).thenReturn(List.of(m));
+        when(friendDir.friendsOf(1L)).thenReturn(List.of(m));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of(MemberMealStatus.builder().member(m).manualFastingSince(now.minus(ago)).build()));
         return new FriendMealQueryService(Clock.fixed(now.atZone(KST).toInstant(), KST),
-                new com.example.timetoeat.domain.friend.service.FriendDirectory(members, mock(com.example.timetoeat.domain.referral.repository.ReferralCodeRepository.class)), meals, false)
+                friendDir, meals, false)
                 .getDemoList(1L, "ALL").get(0);
     }
 
