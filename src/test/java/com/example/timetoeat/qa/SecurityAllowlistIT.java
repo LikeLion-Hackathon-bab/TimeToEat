@@ -30,10 +30,10 @@ class SecurityAllowlistIT extends QaIntegrationSupport {
 
     @Test
     void publicAndServerToServerPathsStayOpen() throws Exception {
-        // 리프레시: 쿠키가 없으면 인증 실패가 아니라 요청 오류(보안 필터를 통과한다)
-        int refresh = mvc.perform(post("/api/v1/auth/refresh")).andReturn().getResponse().getStatus();
-        assertNotEquals(401, refresh);
-        assertNotEquals(403, refresh);
+        // 리프레시: 보안 필터를 통과해 컨트롤러가 답한다. 쿠키가 없으면 INVALID_REFRESH_TOKEN(401, REQUEST_011).
+        // 보안 진입점의 401(본문이 JSON 코드 없음)과 코드로 구분한다.
+        mvc.perform(post("/api/v1/auth/refresh")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("REQUEST_011"));
         mvc.perform(post("/api/v1/auth/logout")).andExpect(status().isOk());
         // OAuth 시작은 카카오로 리다이렉트
         mvc.perform(get("/oauth2/authorization/kakao")).andExpect(status().is3xxRedirection());
@@ -46,6 +46,7 @@ class SecurityAllowlistIT extends QaIntegrationSupport {
                 .content("{\"meetingAt\":\"2026-12-01T13:00:00+09:00\",\"location\":\"a\",\"restaurant\":\"b\"}")).andExpect(status().isForbidden());
         // AI 지원 API는 X-AI-KEY로 보호(403)
         mvc.perform(get("/api/v1/ai/support/users/1/excluded-codes").header("X-AI-KEY", "wrong")).andExpect(status().isForbidden());
-        mvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        // API 문서는 SWAGGER_ENABLED(기본 false)일 때만. 꺼져 있으면 인증 실패(401)가 아니라 404.
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
     }
 }
