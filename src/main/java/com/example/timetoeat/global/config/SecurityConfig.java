@@ -7,7 +7,6 @@ import com.example.timetoeat.global.auth.handler.LoginSuccessHandler;
 import com.example.timetoeat.global.auth.handler.OAuth2LoginFailureHandler;
 import com.example.timetoeat.global.auth.handler.Oauth2EntryPoint;
 import com.example.timetoeat.global.auth.service.CustomOauthUserService;
-import com.example.timetoeat.global.auth.util.CookieOAuth2AuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +41,6 @@ public class SecurityConfig {
     private final JwtVerificationFilter jwtVerificationFilter;
     private final JwtExceptionFilter jwtExceptionFilter;
     private final OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
-    private final CookieOAuth2AuthorizationRequestRepository cookieOAuth2AuthorizationRequestRepository;
 
 
     @Bean
@@ -67,7 +65,10 @@ public class SecurityConfig {
                         .authorizationEndpoint(authorizationEndpointConfig ->
                                         authorizationEndpointConfig
                                                 .baseUri("/oauth2/authorization")
-                                                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository()) // ← 여기만 교체
+                                                .authorizationRequestRepository(new HttpSessionOAuth2AuthorizationRequestRepository())
+                                                // 인가 요청(state)은 Spring 기본값인 HTTP 세션에 둔다. 서버 한 대(EC2 1대) 구성이라
+                                                // 쿠키 저장소의 이점(다중 인스턴스)이 없고, 쿠키 저장소는 Java 역직렬화 표면만 늘린다.
+                                                // 근거: qa-cloud/spring-followups/DECISIONS.md
                         )
                         .userInfoEndpoint(userInfoEndpointConfig ->
                                 userInfoEndpointConfig
