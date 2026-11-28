@@ -20,7 +20,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class CustomExceptionHandler {
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse> handleBusinessException(CustomException e) {
-        log.error("customException : {}", e.getBaseError().getMessage(), e);
+        // 4xx 는 클라이언트 입력·인증 상태에 따른 정상 응답이라 스택 없이 WARN. 5xx 만 ERROR + 스택.
+        if (e.getBaseError().getHttpStatus().is5xxServerError()) {
+            log.error("customException : {}", e.getBaseError().getMessage(), e);
+        } else {
+            log.warn("customException : {} ({})", e.getBaseError().getCode(), e.getMessage());
+        }
         return ResponseEntity
                 .status(e.getBaseError().getHttpStatus())
                 .body(ApiResponse.fail(e.getBaseError()));
