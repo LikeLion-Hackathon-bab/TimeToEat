@@ -23,9 +23,35 @@ public class CouponQueryService {
         rewardBox.computeIfAbsent(memberId, k -> new CopyOnWriteArrayList<>()).add(coupon);
     }
 
-    public List<CouponResponse> getMyCoupons(Long memberId, CouponStatus status) {
-        List<CouponResponse> all =  new ArrayList<>(seed(memberId));
+    // 데모용: 사용 처리한 쿠폰 id(쿠폰 저장소가 메모리라 같은 수명). 영속 쿠폰은 쿠폰 테이블 도입 시 함께.
+    private final Map<Long, Set<Long>> usedBox = new ConcurrentHashMap<>();
+
+    /** 쿠폰 사용(F76). 없는 쿠폰 404, 이미 사용 409, 만료 409. */
+    public synchronized void markUsed(Long memberId, Long couponId) {
+        if (memberId == null) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.UNAUTHORIZED);
+        var coupon = all(memberId).stream().filter(c -> c.getCouponId().equals(couponId)).findFirst()
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "쿠폰을 찾을 수 없습니다."));
+        if (coupon.isUsed()) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.CONFLICT, "이미 사용한 쿠폰입니다.");
+        if (coupon.getExpiresAt().isBefore(LocalDate.now())) throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.CONFLICT, "만료된 쿠폰입니다.");
+        usedBox.computeIfAbsent(memberId, k -> ConcurrentHashMap.newKeySet()).add(couponId);
+    }
+
+    private List<CouponResponse> all(Long memberId) {
+        List<CouponResponse> all = new ArrayList<>(seed(memberId));
         all.addAll(rewardBox.getOrDefault(memberId, List.of()));
+        Set<Long> used = usedBox.getOrDefault(memberId, Set.of());
+        return all.stream().map(c -> !c.isUsed() && used.contains(c.getCouponId()) ? CouponResponse.builder()
+                .couponId(c.getCouponId()).title(c.getTitle()).shopName(c.getShopName()).type(c.getType())
+                .condition(c.getCondition()).expiresAt(c.getExpiresAt()).used(true).thumbnailUrl(c.getThumbnailUrl())
+                .build() : c).toList();
+    }
+
+    public List<CouponResponse> getMyCoupons(Long memberId, CouponStatus status) {
+        List<CouponResponse> all = all(memberId);
 
         if (status == null) {
             // 전체: UNUSED 먼저, 같은 그룹 내에서는 만료 임박순

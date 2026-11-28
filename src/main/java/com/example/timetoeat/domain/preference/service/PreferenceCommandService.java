@@ -68,6 +68,9 @@ public class PreferenceCommandService {
 
     private void replace(MemberEntity member, PreferenceType type, List<String> codes, Map<String, FoodCode> map) {
         prefRepo.deleteByMember_IdAndType(member.getId(), type);
+        // 파생 delete는 엔티티를 지우기만 하고 flush 때 insert가 먼저 실행된다.
+        // 같은 코드를 다시 저장하면 uk_member_food_type 중복(500)이 나므로 여기서 먼저 반영한다.
+        em.flush();
         if (codes.isEmpty()) return;
 
         List<MemberFoodPreference> batch = new ArrayList<>(codes.size());

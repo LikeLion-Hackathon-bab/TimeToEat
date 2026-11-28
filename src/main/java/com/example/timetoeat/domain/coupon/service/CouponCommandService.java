@@ -17,7 +17,7 @@ public class CouponCommandService {
     private final CouponQueryService couponQueryService;
 
     public void use(Long memberId, Long couponId) {
-        // TODO: 실제 구현
+        couponQueryService.markUsed(memberId, couponId);
     }
 
     // 보상 쿠폰 발급(데모) → 쿠폰함에 즉시 반영
