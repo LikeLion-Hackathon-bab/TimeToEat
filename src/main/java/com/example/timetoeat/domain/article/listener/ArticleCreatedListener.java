@@ -91,10 +91,9 @@ public class ArticleCreatedListener {
     }
 
     private String downloadToTemp(String url) throws Exception {
-        Path temp = Files.createTempFile("article-img-", ".bin");
+        // 확장자가 형식과 맞아야 food-ai 가 읽는다(.bin 이면 500). 형식 판별·WebP→JPEG 는 AiImageFiles.
         try (InputStream in = new URL(url).openStream()) {
-            Files.copy(in, temp, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return com.example.timetoeat.infra.ai.AiImageFiles.download(in).toString();
         }
-        return temp.toString();
     }
 }
