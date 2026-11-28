@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /** F76 쿠폰 사용. 기존 서비스는 use()가 TODO라 사용 후에도 '사용 전'에 남았다. */
 class CouponUseTest {
     private final CouponQueryService query = new CouponQueryService();
-    private final CouponCommandService command = new CouponCommandService(query);
+    private final CouponCommandService command = new CouponCommandService(query, e -> {});
 
     private int status(Runnable r) {
         try { r.run(); return 204; } catch (ResponseStatusException e) { return e.getStatusCode().value(); }

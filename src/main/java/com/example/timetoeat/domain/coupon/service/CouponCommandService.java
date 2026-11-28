@@ -15,6 +15,7 @@ import java.time.LocalDate;
 public class CouponCommandService {
 
     private final CouponQueryService couponQueryService;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     public void use(Long memberId, Long couponId) {
         couponQueryService.markUsed(memberId, couponId);
@@ -45,5 +46,6 @@ public class CouponCommandService {
                 .build();
 
         couponQueryService.addReward(memberId, reward);
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.CouponIssued(memberId, id, title)); // F25: 커밋 뒤 쿠폰 알림
     }
 }

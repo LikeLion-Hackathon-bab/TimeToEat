@@ -23,6 +23,7 @@ public class InvitationRoomService {
     private final RecentMenuService menus;
     private final MatchingPostService socket;
     private final com.example.timetoeat.domain.plans.meeting.ConfirmedInvitationRepository results;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     public void enter(Long viewer, long id) {
         if (viewer == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
@@ -34,6 +35,7 @@ public class InvitationRoomService {
         // 결과가 저장된 초대는 끝난 방이다. Socket이 방을 지운 뒤 다시 시드하면 같은 초대로 재진행된다.
         if (results.existsById(id)) throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 확정된 초대입니다.");
         prepare(invitation);
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.RoomEntered(com.example.timetoeat.domain.notification.event.NotificationEvents.RoomKind.INVITATION, id, viewer)); // F25 약속 조율 진행
     }
 
     void prepare(Invitation invitation) {
