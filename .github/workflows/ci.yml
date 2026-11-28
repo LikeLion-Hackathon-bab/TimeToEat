@@ -6,6 +6,9 @@ on:
     branches:
       - 'dev'
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: "Check Gradle Build"
@@ -14,12 +17,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GIT_TOKEN }}
-          submodules: true
-
-      - name: Update Git submodules
-        run: git submodule update --remote --recursive
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
