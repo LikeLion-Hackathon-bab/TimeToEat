@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
 
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -29,6 +28,7 @@ public class ArticleCreatedListener {
     private final ArticleAiCommandService articleAiCommandService;
     private final Optional<AiRetryProducer> aiRetryProducer;
     private final com.example.timetoeat.infra.ai.AiProperties aiProperties;
+    private final com.example.timetoeat.infra.ai.ArticleImageFetcher imageFetcher;
 
     // 트랜잭션 커밋 이후에만 실행 (DB 락 최소화)
     // AFTER_COMMIT 시점에는 커밋이 끝난 원래 트랜잭션 자원이 아직 스레드에 묶여 있어,
@@ -46,21 +46,12 @@ public class ArticleCreatedListener {
         }
 
         try {
-            // 1) 이미지 경로 결정 (URL이면 임시 파일로 저장)
+            // 1) 사진 내려받기. https·허용 호스트·공인 IP 만, 시간·크기·해상도 제한(ArticleImageFetcher).
+            //    로컬 파일 경로나 file: 주소를 그대로 food-ai 로 넘기던 동작은 없앴다.
             String imageUrl = e.getImageUrl();
             if (imageUrl != null) {
-                try {
-                    URI uri = URI.create(imageUrl);
-                    String scheme = uri.getScheme();
-                    if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
-                        imagePath = downloadToTemp(imageUrl);
-                        tempDownloaded = true;
-                    } else {
-                        imagePath = imageUrl; // 파일 경로/기타 스킴(URL의 맨 앞부분)
-                    }
-                } catch (IllegalArgumentException ex) {
-                    imagePath = imageUrl; // URL 파싱 실패 -> 로컬 경로로 간주
-                }
+                imagePath = imageFetcher.fetch(imageUrl).toString();
+                tempDownloaded = true;
             }
             if (imagePath == null) {
                 log.warn("No image to infer. articleId={}", e.getArticleId());
@@ -89,11 +80,5 @@ public class ArticleCreatedListener {
                 }
             }
         }
-    }
-
-    private String downloadToTemp(String url) throws Exception {
-        // 확장자가 형식과 맞아야 food-ai 가 읽는다(.bin 이면 500). 형식 판별·WebP→JPEG 는 AiImageFiles.
-        // 시간·크기·해상도 제한은 AiImageFiles.fetch 가 건다(사용자가 보낸 주소라서).
-        return com.example.timetoeat.infra.ai.AiImageFiles.fetch(url).toString();
     }
 }
