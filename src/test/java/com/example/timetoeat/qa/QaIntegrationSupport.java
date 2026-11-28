@@ -7,7 +7,6 @@ import com.example.timetoeat.domain.post.adap.out.persistence.PostRepository;
 import com.example.timetoeat.domain.post.application.service.MatchingPostService;
 import com.example.timetoeat.domain.post.domain.Status;
 import com.example.timetoeat.global.auth.model.Role;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,7 +22,7 @@ import java.util.UUID;
  * Socket 서버 호출(MatchingPostService)은 시험 대역으로 바꾼다.
  */
 @SpringBootTest
-@EnabledIfEnvironmentVariable(named = "QA_IT", matches = "1")
+@QaIT // @Inherited: 하위 *IT 에도 적용(직접 쓴 @EnabledIfEnvironmentVariable 은 상속되지 않았다)
 @TestPropertySource(properties = {
         "spring.jpa.hibernate.ddl-auto=create",
         "spring.jpa.show-sql=false",
