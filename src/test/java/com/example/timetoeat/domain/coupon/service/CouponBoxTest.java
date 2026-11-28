@@ -34,7 +34,7 @@ class CouponBoxTest {
     private final MemberCouponRepository repo = mock(MemberCouponRepository.class);
     private final MemberJpaRepository members = mock(MemberJpaRepository.class);
     private final CouponQueryService query = new CouponQueryService(repo);
-    private final CouponCommandService command = new CouponCommandService(repo, members, clock);
+    private final CouponCommandService command = new CouponCommandService(repo, members, clock, e -> {});
 
     private static MemberCoupon coupon(long id, LocalDate expires, boolean used) {
         var c = MemberCoupon.builder().member(MemberEntity.builder().id(7L).build()).title("t" + id).shopName("s")

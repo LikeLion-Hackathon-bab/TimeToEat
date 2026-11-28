@@ -22,6 +22,7 @@ class RoomEntryService {
     private final ParticipationInfoService profiles;
     private final RecentMenuService menus;
     private final MatchingPostService socket;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     public void enter(long id, Long viewer) {
         if (viewer == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
@@ -38,5 +39,6 @@ class RoomEntryService {
         } catch (RuntimeException unavailable) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "대기실 연결을 다시 시도해 주세요", unavailable);
         }
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.RoomEntered(com.example.timetoeat.domain.notification.event.NotificationEvents.RoomKind.ANNOUNCEMENT, id, viewer)); // F25 약속 조율 진행
     }
 }

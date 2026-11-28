@@ -10,7 +10,7 @@ class MeetingServiceTest {
     private final MeetingRepository repository = mock(MeetingRepository.class);
     private final com.example.timetoeat.domain.post.adap.out.persistence.PostRepository posts =
             mock(com.example.timetoeat.domain.post.adap.out.persistence.PostRepository.class);
-    private final MeetingService service = new MeetingService(repository, null, posts, null, null);
+    private final MeetingService service = new MeetingService(repository, null, posts, null, null, e -> {});
 
     @Test void repeatedConfirmationCanOnlyAcknowledgeTheSameRestaurant() {
         var stored = mock(ConfirmedMeeting.class);

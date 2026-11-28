@@ -118,11 +118,12 @@ class NotificationServicesTest {
 
     @Test
     void everyTypeHasTheDocumentedCategory() {
-        var alarms = EnumSet.of(NotificationType.INVITATION_SENT, NotificationType.INVITATION_ACCEPTED,
-                NotificationType.INVITATION_REJECTED, NotificationType.MATCHING_COMPLETED);
+        // §14.3 동네 소식 다섯 분류만 LOCAL_NEWS, 나머지(§14.2 일반 알림 15종)는 ALARM
+        var news = EnumSet.of(NotificationType.SCHOOL_NEWS, NotificationType.AREA_NEWS, NotificationType.COMMERCIAL_NEWS,
+                NotificationType.DISCOUNT_NEWS, NotificationType.MEAL_NEWS);
         for (var t : NotificationType.values())
-            assertEquals(alarms.contains(t) ? NotificationCategory.ALARM : NotificationCategory.LOCAL_NEWS, t.category(), t.name());
-        assertEquals(5, NotificationType.values().length - alarms.size(), "§14.3 동네 소식 다섯 분류");
+            assertEquals(news.contains(t) ? NotificationCategory.LOCAL_NEWS : NotificationCategory.ALARM, t.category(), t.name());
+        assertEquals(15, NotificationType.values().length - news.size(), "§14.2 일반 알림 15종");
     }
 
     @Test

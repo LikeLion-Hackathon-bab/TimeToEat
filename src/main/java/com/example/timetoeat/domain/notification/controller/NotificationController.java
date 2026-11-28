@@ -20,6 +20,7 @@ import java.util.List;
  * GET    /api/v1/notifications?category=ALARM|LOCAL_NEWS&newsType=SCHOOL_NEWS&newsType=...&size=50
  * GET    /api/v1/notifications/unread-count
  * PATCH  /api/v1/notifications/{id}/read
+ * PATCH  /api/v1/notifications/read-all   (내 ALARM 전부, 동네 소식 제외)
  * DELETE /api/v1/notifications/{id}
  */
 @RestController
@@ -44,6 +45,12 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public ApiResponse<UnreadCountResponse> unreadCount(@AuthenticationPrincipal(expression = "memberId") Long meId) {
         return ApiResponse.success(new UnreadCountResponse(queryService.unreadAlarmCount(meId)));
+    }
+
+    @PatchMapping("/read-all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void readAll(@AuthenticationPrincipal(expression = "memberId") Long meId) {
+        commandService.markAllRead(meId);
     }
 
     @PatchMapping("/{id}/read")

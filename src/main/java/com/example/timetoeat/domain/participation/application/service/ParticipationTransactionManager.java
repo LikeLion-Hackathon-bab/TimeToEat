@@ -25,6 +25,7 @@ public class ParticipationTransactionManager {
     private final SaveParticipation saveParticipation;
     private final SavePost savePost;
     private final PublishPostEvent publishPostEvent;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     @Transactional
     public boolean apply(MemberId memberId, PostId postId) {
@@ -48,6 +49,9 @@ public class ParticipationTransactionManager {
 
         Participation newParticipation = participation.add(memberId);
         saveParticipation.save(newParticipation);
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.AnnouncementJoined( // F25: 커밋 뒤 공고 작성자 알림
+                post.getPostId().getId(), post.getMemberId().getId(), memberId.getId(), post.getLocation(),
+                newParticipation.getMemberIds().size(), post.getTargetCount(), post.getExpiredAt()));
 
         if (newParticipation.isFull(post.getTargetCount())) {
             Post closedPost = post.close(com.example.timetoeat.domain.post.domain.CloseReason.FULL);

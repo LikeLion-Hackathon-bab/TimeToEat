@@ -39,7 +39,7 @@ class ReferralCodeFlowTest {
         codes = mock(ReferralCodeRepository.class);
         members = mock(MemberJpaRepository.class);
         coupons = mock(CouponCommandService.class);
-        command = new ReferralCommandService(codes, members, coupons, Clock.fixed(NOW.atZone(KST).toInstant(), KST));
+        command = new ReferralCommandService(codes, members, coupons, e -> {}, Clock.fixed(NOW.atZone(KST).toInstant(), KST));
         ReflectionTestUtils.setField(command, "ttlDays", 7);
         ReflectionTestUtils.setField(command, "configuredBaseUrl", "");
         ReflectionTestUtils.setField(command, "clientBaseUrl", "https://babmuckdang.vercel.app/");

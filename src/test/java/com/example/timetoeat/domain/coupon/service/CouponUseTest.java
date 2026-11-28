@@ -21,7 +21,7 @@ class CouponUseTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 11, 28, 12, 0);
     private final MemberCouponRepository repo = mock(MemberCouponRepository.class);
     private final CouponCommandService command = new CouponCommandService(repo, mock(MemberJpaRepository.class),
-            Clock.fixed(NOW.atZone(KST).toInstant(), KST));
+            Clock.fixed(NOW.atZone(KST).toInstant(), KST), e -> {});
 
     private MemberCoupon coupon(LocalDate expires, LocalDateTime usedAt) {
         return MemberCoupon.builder().member(MemberEntity.builder().id(7L).build()).title("t").shopName("s")

@@ -27,6 +27,7 @@ public class ReferralCommandService {
     private final ReferralCodeRepository referralRepo;
     private final MemberJpaRepository memberRepo;
     private final CouponCommandService couponCommandService;
+    private final org.springframework.context.ApplicationEventPublisher events;
     private final Clock clock;
 
     // 추천 링크 주소. 만료된 babmuckdang.site 기본값을 없앴다(재등록되면 공유 링크가 남의 사이트로 간다).
@@ -121,5 +122,7 @@ public class ReferralCommandService {
             throw new CustomException(ReferralErrorCode.ALREADY_REDEEMED);
         }
         couponCommandService.issueRewardCoupon(me.getId(), "INVITE");
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.ReferralRedeemed( // F25: 커밋 뒤 추천인 알림
+                entity.getId(), entity.getInviter().getId(), me.getId()));
     }
 }

@@ -45,7 +45,7 @@ class SpringServiceDefectReproTest {
         var members = mock(MemberJpaRepository.class);
         var coupons = mock(CouponCommandService.class);
         var now = LocalDateTime.of(2026, 11, 28, 12, 0);
-        var svc = new ReferralCommandService(codes, members, coupons, Clock.fixed(now.atZone(KST).toInstant(), KST));
+        var svc = new ReferralCommandService(codes, members, coupons, e -> {}, Clock.fixed(now.atZone(KST).toInstant(), KST));
         var a = MemberEntity.builder().id(1L).build(); var b = MemberEntity.builder().id(3L).build();
         var me = MemberEntity.builder().id(2L).build();
         var codeA = ReferralCode.builder().inviter(a).code("CODEA00000").expiresAt(now.plusDays(1)).build();
@@ -71,7 +71,7 @@ class SpringServiceDefectReproTest {
         var members = mock(MemberJpaRepository.class);
         var coupons = mock(CouponCommandService.class);
         var now = LocalDateTime.of(2026, 11, 28, 12, 0);
-        var svc = new ReferralCommandService(codes, members, coupons, Clock.fixed(now.atZone(KST).toInstant(), KST));
+        var svc = new ReferralCommandService(codes, members, coupons, e -> {}, Clock.fixed(now.atZone(KST).toInstant(), KST));
         when(members.findById(2L)).thenReturn(Optional.of(MemberEntity.builder().id(2L).build()));
         when(codes.findForUpdateByCode("CODEB00000")).thenReturn(Optional.of(ReferralCode.builder()
                 .inviter(MemberEntity.builder().id(3L).build()).code("CODEB00000").expiresAt(now.plusDays(1)).build()));

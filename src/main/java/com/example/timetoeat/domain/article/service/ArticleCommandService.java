@@ -114,6 +114,8 @@ public class ArticleCommandService {
                         .article(article)
                         .build());
                 article.increaseLike();
+                applicationEventPublisher.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.PostLiked(
+                        articleId, article.getAuthor().getId(), memberId)); // F25: 커밋 뒤 알림
                 return ArticleLikeToggleResponse.of(true, article.getLikeCount());
             } catch (DataIntegrityViolationException dup) {
                 entityManager.refresh(article);
@@ -142,6 +144,10 @@ public class ArticleCommandService {
                 req.toEntity(authorRef, article, parent)
         );
         article.increaseComment();
+        applicationEventPublisher.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.CommentCreated( // F25: 커밋 뒤 알림
+                article.getId(), article.getAuthor().getId(), saved.getId(), memberId,
+                parent == null ? null : parent.getId(), parent == null ? null : parent.getAuthor().getId(),
+                req.getContent()));
         return saved.getId();
     }
 

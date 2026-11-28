@@ -5,9 +5,11 @@ import com.example.timetoeat.domain.notification.entity.NotificationCategory;
 import com.example.timetoeat.domain.notification.entity.NotificationType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -33,4 +35,14 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Optional<Notification> findByIdAndReceiverId(Long id, Long receiverId);
 
     boolean existsByDedupKey(String dedupKey);
+
+    /** 내 일반 알림 전부 읽음(동네 소식 제외). */
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            update Notification n set n.read = true, n.readAt = :now
+            where n.receiverId = :receiverId
+              and n.category = com.example.timetoeat.domain.notification.entity.NotificationCategory.ALARM
+              and n.read = false
+            """)
+    int markAllAlarmsRead(@Param("receiverId") Long receiverId, @Param("now") LocalDateTime now);
 }

@@ -24,6 +24,7 @@ public class CouponCommandService {
     private final MemberCouponRepository coupons;
     private final MemberJpaRepository members;
     private final Clock clock;
+    private final org.springframework.context.ApplicationEventPublisher events;
 
     /** 쿠폰 사용(F76). 로그인 없음 401, 없는(남의) 쿠폰 404, 이미 사용 409, 만료 409(당일까지 사용 가능). */
     public void use(Long memberId, Long couponId) {
@@ -59,6 +60,8 @@ public class CouponCommandService {
                 .expiresAt(LocalDate.now(clock).plusDays(30))
                 // 썸네일 없음(null): 제휴점 공통 보상이라 가게 사진이 없다. 외부 picsum 자리 이미지는 쓰지 않는다.
                 .build());
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.CouponIssued(
+                memberId, saved.getId(), title)); // 커밋 뒤 쿠폰 알림(#133)
         return CouponQueryService.toResponse(saved);
     }
 }

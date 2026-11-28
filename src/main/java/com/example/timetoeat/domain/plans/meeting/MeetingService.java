@@ -19,6 +19,7 @@ class MeetingService {
     private final com.example.timetoeat.domain.post.adap.out.persistence.PostRepository posts;
     private final com.example.timetoeat.domain.invitation.adap.out.persistence.InvitationRepository invitations;
     private final ConfirmedInvitationRepository invitationResults;
+    private final org.springframework.context.ApplicationEventPublisher events;
     record Room(long id, String location) {}
     @Transactional(readOnly=true)
     public List<Room> rooms(Long viewer) {
@@ -55,6 +56,7 @@ class MeetingService {
         var stored = meetings.findById(id).orElseThrow().getRestaurant();
         if (!stored.equals(restaurant))
             throw new AlreadyConfirmed("이미 다른 식당으로 확정된 공고입니다.", new StoredRestaurant(stored));
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.MeetingConfirmed(com.example.timetoeat.domain.notification.event.NotificationEvents.RoomKind.ANNOUNCEMENT, id)); // F25: 커밋 뒤 확정 알림
     }
     /** 개별 초대 결과 저장. 같은 값 재전송은 성공, 다른 값은 409, 수락 안 된 초대는 409, 없는 초대는 404. */
     @Transactional
@@ -71,6 +73,7 @@ class MeetingService {
                 || !stored.getRestaurant().equals(restaurant))
             throw new AlreadyConfirmed("이미 다른 결과로 확정된 초대입니다.", new StoredInvitationResult(
                     stored.getMeetingAt().atZone(SEOUL).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX")), stored.getLocation(), stored.getRestaurant()));
+        events.publishEvent(new com.example.timetoeat.domain.notification.event.NotificationEvents.MeetingConfirmed(com.example.timetoeat.domain.notification.event.NotificationEvents.RoomKind.INVITATION, id)); // F25: 커밋 뒤 확정 알림
     }
 
     /** 내 밥약 목록: 공고 밥약 + 초대 밥약, 만남 시각 내림차순. */
