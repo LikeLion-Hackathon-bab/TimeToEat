@@ -5,8 +5,8 @@ import com.example.timetoeat.domain.meal.entity.MemberMealStatus;
 import com.example.timetoeat.domain.meal.repository.MemberMealStatusRepository;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,15 +16,29 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class FriendMealQueryService {
 
-    @Qualifier("kstClock")
     private final Clock clock;
 
     private final MemberJpaRepository memberRepo;
     private final MemberMealStatusRepository mealRepo;
+
+    /**
+     * 30명이 안 될 때 가짜 시연 친구(음수 id)로 채울지. 기본 꺼짐.
+     * 가짜 항목은 실제 회원이 아니라 태그·초대에 쓰면 400이다. 시연은 실제 시연 회원(시연 로그인)으로 한다.
+     */
+    private final boolean demoFriendsEnabled;
+
+    public FriendMealQueryService(@Qualifier("kstClock") Clock clock,
+                                  MemberJpaRepository memberRepo,
+                                  MemberMealStatusRepository mealRepo,
+                                  @Value("${demo-friends.enabled:false}") boolean demoFriendsEnabled) {
+        this.clock = clock;
+        this.memberRepo = memberRepo;
+        this.mealRepo = mealRepo;
+        this.demoFriendsEnabled = demoFriendsEnabled;
+    }
 
     // 공개 API: 기존 컨트롤러가 호출
     public List<FriendMealItemResponse> getDemoList(Long meId, String filter) {
@@ -42,9 +56,9 @@ public class FriendMealQueryService {
             items.add(toItem(m, statusMap.get(m.getId())));
         }
 
-        // 4) 30명 미만이면 데모로 채우기. 시연 항목 id는 음수로 둬 실제 회원 id(양수)와 절대 겹치지 않게 한다.
-        //    (이전에는 1000+n 이라 회원 id가 1000을 넘으면 시연 카드로 보낸 초대가 다른 실제 회원에게 저장됐다)
-        if (items.size() < 30) {
+        // 4) DEMO_FRIENDS_ENABLED=true 이고 30명 미만이면 데모로 채우기. 시연 항목 id는 음수로 둬 실제 회원 id(양수)와
+        //    절대 겹치지 않게 한다. (이전에는 1000+n 이라 회원 id가 1000을 넘으면 시연 카드로 보낸 초대가 다른 실제 회원에게 저장됐다)
+        if (demoFriendsEnabled && items.size() < 30) {
             items.addAll(fakeItems(30 - items.size()));
         }
 
