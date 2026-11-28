@@ -2,6 +2,8 @@ package com.example.timetoeat.domain.challenge.service;
 
 import com.example.timetoeat.domain.article.repository.ArticleRepository;
 import com.example.timetoeat.domain.challenge.dto.response.ChallengeStatusResponse;
+import com.example.timetoeat.domain.challenge.entity.ChallengeRewardHistory.RewardType;
+import com.example.timetoeat.domain.challenge.repository.ChallengeRewardHistoryRepository;
 import org.junit.jupiter.api.Test;
 
 import java.time.*;
@@ -19,6 +21,10 @@ class ChallengeStatusTest {
 
     /** postedDays 날짜에 게시글이 있다고 답하는 저장소 대역으로 서비스를 만든다. 질의 구간도 함께 검사한다. */
     private static ChallengeQueryService service(LocalDate today, Set<LocalDate> postedDays) {
+        return service(today, postedDays, mock(ChallengeRewardHistoryRepository.class));
+    }
+
+    private static ChallengeQueryService service(LocalDate today, Set<LocalDate> postedDays, ChallengeRewardHistoryRepository rewards) {
         var repo = mock(ArticleRepository.class);
         when(repo.countByAuthor_IdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(eq(1L), any(), any())).thenAnswer(inv -> {
             LocalDateTime start = inv.getArgument(1), end = inv.getArgument(2);
@@ -27,7 +33,7 @@ class ChallengeStatusTest {
             return postedDays.contains(start.toLocalDate()) ? 1L : 0L;
         });
         Clock clock = Clock.fixed(today.atTime(9, 0).atZone(KST).toInstant(), KST);
-        return new ChallengeQueryService(clock, repo);
+        return new ChallengeQueryService(clock, repo, rewards);
     }
 
     private static Set<LocalDate> streak(LocalDate last, int days) {
@@ -107,9 +113,45 @@ class ChallengeStatusTest {
         var repo = mock(ArticleRepository.class);
         when(repo.countByAuthor_IdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(anyLong(), any(), any())).thenReturn(1L);
         Clock clock = Clock.fixed(Instant.parse("2026-11-28T00:00:00Z"), KST);
-        ChallengeStatusResponse r = new ChallengeQueryService(clock, repo).getMyStatus(1L);
+        var rewards = mock(ChallengeRewardHistoryRepository.class);
+        ChallengeStatusResponse r = new ChallengeQueryService(clock, repo, rewards).getMyStatus(1L);
         assertTrue(r.isWeekRewardAvailable());
         // 7(주) + 28(월) + 401(연속, 안전장치) 회. 성능 참고용 상한.
         verify(repo, times(7 + 28 + 401)).countByAuthor_IdAndCreatedAtGreaterThanEqualAndCreatedAtLessThan(anyLong(), any(), any());
+        verify(rewards, times(1)).existsByMember_IdAndTypeAndAchievedAtBetween(anyLong(), any(), any(), any());
+        verifyNoMoreInteractions(rewards);
+    }
+
+    /** T3 와 같은 창: 오늘 포함 최근 7일 안에 WEEK 를 받았으면 7일 연속이어도 버튼을 띄우지 않는다. 이력 조회 1회. */
+    @Test
+    void weekRewardHiddenWhenClaimedWithinLastSevenDays() {
+        LocalDate today = LocalDate.of(2026, 11, 28);
+        var rewards = mock(ChallengeRewardHistoryRepository.class);
+        when(rewards.existsByMember_IdAndTypeAndAchievedAtBetween(1L, RewardType.WEEK, today.minusDays(6), today)).thenReturn(true);
+        assertFalse(service(today, streak(today, 10), rewards).getMyStatus(1L).isWeekRewardAvailable());
+        verify(rewards, times(1)).existsByMember_IdAndTypeAndAchievedAtBetween(1L, RewardType.WEEK, today.minusDays(6), today);
+        verifyNoMoreInteractions(rewards);
+    }
+
+    @Test
+    void weekRewardShownAgainOnceTheWindowHasPassed() {
+        LocalDate today = LocalDate.of(2026, 11, 28);
+        var history = Set.of(today.minusDays(7)); // 14일 연속의 7일째에 받음 → 오늘(14일째) 다시 가능
+        var rewards = mock(ChallengeRewardHistoryRepository.class);
+        when(rewards.existsByMember_IdAndTypeAndAchievedAtBetween(anyLong(), eq(RewardType.WEEK), any(), any())).thenAnswer(i -> {
+            LocalDate from = i.getArgument(2), to = i.getArgument(3);
+            return history.stream().anyMatch(d -> !d.isBefore(from) && !d.isAfter(to));
+        });
+        assertTrue(service(today, streak(today, 14), rewards).getMyStatus(1L).isWeekRewardAvailable());
+        assertFalse(service(today.minusDays(1), streak(today.minusDays(1), 13), rewards).getMyStatus(1L).isWeekRewardAvailable(),
+                "13일째는 아직 창 안");
+    }
+
+    @Test
+    void noHistoryQueryWhenStreakIsShort() {
+        LocalDate today = LocalDate.of(2026, 11, 28);
+        var rewards = mock(ChallengeRewardHistoryRepository.class);
+        assertFalse(service(today, streak(today, 6), rewards).getMyStatus(1L).isWeekRewardAvailable());
+        verifyNoInteractions(rewards);
     }
 }

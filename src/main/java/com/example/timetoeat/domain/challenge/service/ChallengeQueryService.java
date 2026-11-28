@@ -2,6 +2,8 @@ package com.example.timetoeat.domain.challenge.service;
 
 import com.example.timetoeat.domain.article.repository.ArticleRepository;
 import com.example.timetoeat.domain.challenge.dto.response.ChallengeStatusResponse;
+import com.example.timetoeat.domain.challenge.entity.ChallengeRewardHistory.RewardType;
+import com.example.timetoeat.domain.challenge.repository.ChallengeRewardHistoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,19 @@ public class ChallengeQueryService {
     @Qualifier("kstClock")
     private final Clock clock;
     private final ArticleRepository articleRepository;
+    private final ChallengeRewardHistoryRepository rewardRepo;
+
+    /** 주간 보상은 연속 7일 한 주기에 1회: 오늘 포함 최근 7일 안에 WEEK 를 받았으면 다시 받을 수 없다. 상태 조회와 수령이 같은 창을 쓴다. */
+    static final int WEEK_CLAIM_WINDOW_DAYS = 7;
+
+    static LocalDate weekClaimWindowStart(LocalDate achievedAt) {
+        return achievedAt.minusDays(WEEK_CLAIM_WINDOW_DAYS - 1L);
+    }
+
+    /** 최근 7일(오늘 포함) 안에 주간 보상을 받았는지. 이력 조회 1회. */
+    boolean weekRewardClaimedRecently(Long memberId, LocalDate today) {
+        return rewardRepo.existsByMember_IdAndTypeAndAchievedAtBetween(memberId, RewardType.WEEK, weekClaimWindowStart(today), today);
+    }
 
     // 오늘 포함 ‘해당 날짜’에 게시글 1개 이상 올렸는지
     private boolean postedOn(Long memberId, LocalDate date) {
@@ -66,7 +81,9 @@ public class ChallengeQueryService {
 
         // 3) 보상 플래그
         int streak = currentStreak(memberId);
-        boolean weekReward  = streak >= 7;
+        // 7일 연속이어도 이번 주기 보상을 이미 받았으면 false(수령 API가 409로 거절할 버튼을 띄우지 않게).
+        // 이력 조회는 연속 7일 이상일 때만, 1회.
+        boolean weekReward  = streak >= 7 && !weekRewardClaimedRecently(memberId, today);
 
         // 해당 달을 하루도 빠지지 않고 채우면 보상(말일에만 true)
         boolean monthReward = (today.getDayOfMonth() == daysInMonth) && monthPerfectSoFar;

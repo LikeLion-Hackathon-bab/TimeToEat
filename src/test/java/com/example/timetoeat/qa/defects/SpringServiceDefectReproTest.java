@@ -90,8 +90,12 @@ class SpringServiceDefectReproTest {
     private final CouponCommandService rewardCoupons = mock(CouponCommandService.class);
 
     private ChallengeRewardCommandService rewardServiceOn(LocalDate day) {
+        return rewardServiceOn(day, true);
+    }
+
+    private ChallengeRewardCommandService rewardServiceOn(LocalDate day, boolean weekAvailable) {
         var status = mock(ChallengeQueryService.class);
-        when(status.getMyStatus(1L)).thenReturn(ChallengeStatusResponse.of(Collections.nCopies(7, true), 7, 8, 30, true, false));
+        when(status.getMyStatus(1L)).thenReturn(ChallengeStatusResponse.of(Collections.nCopies(7, true), 7, 8, 30, weekAvailable, false));
         var repo = mock(ChallengeRewardHistoryRepository.class);
         when(repo.existsByMember_IdAndTypeAndAchievedAt(anyLong(), any(), any())).thenAnswer(i -> history.stream()
                 .anyMatch(h -> h.getType() == i.getArgument(1) && h.getAchievedAt().equals(i.getArgument(2))));
@@ -125,6 +129,17 @@ class SpringServiceDefectReproTest {
         }
         assertEquals(2, claimed, "7일째·14일째만");
         assertEquals(List.of(day7, day7.plusDays(7)), history.stream().map(ChallengeRewardHistory::getAchievedAt).toList());
+    }
+
+    /** 상태 조회가 이미 받은 주기에 weekRewardAvailable=false 를 줄 때도 수령 재요청은 400(불가)이 아니라 409(이미 받음). */
+    @Test
+    void claimAfterStatusHidesButtonIsStillConflict() {
+        LocalDate day8 = LocalDate.of(2026, 11, 8);
+        history.add(ChallengeRewardHistory.builder().type(RewardType.WEEK).achievedAt(day8.minusDays(1)).build());
+        var svc = rewardServiceOn(day8, false);
+        var e = assertThrows(CustomException.class, () -> svc.claim(1L, RewardType.WEEK));
+        assertEquals(ChallengeErrorCode.ALREADY_CLAIMED, e.getBaseError());
+        verifyNoInteractions(rewardCoupons);
     }
 
     @Test
