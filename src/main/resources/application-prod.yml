@@ -38,9 +38,6 @@ spring:
             scope: ${KAKAO_SCOPE:profile_nickname,profile_image}
             provider: kakao
 
-springdoc:
-  server-url: https://babmuckdang.site
-
 app:
   ai:
     food-base-url: ${FOOD_AI_BASE_URL:http://food-ai:8000}
