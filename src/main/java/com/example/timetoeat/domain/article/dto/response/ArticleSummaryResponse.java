@@ -23,6 +23,9 @@ public class ArticleSummaryResponse {
 
     private String restaurantName;
 
+    // 피드 식당 카드(시안 card_restaurant_pic)에 주소·분류·좌표가 필요하다. restaurantName 은 하위 호환으로 남긴다.
+    private ArticleDetailResponse.RestaurantInfo restaurant;
+
     private int likeCount;
     private int commentCount;
 
@@ -36,6 +39,7 @@ public class ArticleSummaryResponse {
     @Builder
     private ArticleSummaryResponse(Long articleId, Long authorId, String authorUsername, String imageUrl,
                                    LocalDate mealDate, LocalTime mealTime, String restaurantName,
+                                   ArticleDetailResponse.RestaurantInfo restaurant,
                                    int likeCount, int commentCount, boolean likedByMe,
                                    LocalDateTime createdAt, LocalDateTime expiresAt,
                                    List<Long> taggedMemberIds) {
@@ -47,6 +51,7 @@ public class ArticleSummaryResponse {
         this.mealDate = mealDate;
         this.mealTime = mealTime;
         this.restaurantName = restaurantName;
+        this.restaurant = restaurant;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
         this.likedByMe = likedByMe;
@@ -65,6 +70,7 @@ public class ArticleSummaryResponse {
                 .mealDate(article.getMealDate())
                 .mealTime(article.getMealTime())
                 .restaurantName(article.getRestaurant() != null ? article.getRestaurant().getPlaceName() : null)
+                .restaurant(ArticleDetailResponse.RestaurantInfo.from(article.getRestaurant()))
                 .likeCount(article.getLikeCount())
                 .commentCount(article.getCommentCount())
                 .likedByMe(likedByMe)
