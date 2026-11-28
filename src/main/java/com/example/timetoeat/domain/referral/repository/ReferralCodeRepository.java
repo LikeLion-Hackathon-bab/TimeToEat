@@ -16,6 +16,9 @@ public interface ReferralCodeRepository extends JpaRepository<ReferralCode, Long
 
     Optional<ReferralCode> findByCode(String code);
 
+    /** 이 회원이 이미 추천 코드를 등록했는지(회원당 1회) */
+    boolean existsByUsedBy_Id(Long memberId);
+
     List<ReferralCode> findAllByInviter_IdOrderByCreatedAtDesc(Long inviterId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

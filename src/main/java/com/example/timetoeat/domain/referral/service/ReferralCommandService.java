@@ -108,7 +108,18 @@ public class ReferralCommandService {
         if (entity.getInviter().getId().equals(me.getId()))
             throw new CustomException(ReferralErrorCode.SELF_REFERRAL_NOT_ALLOWED);
 
+        // 회원당 1회: 다른 추천인의 코드를 또 등록해 INVITE 쿠폰을 반복 수령하지 못하게
+        if (referralRepo.existsByUsedBy_Id(me.getId()))
+            throw new CustomException(ReferralErrorCode.ALREADY_REDEEMED);
+
         entity.markUsed(me, now);
+        try {
+            // 서로 다른 코드로 동시에 들어온 두 요청은 위 검사를 함께 통과할 수 있다 → uk_referral_code_used_by 가 막는다.
+            // 쿠폰 발급 전에 flush 해 충돌을 여기서 받는다.
+            referralRepo.saveAndFlush(entity);
+        } catch (DataIntegrityViolationException dup) {
+            throw new CustomException(ReferralErrorCode.ALREADY_REDEEMED);
+        }
         couponCommandService.issueRewardCoupon(me.getId(), "INVITE");
     }
 }
