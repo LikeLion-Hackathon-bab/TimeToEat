@@ -10,7 +10,7 @@ public interface MemberJpaRepository extends JpaRepository<MemberEntity, Long> {
 
     Optional<MemberEntity> findByEmail(String email);
 
-    List<MemberEntity> findTop30ByIdNotOrderByCreatedAtDesc(Long id);
+    List<MemberEntity> findByEmailIn(java.util.Collection<String> emails);
 
     long countByIdIn(java.util.Collection<Long> ids);
 }

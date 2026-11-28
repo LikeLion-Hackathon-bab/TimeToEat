@@ -21,14 +21,14 @@ import static org.mockito.Mockito.*;
 class FriendMealQueryServiceTest {
     @Test
     void demoEntriesNeverReuseARealMemberId() {
-        var repo = mock(MemberJpaRepository.class);
+        var friendDir = mock(FriendDirectory.class);
         var meals = mock(MemberMealStatusRepository.class);
         // 실제 회원 2명이 id 1002, 1003 (AUTO_INCREMENT가 1000을 넘은 DB)
-        when(repo.findTop30ByIdNotOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(
+        when(friendDir.friendsOf(anyLong())).thenReturn(List.of(
                 MemberEntity.builder().id(1002L).username("실제A").build(),
                 MemberEntity.builder().id(1003L).username("실제B").build()));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
-        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), new FriendDirectory(repo, mock(ReferralCodeRepository.class)), meals, true);
+        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), friendDir, meals, true);
 
         List<FriendMealItemResponse> list = service.getDemoList(1L, "ALL");
 
@@ -42,12 +42,12 @@ class FriendMealQueryServiceTest {
 
     @Test
     void byDefaultTheListHasOnlyRealMembers() {
-        var repo = mock(MemberJpaRepository.class);
+        var friendDir = mock(FriendDirectory.class);
         var meals = mock(MemberMealStatusRepository.class);
-        when(repo.findTop30ByIdNotOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(
+        when(friendDir.friendsOf(anyLong())).thenReturn(List.of(
                 MemberEntity.builder().id(7L).username("실제A").build()));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
-        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), new FriendDirectory(repo, mock(ReferralCodeRepository.class)), meals, false);
+        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), friendDir, meals, false);
 
         List<FriendMealItemResponse> list = service.getDemoList(1L, "ALL");
 

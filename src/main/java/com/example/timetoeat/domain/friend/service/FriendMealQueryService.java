@@ -41,7 +41,7 @@ public class FriendMealQueryService {
 
     // 공개 API: 기존 컨트롤러가 호출
     public List<FriendMealItemResponse> getDemoList(Long meId, String filter) {
-        // 1) 친구 최대 30명(추천 관계 우선 + 최근 가입자, me 제외). 홈 피드와 같은 출처.
+        // 1) 친구 최대 30명(추천 관계 + 시연 회원끼리, me 제외). 홈 피드와 같은 출처.
         List<MemberEntity> members = friendDirectory.friendsOf(meId);
 
         // 2) 벌크로 식사상태 조회
