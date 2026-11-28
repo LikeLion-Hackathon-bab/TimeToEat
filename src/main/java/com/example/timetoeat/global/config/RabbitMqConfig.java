@@ -37,6 +37,11 @@ public class RabbitMqConfig {
     private String username;
     @Value("${spring.rabbitmq.password}")
     private String password;
+    // R18-1: 기본값(amqp-client 60초·핸드셰이크 10초)이면 브로커가 사라졌을 때 발행 스레드가 오래 묶인다
+    @Value("${app.rabbitmq.connection-timeout-ms:2000}")
+    private int connectionTimeoutMs;
+    @Value("${app.rabbitmq.handshake-timeout-ms:3000}")
+    private int handshakeTimeoutMs;
 
     public static final String DOMAIN_EVENTS_EXCHANGE = "domain-events-exchange";
     private static final String NOTIFICATION_QUEUE = "notification-queue";
@@ -88,6 +93,8 @@ public class RabbitMqConfig {
         connectionFactory.setPort(port);
         connectionFactory.setUsername(username);
         connectionFactory.setPassword(password);
+        connectionFactory.setConnectionTimeout(connectionTimeoutMs);
+        connectionFactory.getRabbitConnectionFactory().setHandshakeTimeout(handshakeTimeoutMs);
         return connectionFactory;
     }
 
@@ -114,6 +121,7 @@ public class RabbitMqConfig {
 
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter messageConverter) {
+        // 재시도 템플릿은 두지 않는다: 발행 실패는 AfterCommitPublisher가 로그로 남기고 입장 API가 복구한다
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(messageConverter);
         return rabbitTemplate;
