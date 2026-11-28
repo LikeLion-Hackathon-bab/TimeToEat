@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** 쿠폰함 DB 저장(F75·F76, T1): 고유 id, 사용 1회, 재시작(새 컨텍스트, ddl-auto=validate + db/member_coupon.sql) 뒤 유지. */
+/** 쿠폰함 DB 저장(F75·F76, T1): 빈 쿠폰함(D07), 고유 id, 사용 1회, 재시작(새 컨텍스트, ddl-auto=validate + db/member_coupon.sql) 뒤 유지. */
 class CouponPersistenceIT extends QaIntegrationSupport {
     @Autowired CouponQueryService query;
     @Autowired CouponCommandService command;
@@ -51,25 +51,25 @@ class CouponPersistenceIT extends QaIntegrationSupport {
         assertEquals(r.get(0).getCouponId(), rewards(me, CouponStatus.USED).get(0).getCouponId());
     }
 
+    /** F76/D07: 새 계정의 쿠폰함은 빈 배열(가짜 쿠폰 없음), 조회해도 행이 생기지 않는다. 발급된 쿠폰만 보이고 남의 쿠폰은 404. */
     @Test
-    void seedCouponsAreCreatedOncePerMemberAndOthersAreUnaffected() throws Exception {
+    void newMemberHasEmptyBoxAndOnlyIssuedCouponsAppear() {
         long me = member("쿠폰3").getId(), other = member("쿠폰4").getId();
-        // 첫 조회가 겹쳐도 시연 쿠폰은 3장
-        var pool = Executors.newFixedThreadPool(8);
-        var start = new CountDownLatch(1);
-        var futures = new java.util.ArrayList<Future<?>>();
-        for (int i = 0; i < 8; i++) futures.add(pool.submit(() -> { start.await(); return query.getMyCoupons(me, null); }));
-        start.countDown();
-        for (var f : futures) f.get(30, TimeUnit.SECONDS);
-        pool.shutdown();
+        assertEquals(List.of(), query.getMyCoupons(me, null));
+        assertEquals(List.of(), query.getMyCoupons(me, CouponStatus.UNUSED));
+        assertEquals(List.of(), query.getMyCoupons(me, CouponStatus.USED));
+        assertEquals(0, jdbc.queryForObject("select count(*) from member_coupon where member_id=?", Integer.class, me));
+
+        long id = command.issueRewardCoupon(me, "WEEK").getCouponId();
         var mine = query.getMyCoupons(me, null);
-        assertEquals(3, mine.size());
-        long seed1 = mine.stream().filter(c -> c.getTitle().equals("세겹 먹는 날")).findFirst().orElseThrow().getCouponId();
-        command.use(me, seed1);
-        assertTrue(query.getMyCoupons(me, CouponStatus.USED).stream().anyMatch(c -> c.getCouponId() == seed1));
-        assertEquals(409, code(() -> command.use(me, seed1)));
-        assertEquals(404, code(() -> command.use(other, seed1)), "남의 쿠폰");
-        assertTrue(query.getMyCoupons(other, CouponStatus.UNUSED).stream().anyMatch(c -> c.getTitle().equals("세겹 먹는 날")));
+        assertEquals(1, mine.size());
+        assertEquals("주간 챌린지 리워드", mine.get(0).getTitle());
+        assertNull(mine.get(0).getThumbnailUrl(), "외부 picsum 자리 이미지 없음");
+        command.use(me, id);
+        assertTrue(query.getMyCoupons(me, CouponStatus.USED).stream().anyMatch(c -> c.getCouponId() == id));
+        assertEquals(409, code(() -> command.use(me, id)));
+        assertEquals(404, code(() -> command.use(other, id)), "남의 쿠폰");
+        assertEquals(List.of(), query.getMyCoupons(other, null));
     }
 
     @Test
@@ -99,9 +99,8 @@ class CouponPersistenceIT extends QaIntegrationSupport {
 
         long me = member("쿠폰6").getId();
         long reward = command.issueRewardCoupon(me, "INVITE").getCouponId();
-        long seed1 = query.getMyCoupons(me, null).stream().filter(c -> c.getTitle().equals("세겹 먹는 날"))
-                .findFirst().orElseThrow().getCouponId();
-        command.use(me, seed1);
+        long used = command.issueRewardCoupon(me, "WEEK").getCouponId();
+        command.use(me, used);
 
         try (var restarted = new SpringApplicationBuilder(TimeToEatApplication.class).properties(
                 "spring.jpa.hibernate.ddl-auto=validate",
@@ -111,9 +110,9 @@ class CouponPersistenceIT extends QaIntegrationSupport {
                 "logging.level.org.hibernate.SQL=warn").run()) {
             var q2 = restarted.getBean(CouponQueryService.class);
             var all = q2.getMyCoupons(me, null);
-            assertEquals(4, all.size(), "시연 3 + 보상 1, 재시작 뒤 시연 쿠폰이 다시 생기지 않음");
+            assertEquals(2, all.size(), "발급한 2장만");
             assertTrue(all.stream().anyMatch(c -> c.getCouponId() == reward && !c.isUsed() && c.getTitle().equals("친구 초대 리워드")));
-            assertTrue(all.stream().anyMatch(c -> c.getCouponId() == seed1 && c.isUsed()), "사용 처리도 유지");
+            assertTrue(all.stream().anyMatch(c -> c.getCouponId() == used && c.isUsed()), "사용 처리도 유지");
         }
     }
 

@@ -19,7 +19,6 @@ import static jakarta.persistence.FetchType.LAZY;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "member_coupon",
-        uniqueConstraints = @UniqueConstraint(name = "uk_member_coupon_seed", columnNames = {"member_id", "seed_key"}),
         indexes = @Index(name = "idx_member_coupon_member", columnList = "member_id"))
 @Entity
 public class MemberCoupon extends BaseTimeEntity {
@@ -30,10 +29,6 @@ public class MemberCoupon extends BaseTimeEntity {
     @ManyToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)
     private MemberEntity member;
-
-    /** 시연 쿠폰이면 그 키(회원당 1장씩만 만들어지게 유니크), 보상 쿠폰은 NULL */
-    @Column(name = "seed_key", length = 32)
-    private String seedKey;
 
     @Column(name = "title", nullable = false, length = 100)
     private String title;
@@ -59,10 +54,9 @@ public class MemberCoupon extends BaseTimeEntity {
     private String thumbnailUrl;
 
     @Builder
-    private MemberCoupon(MemberEntity member, String seedKey, String title, String shopName, CouponType type,
+    private MemberCoupon(MemberEntity member, String title, String shopName, CouponType type,
                          String conditionText, LocalDate expiresAt, LocalDateTime usedAt, String thumbnailUrl) {
         this.member = member;
-        this.seedKey = seedKey;
         this.title = title;
         this.shopName = shopName;
         this.type = type;

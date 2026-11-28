@@ -16,8 +16,6 @@ public interface MemberCouponRepository extends JpaRepository<MemberCoupon, Long
 
     Optional<MemberCoupon> findByIdAndMember_Id(Long id, Long memberId);
 
-    boolean existsByMember_IdAndSeedKeyIsNotNull(Long memberId);
-
     /** 아직 안 쓴 쿠폰만 사용 처리(조건부 UPDATE). 동시 요청 중 정확히 하나만 1을 받는다. */
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("update MemberCoupon c set c.usedAt = :now where c.id = :id and c.member.id = :memberId and c.usedAt is null")

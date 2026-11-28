@@ -57,7 +57,7 @@ public class CouponCommandService {
                 .type(CouponResponse.CouponType.SERVICE)
                 .conditionText("매장 방문 시 2,000원 할인 쿠폰 사용 가능")
                 .expiresAt(LocalDate.now(clock).plusDays(30))
-                .thumbnailUrl("https://picsum.photos/seed/reward-" + (key.isEmpty() ? "COUPON" : key) + "/200/120")
+                // 썸네일 없음(null): 제휴점 공통 보상이라 가게 사진이 없다. 외부 picsum 자리 이미지는 쓰지 않는다.
                 .build());
         return CouponQueryService.toResponse(saved);
     }
