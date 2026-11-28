@@ -27,6 +27,9 @@ public class JwtService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final MemberService memberService;
     private final RefreshRotationGrace rotationGrace;
+    /** 시연 기간. 시연 회원의 refresh 는 시연이 닫히면 거절한다(리뷰 D1). 없으면 닫힘으로 본다. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private com.example.timetoeat.global.auth.demo.DemoLoginWindow demoWindow;
 
     @Transactional
     public TokenDto doTokenGenerationProcess(CustomOauth2User principal) {
@@ -72,6 +75,11 @@ public class JwtService {
         }
 
         MemberEntity member = memberService.getById(memberId);
+        if (com.example.timetoeat.global.auth.demo.DemoAccounts.isDemoEmail(member.getEmail())
+                && (demoWindow == null || !demoWindow.isOpen())) {
+            refreshTokenRepository.deleteAllByMemberId(memberId);
+            throw new CustomException(GlobalErrorCode.INVALID_REFRESH_TOKEN);
+        }
         TokenDto tokenDto = jwtProvider.issueToken(member, now);
         Date refreshExp = jwtProvider.getRefreshTokenExpiration(now);
 
