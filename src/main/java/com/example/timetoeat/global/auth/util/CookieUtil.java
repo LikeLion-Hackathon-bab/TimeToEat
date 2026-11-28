@@ -5,12 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.util.SerializationUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.Base64;
 import java.util.Optional;
 
 public class CookieUtil {
@@ -56,20 +51,6 @@ public class CookieUtil {
         ResponseCookie c2 = ResponseCookie.from(name, "")
                 .httpOnly(true).secure(true).path("/").maxAge(0).sameSite(SAME_SITE_DEFAULT).build();
         response.addHeader(HttpHeaders.SET_COOKIE, c2.toString());
-    }
-
-    public static String serialize(Object object) {
-        return Base64.getUrlEncoder().encodeToString(SerializationUtils.serialize(object));
-    }
-
-    public static <T> T deserialize(Cookie cookie, Class<T> cls) {
-        byte[] decodedBytes = Base64.getUrlDecoder().decode(cookie.getValue());
-        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(decodedBytes))) {
-            Object object = ois.readObject();
-            return cls.cast(object);
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Cookie deserialization failed", e);
-        }
     }
 
     public static String extractFromCookieHeader(String cookieHeader, String name) {
