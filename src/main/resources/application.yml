@@ -55,3 +55,10 @@ springdoc:
     enabled: ${SWAGGER_ENABLED:false}
   swagger-ui:
     enabled: ${SWAGGER_ENABLED:false}
+
+# 시연 로그인(카카오 계정 없이 시연 회원 5명). 기본 꺼짐 → /api/v1/auth/demo-login 404.
+# 켤 때: DEMO_LOGIN_ENABLED=true, DEMO_LOGIN_SECRET(32자 이상), 선택 DEMO_LOGIN_UNTIL(ISO 시각, 지나면 자동 꺼짐).
+demo-login:
+  enabled: ${DEMO_LOGIN_ENABLED:false}
+  secret: ${DEMO_LOGIN_SECRET:}
+  until: ${DEMO_LOGIN_UNTIL:}

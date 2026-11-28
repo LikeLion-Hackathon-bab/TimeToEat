@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
  * 소셜 로그인 실패(사용자가 카카오 동의 취소, state 불일치, 공급자 오류 등) 시 Client 로그인 화면으로 돌려보낸다.
  * 이전에는 콜백 주소(브라우저 최상위 이동)에 JSON 401을 써서 사용자가 빈 JSON 화면에 갇혔다(N4).
  * 이동 주소는 성공 처리와 같은 CLIENT_LOGIN_REDIRECT 기준의 /login 으로 고정해 열린 리다이렉트가 없게 한다.
+ * 값이 비었거나 상대 경로면 같은 사이트의 /login(상대 경로)로 보낸다(Vercel 프록시 구성, 리뷰 D4).
  */
 @Slf4j
 @Component
@@ -32,7 +33,7 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
     private final String loginRedirect;
 
     public OAuth2LoginFailureHandler(
-            @Value("${CLIENT_LOGIN_REDIRECT:https://bab-muk-dang-client.vercel.app/}") String loginRedirect) {
+            @Value("${CLIENT_LOGIN_REDIRECT:}") String loginRedirect) {
         this.loginRedirect = loginRedirect;
     }
 
@@ -52,7 +53,9 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
     }
 
     String failureUrl(String reason) {
-        UriComponentsBuilder b = UriComponentsBuilder.fromUri(URI.create(loginRedirect).resolve("/login"))
+        URI base = loginRedirect == null || loginRedirect.isBlank() ? null : URI.create(loginRedirect.trim());
+        URI login = base == null || !base.isAbsolute() ? URI.create("/login") : base.resolve("/login");
+        UriComponentsBuilder b = UriComponentsBuilder.fromUri(login)
                 .replaceQuery(null)
                 .fragment(null)
                 .queryParam(ERROR_PARAM, ERROR_VALUE);

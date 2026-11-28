@@ -43,6 +43,13 @@ class OAuth2LoginFailureHandlerTest {
                 fail(new BadCredentialsException("boom")).getRedirectedUrl());
     }
 
+    @Test void unsetOrRelativeBaseUsesSameSiteRelativeLogin() {
+        assertEquals("/login?error=social_login_failed&reason=access_denied",
+                new OAuth2LoginFailureHandler("").failureUrl("access_denied"));
+        assertEquals("/login?error=social_login_failed", new OAuth2LoginFailureHandler(null).failureUrl(null));
+        assertEquals("/login?error=social_login_failed", new OAuth2LoginFailureHandler("/").failureUrl(null));
+    }
+
     @Test void baseWithPathOrQueryStillGoesToLogin() {
         var h = new OAuth2LoginFailureHandler("https://example.com/app/?from=x#top");
         assertEquals("https://example.com/login?error=social_login_failed", h.failureUrl(null));

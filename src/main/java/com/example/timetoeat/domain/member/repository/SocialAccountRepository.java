@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface SocialAccountRepository extends JpaRepository<SocialAccount, Long> {
     Optional<SocialAccount> findByProviderId(String providerId);
+
+    boolean existsByMemberEntity_Id(Long memberId);
 }
