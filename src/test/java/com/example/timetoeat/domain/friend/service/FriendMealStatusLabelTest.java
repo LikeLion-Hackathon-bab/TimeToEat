@@ -5,6 +5,7 @@ import com.example.timetoeat.domain.meal.entity.MemberMealStatus;
 import com.example.timetoeat.domain.meal.repository.MemberMealStatusRepository;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
+import com.example.timetoeat.domain.referral.repository.ReferralCodeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,7 @@ class FriendMealStatusLabelTest {
         members = mock(MemberJpaRepository.class);
         meals = mock(MemberMealStatusRepository.class);
         // 시연 채움 동작을 시험하므로 demo-friends.enabled=true 로 만든다(운영 기본값은 false)
-        service = new FriendMealQueryService(clock, members, meals, true);
+        service = new FriendMealQueryService(clock, new FriendDirectory(members, mock(ReferralCodeRepository.class)), meals, true);
     }
 
     private MemberEntity member(long id, String name, String img) {

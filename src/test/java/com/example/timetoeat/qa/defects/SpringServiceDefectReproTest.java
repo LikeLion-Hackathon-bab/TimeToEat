@@ -165,7 +165,8 @@ class SpringServiceDefectReproTest {
         var m = MemberEntity.builder().id(2L).username("가").build();
         when(members.findTop30ByIdNotOrderByCreatedAtDesc(1L)).thenReturn(List.of(m));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of(MemberMealStatus.builder().member(m).manualFastingSince(now.minus(ago)).build()));
-        return new FriendMealQueryService(Clock.fixed(now.atZone(KST).toInstant(), KST), members, meals, false)
+        return new FriendMealQueryService(Clock.fixed(now.atZone(KST).toInstant(), KST),
+                new com.example.timetoeat.domain.friend.service.FriendDirectory(members, mock(com.example.timetoeat.domain.referral.repository.ReferralCodeRepository.class)), meals, false)
                 .getDemoList(1L, "ALL").get(0);
     }
 

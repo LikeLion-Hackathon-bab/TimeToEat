@@ -4,6 +4,7 @@ import com.example.timetoeat.domain.friend.dto.response.FriendMealItemResponse;
 import com.example.timetoeat.domain.meal.repository.MemberMealStatusRepository;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
+import com.example.timetoeat.domain.referral.repository.ReferralCodeRepository;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -27,7 +28,7 @@ class FriendMealQueryServiceTest {
                 MemberEntity.builder().id(1002L).username("실제A").build(),
                 MemberEntity.builder().id(1003L).username("실제B").build()));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
-        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), repo, meals, true);
+        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), new FriendDirectory(repo, mock(ReferralCodeRepository.class)), meals, true);
 
         List<FriendMealItemResponse> list = service.getDemoList(1L, "ALL");
 
@@ -46,7 +47,7 @@ class FriendMealQueryServiceTest {
         when(repo.findTop30ByIdNotOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(
                 MemberEntity.builder().id(7L).username("실제A").build()));
         when(meals.findByMember_IdIn(any())).thenReturn(List.of());
-        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), repo, meals, false);
+        var service = new FriendMealQueryService(Clock.system(ZoneId.of("Asia/Seoul")), new FriendDirectory(repo, mock(ReferralCodeRepository.class)), meals, false);
 
         List<FriendMealItemResponse> list = service.getDemoList(1L, "ALL");
 
