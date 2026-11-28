@@ -1,6 +1,7 @@
 package com.example.timetoeat.domain.article.dto.response;
 
 import com.example.timetoeat.domain.article.entity.Article;
+import com.example.timetoeat.domain.article.entity.UploadMethod;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -36,13 +37,16 @@ public class ArticleSummaryResponse {
 
     private List<Long> taggedMemberIds;
 
+    // 사진을 올린 방법(CAMERA/ALBUM). 이 값이 저장되기 전 글은 null.
+    private UploadMethod method;
+
     @Builder
     private ArticleSummaryResponse(Long articleId, Long authorId, String authorUsername, String imageUrl,
                                    LocalDate mealDate, LocalTime mealTime, String restaurantName,
                                    ArticleDetailResponse.RestaurantInfo restaurant,
                                    int likeCount, int commentCount, boolean likedByMe,
                                    LocalDateTime createdAt, LocalDateTime expiresAt,
-                                   List<Long> taggedMemberIds) {
+                                   List<Long> taggedMemberIds, UploadMethod method) {
 
         this.articleId = articleId;
         this.authorId = authorId;
@@ -58,6 +62,7 @@ public class ArticleSummaryResponse {
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
         this.taggedMemberIds = taggedMemberIds;
+        this.method = method;
     }
 
     public static ArticleSummaryResponse from(Article article, boolean likedByMe, List<Long> taggedMemberIds) {
@@ -77,6 +82,7 @@ public class ArticleSummaryResponse {
                 .createdAt(article.getCreatedAt())
                 .expiresAt(article.getExpiresAt())
                 .taggedMemberIds(taggedMemberIds)
+                .method(article.getMethod())
                 .build();
     }
 
