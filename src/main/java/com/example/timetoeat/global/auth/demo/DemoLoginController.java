@@ -37,17 +37,23 @@ public class DemoLoginController {
     public ResponseEntity<ApiResponse<DemoLoginResponse>> login(@RequestBody(required = false) DemoLoginRequest body,
                                                                 HttpServletRequest request,
                                                                 HttpServletResponse response) {
+        // forward-headers-strategy: framework 로 X-Forwarded-For 첫 값이 들어온다. Caddy가 밖에서 온 XFF를 덮어써서
+        // 위조할 수 없다. x-real-ip·x-vercel-forwarded-for 는 Caddy로 직접 오는 요청이 마음대로 넣을 수 있어 쓰지 않는다.
         String ip = request.getRemoteAddr();
         Integer account = body == null ? null : body.account();
         if (service.expired()) {
             // 만료 뒤에는 꺼진 것과 같게 보인다.
             return error(HttpStatus.NOT_FOUND, "HTTP_404", "요청한 경로를 찾을 수 없습니다.");
         }
-        if (!rateLimiter.tryAcquire(ip)) {
+        String secret = body == null ? null : body.secret();
+        // 제한은 틀린 코드에만 건다(보안 재검토 N1). Vercel·Caddy 뒤에서는 모두 같은 출구 IP로 보이므로,
+        // 성공까지 세면 남이 틀린 코드를 퍼부어 맞는 코드를 가진 심사위원까지 429를 받는다.
+        // 코드는 32자 이상이고 비교는 상수 시간이라, 실패만 세도 무차별 대입 방어는 그대로다.
+        if (!service.secretMatches(secret) && !rateLimiter.tryAcquire(ip)) {
             log.warn("시연 로그인 제한 초과: account={}, ip={}", account, ip);
             return error(HttpStatus.TOO_MANY_REQUESTS, "DEMO_429", "잠시 뒤 다시 시도해 주세요.");
         }
-        DemoLoginService.Result r = service.login(body == null ? null : body.secret(), account);
+        DemoLoginService.Result r = service.login(secret, account);
         log.warn("시연 로그인 {}: account={}, ip={}", r.outcome(), account, ip);
         return switch (r.outcome()) {
             case OK -> {
