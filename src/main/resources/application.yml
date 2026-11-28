@@ -47,3 +47,11 @@ management:
 
 matching:
   socket-base-url: ${SOCKET_BASE_URL:http://socket:3000}
+
+# API 문서(Swagger UI·/v3/api-docs)는 기본으로 끈다. 운영에 공개하면 전체 API 목록이 노출된다.
+# 로컬·시험 서버에서만 SWAGGER_ENABLED=true 로 켠다.
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}
