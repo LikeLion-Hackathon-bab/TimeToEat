@@ -1,5 +1,12 @@
 package com.example.timetoeat.qa.defects;
 
+import com.example.timetoeat.domain.challenge.dto.response.ChallengeStatusResponse;
+import com.example.timetoeat.domain.challenge.entity.ChallengeRewardHistory;
+import com.example.timetoeat.domain.challenge.entity.ChallengeRewardHistory.RewardType;
+import com.example.timetoeat.domain.challenge.exception.ChallengeErrorCode;
+import com.example.timetoeat.domain.challenge.repository.ChallengeRewardHistoryRepository;
+import com.example.timetoeat.domain.challenge.service.ChallengeQueryService;
+import com.example.timetoeat.domain.challenge.service.ChallengeRewardCommandService;
 import com.example.timetoeat.domain.coupon.service.CouponCommandService;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
 import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
@@ -70,5 +77,65 @@ class SpringServiceDefectReproTest {
         var e = assertThrows(CustomException.class, () -> svc.redeem(2L, "CODEB00000"));
         assertEquals(ReferralErrorCode.ALREADY_REDEEMED, e.getBaseError());
         verifyNoInteractions(coupons);
+    }
+
+    /**
+     * T3: 7일 연속을 넘겨 계속 인증하면 WEEK 보상을 매일 다시 받을 수 있었다(achievedAt=오늘). → 연속 7일 한 주기에 1회.
+     * 저장소 대역은 저장된 기록(유형·달성일)으로 exists 질의에 답한다.
+     */
+    private final List<ChallengeRewardHistory> history = new ArrayList<>();
+    private final CouponCommandService rewardCoupons = mock(CouponCommandService.class);
+
+    private ChallengeRewardCommandService rewardServiceOn(LocalDate day) {
+        var status = mock(ChallengeQueryService.class);
+        when(status.getMyStatus(1L)).thenReturn(ChallengeStatusResponse.of(Collections.nCopies(7, true), 7, 8, 30, true, false));
+        var repo = mock(ChallengeRewardHistoryRepository.class);
+        when(repo.existsByMember_IdAndTypeAndAchievedAt(anyLong(), any(), any())).thenAnswer(i -> history.stream()
+                .anyMatch(h -> h.getType() == i.getArgument(1) && h.getAchievedAt().equals(i.getArgument(2))));
+        when(repo.existsByMember_IdAndTypeAndAchievedAtBetween(anyLong(), any(), any(), any())).thenAnswer(i -> history.stream()
+                .anyMatch(h -> h.getType() == i.getArgument(1)
+                        && !h.getAchievedAt().isBefore(i.getArgument(2)) && !h.getAchievedAt().isAfter(i.getArgument(3))));
+        when(repo.save(any())).thenAnswer(i -> { history.add(i.getArgument(0)); return i.getArgument(0); });
+        var members = mock(MemberJpaRepository.class);
+        when(members.findById(1L)).thenReturn(Optional.of(MemberEntity.builder().id(1L).build()));
+        return new ChallengeRewardCommandService(status, repo, members, rewardCoupons,
+                Clock.fixed(day.atTime(20, 0).atZone(KST).toInstant(), KST));
+    }
+
+    @Test
+    void weekRewardIsNotClaimableAgainTheNextDayOfTheSameStreak() {
+        LocalDate day7 = LocalDate.of(2026, 11, 7);
+        rewardServiceOn(day7).claim(1L, RewardType.WEEK);
+        var e = assertThrows(CustomException.class, () -> rewardServiceOn(day7.plusDays(1)).claim(1L, RewardType.WEEK),
+                "같은 연속 기록(8일째)으로 두 번째 주간 보상");
+        assertEquals(ChallengeErrorCode.ALREADY_CLAIMED, e.getBaseError());
+        verify(rewardCoupons, times(1)).issueRewardCoupon(1L, "WEEK");
+    }
+
+    @Test
+    void fourteenDayStreakGivesTwoWeekRewardsNotEight() {
+        LocalDate day7 = LocalDate.of(2026, 11, 7);
+        int claimed = 0;
+        for (int d = 0; d <= 7; d++) {   // 7일째~14일째 매일 시도
+            try { rewardServiceOn(day7.plusDays(d)).claim(1L, RewardType.WEEK); claimed++; }
+            catch (CustomException e) { assertEquals(ChallengeErrorCode.ALREADY_CLAIMED, e.getBaseError()); }
+        }
+        assertEquals(2, claimed, "7일째·14일째만");
+        assertEquals(List.of(day7, day7.plusDays(7)), history.stream().map(ChallengeRewardHistory::getAchievedAt).toList());
+    }
+
+    @Test
+    void monthRewardIsUnaffectedByWeekWindow() {
+        LocalDate lastDay = LocalDate.of(2026, 11, 30);
+        var status = mock(ChallengeQueryService.class);
+        when(status.getMyStatus(1L)).thenReturn(ChallengeStatusResponse.of(Collections.nCopies(7, true), 7, 30, 30, true, true));
+        var repo = mock(ChallengeRewardHistoryRepository.class);
+        var members = mock(MemberJpaRepository.class);
+        when(members.findById(1L)).thenReturn(Optional.of(MemberEntity.builder().id(1L).build()));
+        var svc = new ChallengeRewardCommandService(status, repo, members, rewardCoupons,
+                Clock.fixed(lastDay.atTime(20, 0).atZone(KST).toInstant(), KST));
+        svc.claim(1L, RewardType.MONTH);
+        verify(repo, never()).existsByMember_IdAndTypeAndAchievedAtBetween(anyLong(), eq(RewardType.MONTH), any(), any());
+        verify(rewardCoupons).issueRewardCoupon(1L, "MONTH");
     }
 }
