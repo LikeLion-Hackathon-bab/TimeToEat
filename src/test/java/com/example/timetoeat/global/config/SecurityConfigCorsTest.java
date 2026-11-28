@@ -18,4 +18,14 @@ class SecurityConfigCorsTest {
         assertFalse(list.stream().anyMatch(o -> o.contains("*")), "credentials=true 와 와일드카드는 같이 쓰지 않는다");
         assertEquals(SecurityConfig.DEFAULT_ORIGINS.size() + 2, list.size());
     }
+
+    /** 보안 점검 M2: 기본 목록에는 운영 Client 출처(https)만. localhost·IP·만료 도메인 없음. */
+    @Test void defaultHasOnlyHttpsProductionOrigins() {
+        for (String o : SecurityConfig.DEFAULT_ORIGINS) {
+            assertTrue(o.startsWith("https://"), o);
+            assertFalse(o.contains("localhost") || o.contains("127.0.0.1") || o.matches("https://\\d+\\.\\d+\\.\\d+\\.\\d+.*")
+                    || o.contains("babmuckdang.site"), o);
+        }
+        assertTrue(SecurityConfig.allowedOrigins("http://localhost:3001").contains("http://localhost:3001"), "개발 출처는 환경변수로");
+    }
 }
