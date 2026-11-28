@@ -14,9 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.transaction.event.TransactionPhase;
 
-import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -74,6 +72,9 @@ public class ArticleCreatedListener {
             var upsert = AiInferenceUpsertRequest.from(result);
             articleAiCommandService.upsertMealLog(e.getArticleId(), upsert);
 
+        } catch (com.example.timetoeat.infra.ai.AiImageFiles.RejectedImageException ex) {
+            // 다시 해도 같은 결과라 재시도 큐에 넣지 않는다.
+            log.warn("AI inference skipped, image rejected. articleId={}, reason={}", e.getArticleId(), ex.getMessage());
         } catch (Exception ex) {
             log.warn("AI inference post-commit failed. articleId={}, queue fallback if enabled", e.getArticleId(), ex);
             final String retryImagePath = imagePath;
@@ -92,8 +93,7 @@ public class ArticleCreatedListener {
 
     private String downloadToTemp(String url) throws Exception {
         // 확장자가 형식과 맞아야 food-ai 가 읽는다(.bin 이면 500). 형식 판별·WebP→JPEG 는 AiImageFiles.
-        try (InputStream in = new URL(url).openStream()) {
-            return com.example.timetoeat.infra.ai.AiImageFiles.download(in).toString();
-        }
+        // 시간·크기·해상도 제한은 AiImageFiles.fetch 가 건다(사용자가 보낸 주소라서).
+        return com.example.timetoeat.infra.ai.AiImageFiles.fetch(url).toString();
     }
 }
