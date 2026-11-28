@@ -10,13 +10,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface ArticleRepository extends JpaRepository<Article, Long> {
 
-    // 홈 피드: 생성 24h 이내만 노출 + 최신순
+    // 홈 피드(F09): 주어진 작성자들(나 + 친구)의 생성 24h 이내 글 + 최신순
     @EntityGraph(attributePaths = "author")
-    Page<Article> findByCreatedAtGreaterThanEqual(LocalDateTime threshold, Pageable pageable);
+    Page<Article> findByAuthor_IdInAndCreatedAtGreaterThanEqual(Collection<Long> authorIds, LocalDateTime threshold, Pageable pageable);
 
     // 프로필(내 밥그릇 포함): 특정 작성자의 전체 글 + 최신순
     @EntityGraph(attributePaths = "author")

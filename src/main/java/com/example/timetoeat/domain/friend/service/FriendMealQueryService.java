@@ -4,7 +4,6 @@ import com.example.timetoeat.domain.friend.dto.response.FriendMealItemResponse;
 import com.example.timetoeat.domain.meal.entity.MemberMealStatus;
 import com.example.timetoeat.domain.meal.repository.MemberMealStatusRepository;
 import com.example.timetoeat.domain.member.entity.MemberEntity;
-import com.example.timetoeat.domain.member.repository.MemberJpaRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ public class FriendMealQueryService {
 
     private final Clock clock;
 
-    private final MemberJpaRepository memberRepo;
+    private final FriendDirectory friendDirectory;
     private final MemberMealStatusRepository mealRepo;
 
     /**
@@ -31,19 +30,19 @@ public class FriendMealQueryService {
     private final boolean demoFriendsEnabled;
 
     public FriendMealQueryService(@Qualifier("kstClock") Clock clock,
-                                  MemberJpaRepository memberRepo,
+                                  FriendDirectory friendDirectory,
                                   MemberMealStatusRepository mealRepo,
                                   @Value("${demo-friends.enabled:false}") boolean demoFriendsEnabled) {
         this.clock = clock;
-        this.memberRepo = memberRepo;
+        this.friendDirectory = friendDirectory;
         this.mealRepo = mealRepo;
         this.demoFriendsEnabled = demoFriendsEnabled;
     }
 
     // 공개 API: 기존 컨트롤러가 호출
     public List<FriendMealItemResponse> getDemoList(Long meId, String filter) {
-        // 1) 실제 가입자 30명 (me 제외)
-        List<MemberEntity> members = memberRepo.findTop30ByIdNotOrderByCreatedAtDesc(meId);
+        // 1) 친구 최대 30명(추천 관계 우선 + 최근 가입자, me 제외). 홈 피드와 같은 출처.
+        List<MemberEntity> members = friendDirectory.friendsOf(meId);
 
         // 2) 벌크로 식사상태 조회
         Map<Long, MemberMealStatus> statusMap = mealRepo.findByMember_IdIn(

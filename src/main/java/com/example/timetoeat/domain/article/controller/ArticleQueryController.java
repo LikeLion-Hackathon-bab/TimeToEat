@@ -32,7 +32,7 @@ public class ArticleQueryController {
     private final ArticleQueryService articleQueryService;
     private final Clock clock;
 
-    // 홈 피드 조회: 24시간 이내 + 최신순
+    // 홈 피드 조회(F09): 내 글 + 친구 글, 24시간 이내 + 최신순
     @GetMapping("/home")
     public Page<ArticleSummaryResponse> getHomeFeed(
             @AuthenticationPrincipal(expression = "memberId") Long meId,
